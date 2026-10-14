@@ -1,0 +1,54 @@
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+id_rsa*
+id_ed25519*
+credentials*
+secrets*
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+env/
+
+# Models and machine-specific runtimes
+*.pt
+*.pth
+*.ckpt
+*.onnx
+*.gguf
+*.safetensors
+models/
+
+# Private/session data
+datasets/
+recordings/
+audio_recordings/
+transcripts/
+sessions/
+logs/
+*.log
+
+# Generated reports (sanitized reports may be force-added after review)
+reports/jetson_inventory_*.md
+reports/jetson_inventory_*.json
+
+# Editors, operating systems, and temporary files
+.DS_Store
+._*
+Thumbs.db
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
