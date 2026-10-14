@@ -25,11 +25,57 @@ the target device; listing a model here is not a compatibility claim.
 
 ## Current status
 
-Only **Milestone 1, Step 1 — Jetson inventory** is implemented. The inventory
-script collects a read-only hardware, software, storage, Python, audio, and
-monitoring baseline and writes local Markdown and JSON reports. Audio capture,
-VAD, speaker recognition, ASR, Nemotron, hesitation detection, cue caching,
-and TTS are planned but not implemented.
+**Milestone 1, Step 1 — Jetson inventory** is complete. **Step 2 — isolated
+Nemotron feasibility** is ready for Jetson execution. The benchmark runs only
+the official NVIDIA Nemotron 3 Nano 4B Q4_K_M model against synthetic prompts;
+it does not capture audio or process a real conversation. Audio capture, VAD,
+speaker recognition, ASR, hesitation detection, cue caching, and TTS remain
+planned rather than implemented.
+
+## Run the Nemotron benchmark on the Jetson
+
+Keep the runtime and downloaded model on the Jetson's native Linux storage.
+The following commands install build tools, compile llama.cpp with CUDA, and
+run the benchmark. Review each `sudo` command before entering your password.
+
+```sh
+sudo apt update
+sudo apt install -y build-essential cmake git libcurl4-openssl-dev
+
+mkdir -p "$HOME/cowingman-runtime"
+cd "$HOME/cowingman-runtime"
+git clone https://github.com/ggml-org/llama.cpp.git
+cd llama.cpp
+cmake -B build -DGGML_CUDA=ON -DLLAMA_CURL=ON -DCMAKE_BUILD_TYPE=Release
+cmake --build build --config Release -j2 --target llama-server
+```
+
+Return to the Co-Wingman project on the portable drive, replacing the example
+path with the path reported by `findmnt`:
+
+```sh
+cd "/path/to/Co-Wingman-jetson"
+python3 scripts/nemotron_benchmark.py \
+  --server "$HOME/cowingman-runtime/llama.cpp/build/bin/llama-server" \
+  --context-size 4096 \
+  --trials 3
+```
+
+The first run downloads the 2.84 GB official NVIDIA checkpoint to llama.cpp's
+model cache on the Jetson's native filesystem. Internet is used only for
+installation and model download; all prompts and inference stay local. The
+server listens only on `127.0.0.1`. See the
+[official NVIDIA model card](https://huggingface.co/nvidia/NVIDIA-Nemotron-3-Nano-4B-GGUF)
+for the checkpoint description and license.
+
+Bring back the matching files printed by the command:
+
+- `reports/nemotron_benchmark_YYYYMMDD_HHMMSS.md`
+- `reports/nemotron_benchmark_YYYYMMDD_HHMMSS.json`
+
+Do not commit generated reports until they have been reviewed for identifiers.
+For methodology and pass criteria, see
+[docs/milestones/milestone1_step2.md](docs/milestones/milestone1_step2.md).
 
 ## Hardware and workflow
 

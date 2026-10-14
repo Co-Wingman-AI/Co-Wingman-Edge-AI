@@ -42,6 +42,8 @@ logs/
 # Generated reports (sanitized reports may be force-added after review)
 reports/jetson_inventory_*.md
 reports/jetson_inventory_*.json
+reports/nemotron_benchmark_*.md
+reports/nemotron_benchmark_*.json
 
 # Editors, operating systems, and temporary files
 .DS_Store

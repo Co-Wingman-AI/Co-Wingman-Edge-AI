@@ -221,13 +221,23 @@ def dpkg_nvidia_packages() -> list[dict[str, str]] | str:
     for line in str(result.get("output", "")).splitlines():
         if "\t" in line and not line.startswith("dpkg-query:"):
             name, version = line.split("\t", 1)
-            packages.append({"name": name, "version": version})
+            if version.strip():
+                packages.append({"name": name, "version": version})
     return packages or NOT_DETECTED
 
 
 def command_output(command: list[str]) -> str:
     result = run_command(command)
     return str(result.get("output", result["status"]))
+
+
+def cuda_runtime_libraries() -> str:
+    result = run_command(["ldconfig", "-p"])
+    if result["status"] != "ok":
+        return str(result.get("output", result["status"]))
+    markers = ("cuda", "cudnn", "nvinfer", "nvrtc", "cublas", "cufft", "curand", "cusparse")
+    lines = [line for line in str(result["output"]).splitlines() if any(item in line.lower() for item in markers)]
+    return "\n".join(lines) if lines else NOT_DETECTED
 
 
 def accelerator_device_nodes() -> list[str] | str:
@@ -288,7 +298,7 @@ def collect_inventory() -> dict[str, Any]:
         "compute": {
             "cuda_toolkit": cuda_version,
             "nvidia_driver": read_text(Path("/proc/driver/nvidia/version"), NOT_DETECTED),
-            "cuda_runtime_libraries": command_output(["ldconfig", "-p"]),
+            "cuda_runtime_libraries": cuda_runtime_libraries(),
             "cudnn_packages": command_output(["dpkg-query", "-W", "libcudnn*"]),
             "tensorrt_packages": command_output(["dpkg-query", "-W", "libnvinfer*"]),
             "nvidia_packages": dpkg_nvidia_packages(),
@@ -332,7 +342,10 @@ def collect_inventory() -> dict[str, Any]:
 
 SENSITIVE_PATTERNS = (
     (re.compile(r"(?i)(serial(?: number)?|machine[-_ ]id)\s*[:=]\s*\S+"), r"\1: <redacted>"),
-    (re.compile(r"(?im)^(user name|host name)\s*:\s*.+$"), r"\1: <redacted>"),
+    (re.compile(r"(?im)^\s*(user[-_ ]name|host[-_ ]name)\s*[:=]\s*.+$"), r"\1: <redacted>"),
+    (re.compile(r"(?im)^\s*(cookie)\s*[:=]\s*.+$"), r"\1: <redacted>"),
+    (re.compile(r"(?i)\b(?:[0-9a-f]{2}[:_-]){5}[0-9a-f]{2}\b"), "<redacted-device-id>"),
+    (re.compile(r"(?i)\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b"), "<redacted-address>"),
     (re.compile(r"(?i)\b(?:GPU-)?[0-9a-f]{8}-[0-9a-f-]{27,}\b"), "<redacted-uuid>"),
     (re.compile(r"/home/[^/\s]+"), "/home/<user>"),
     (re.compile(r"/Users/[^/\s]+"), "/Users/<user>"),

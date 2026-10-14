@@ -31,11 +31,16 @@ class InventoryTests(unittest.TestCase):
             "path": str(inventory.PROJECT_ROOT / "reports"),
             "home": "/home/alice/models",
             "serial": "Serial Number: ABC123",
+            "pipewire": '\tuser-name: "alice"\n\thost-name: "jetson-one"\n\tcookie: 12345',
+            "bluetooth": "bluez_source.DE_B7_11_4D_BC_30.handsfree_head_unit",
         }
         safe = inventory.sanitize(raw)
         rendered = json.dumps(safe)
         self.assertNotIn("alice", rendered)
         self.assertNotIn("ABC123", rendered)
+        self.assertNotIn("jetson-one", rendered)
+        self.assertNotIn("DE_B7_11_4D_BC_30", rendered)
+        self.assertNotIn("12345", rendered)
         self.assertNotIn(str(inventory.PROJECT_ROOT), rendered)
 
     def test_reports_are_timestamped_and_valid(self):
