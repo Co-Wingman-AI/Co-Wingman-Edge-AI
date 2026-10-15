@@ -65,7 +65,7 @@ REDACTIONS = (
 
 def read_text(path: Path, default: str = "not detected") -> str:
     try:
-        value = path.read_text(encoding="utf-8", errors="replace").strip("\x00\n ")
+        value = (path.read_bytes() or b"").decode("utf-8", errors="replace").strip("\x00\n ")
         return value or default
     except OSError:
         return default
@@ -308,7 +308,8 @@ def stream_chat_request(
                     usage = event["usage"]
                 choices = event.get("choices") or []
                 if choices:
-                    content = choices[0].get("delta", {}).get("content") or ""
+                    delta = choices[0].get("delta", {})
+                    content = delta.get("content") or delta.get("reasoning_content") or ""
                     if content:
                         if first_content_at is None:
                             first_content_at = time.monotonic()
@@ -525,7 +526,7 @@ def main() -> int:
     base_url = f"http://127.0.0.1:{port}"
     command = [
         str(server), "-hf", MODEL_REF, "-c", str(args.context_size),
-        "--alias", MODEL_REF, "-ngl", "999", "--port", str(port), "--host", "127.0.0.1",
+        "--alias", MODEL_REF, "-ngl", "28", "--port", str(port), "--host", "127.0.0.1", "--no-reasoning-preserve",
     ]
     server_log = tempfile.TemporaryFile(mode="w+", encoding="utf-8")
     process: subprocess.Popen[str] | None = None
@@ -554,7 +555,7 @@ def main() -> int:
         warmup = stream_chat_request(
             base_url,
             "Return the requested JSON with cue set to ready, intent set to respond, and should_offer true.",
-            48,
+            160,
             args.request_timeout,
         )
         if not warmup.get("success"):
@@ -565,7 +566,7 @@ def main() -> int:
             result = stream_chat_request(
                 base_url,
                 SYNTHETIC_PROMPTS[index % len(SYNTHETIC_PROMPTS)],
-                96,
+                160,
                 args.request_timeout,
             )
             result["json_validation"] = validate_cue_json(result.get("content", ""))
