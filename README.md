@@ -1,94 +1,127 @@
 # Co-Wingman
 
 Co-Wingman is an independent research project for a privacy-conscious,
-real-time conversational recovery assistant running locally on an NVIDIA
-Jetson Orin Nano 8 GB. It is intended to help an enrolled user request a short,
-context-aware conversational cue when they get stuck. It is not a medical
-diagnostic system, and it does not equate speech disfluency with anxiety.
+real-time conversational recovery assistant on an NVIDIA Jetson Orin Nano
+8 GB. It helps an enrolled user request a short conversational cue when they
+get stuck. It is not a medical diagnostic system and does not infer that
+speech disfluency means anxiety.
 
-## Architecture direction
+## Production architecture
 
-All live conversation data and inference remain on the Jetson. The planned
-pipeline uses only NVIDIA models:
+The production direction is hybrid and NVIDIA-only:
 
-- NVIDIA MarbleNet for voice activity detection
-- NVIDIA TitaNet for speaker enrollment and attribution
-- a Jetson-compatible NVIDIA NeMo/Riva ASR model for transcription
-- a locally deployed NVIDIA Nemotron model for bounded, event-driven context
-  maintenance and cue generation
-- an NVIDIA NeMo TTS model, with the exact acoustic model and vocoder selected
-  only after hardware measurements
+- Raw audio, voice activity detection, speaker attribution, ASR, and TTS run
+  locally on the Jetson with NVIDIA speech/audio models.
+- Only a small, locally selected, ephemeral text window may cross the cloud
+  boundary.
+- NVIDIA Nemotron cue generation runs through Nebius Token Factory.
+- Raw audio and full transcripts must never be sent to the cloud.
 
-No cloud model or external inference API is part of the runtime architecture.
-Specific model checkpoints and runtimes remain decisions to be validated on
-the target device; listing a model here is not a compatibility claim.
+Candidate local components remain NVIDIA MarbleNet for VAD, NVIDIA TitaNet
+for speaker attribution, and Jetson-compatible NVIDIA NeMo/Riva ASR and TTS.
+Those components are not installed or exercised by this milestone, and their
+listing is not a Jetson compatibility claim.
 
-## Current status
+## Current milestone
 
-**Milestone 1, Step 1 — Jetson inventory** is complete. **Step 2 — isolated
-Nemotron feasibility** is ready for Jetson execution. The benchmark runs only
-the official NVIDIA Nemotron 3 Nano 4B Q4_K_M model against synthetic prompts;
-it does not capture audio or process a real conversation. Audio capture, VAD,
-speaker recognition, ASR, hesitation detection, cue caching, and TTS remain
-planned rather than implemented.
+**Milestone 1, Step 3 — hybrid Nebius/NVIDIA Nemotron boundary** is implemented
+and awaiting its Jetson report. It adds:
 
-## Run the Nemotron benchmark on the Jetson
+- a modular, dependency-free Nebius Token Factory client;
+- enforced HTTPS Nebius endpoints and NVIDIA Nemotron model IDs;
+- a bounded input contract of at most four text fragments, 240 characters per
+  fragment, and 800 characters total;
+- synthetic-only live benchmarking with JSON and Markdown reports that omit
+  prompts, cue text, credentials, raw audio, and transcripts;
+- unit tests and a mocked client integration test.
 
-Keep the runtime and downloaded model on the Jetson's native Linux storage.
-The following commands install build tools, compile llama.cpp with CUDA, and
-run the benchmark. Review each `sudo` command before entering your password.
+The returned Step 2 Jetson report did **not** pass its resource gate. During
+local Nemotron inference it measured about 294 MiB minimum available RAM,
+4.47 GiB maximum server RSS, and 361 MiB swap growth. That experiment is
+retained as historical evidence, but local Nemotron is not the production
+design. The hybrid Step 3 client does not start that local LLM server.
+
+## Validate on macOS
+
+No API key or network request is needed:
 
 ```sh
-sudo apt update
-sudo apt install -y build-essential cmake git libcurl4-openssl-dev
-
-mkdir -p "$HOME/cowingman-runtime"
-cd "$HOME/cowingman-runtime"
-git clone https://github.com/ggml-org/llama.cpp.git
-cd llama.cpp
-cmake -B build -DGGML_CUDA=ON -DLLAMA_CURL=ON -DCMAKE_BUILD_TYPE=Release
-cmake --build build --config Release -j2 --target llama-server
+cd "/Volumes/Projects/Cowingman-jetson"
+python3 -m unittest discover -s tests -v
+python3 scripts/hybrid_nemotron_benchmark.py --dry-run --trials 3
 ```
 
-Return to the Co-Wingman project on the portable drive, replacing the example
-path with the path reported by `findmnt`:
+The dry run writes timestamp-matched files under `reports/`. Generated reports
+are ignored by Git until deliberately reviewed and force-added.
+
+## Run the gate on Jetson
+
+Create a Nebius Token Factory API key in your account. Export it only in the
+current shell; do not write it into this repository or paste it into a report.
+
+### Check the reported 99% RAM use first
+
+Linux normally uses otherwise-idle RAM for reclaimable filesystem cache, so a
+"99% used" display does not by itself prove that the Jetson is out of memory.
+Jetson CPU and GPU workloads also share physical RAM. Run these read-only
+checks while the Jetson is otherwise idle:
+
+```sh
+free -h
+grep -E 'MemTotal|MemFree|MemAvailable|Buffers|Cached|SwapTotal|SwapFree' /proc/meminfo
+ps -eo pid,comm,rss,%mem --sort=-rss | head -15
+tegrastats --interval 1000
+```
+
+Let `tegrastats` run for about 10 seconds, then press Ctrl-C.
+
+The Step 2 report's near-99% reading occurred while the local Nemotron server
+was loaded and was accompanied by low `MemAvailable` and growing swap. That
+was real workload pressure, not merely an idle cache reading. Memory used by
+that process should be released after the benchmark terminates; the following
+idle snapshot checks whether it was released.
+
+- If `MemAvailable` is at least about 1 GiB and swap use is stable, the high
+  percentage is probably largely reclaimable cache. The Step 3 cloud client
+  itself uses little memory and does not run a local AI model.
+- If `MemAvailable` is below 1 GiB while idle, stop and identify the largest
+  process before running the gate.
+- If swap usage keeps increasing, stop: the device is under real memory
+  pressure.
+- If one process dominates RSS, identify why it is running before terminating
+  or disabling anything. Do not use `drop_caches`, `swapoff`, or disable
+  services blindly.
+- A reboot can clear temporary processes and cache, but it is not a fix for a
+  persistent service or memory leak.
+
+Return the output of these checks along with the two benchmark reports. This
+RAM snapshot does not establish that the later concurrent local NVIDIA speech
+pipeline will fit; that requires a separate milestone.
+
+### Run the synthetic text gate
 
 ```sh
 cd "/path/to/Co-Wingman-jetson"
-python3 scripts/nemotron_benchmark.py \
-  --server "$HOME/cowingman-runtime/llama.cpp/build/bin/llama-server" \
-  --context-size 4096 \
-  --trials 3
+python3 -m unittest discover -s tests -v
+read -rsp "Nebius API key: " NEBIUS_API_KEY && printf '\n'
+export NEBIUS_API_KEY
+python3 scripts/hybrid_nemotron_benchmark.py --live --trials 3
+unset NEBIUS_API_KEY
 ```
 
-The first run downloads the 2.84 GB official NVIDIA checkpoint to llama.cpp's
-model cache on the Jetson's native filesystem. Internet is used only for
-installation and model download; all prompts and inference stay local. The
-server listens only on `127.0.0.1`. See the
-[official NVIDIA model card](https://huggingface.co/nvidia/NVIDIA-Nemotron-3-Nano-4B-GGUF)
-for the checkpoint description and license.
+Return the matching files printed by the command:
 
-Bring back the matching files printed by the command:
+- `reports/hybrid_nemotron_YYYYMMDD_HHMMSS.json`
+- `reports/hybrid_nemotron_YYYYMMDD_HHMMSS.md`
 
-- `reports/nemotron_benchmark_YYYYMMDD_HHMMSS.md`
-- `reports/nemotron_benchmark_YYYYMMDD_HHMMSS.json`
-
-Do not commit generated reports until they have been reviewed for identifiers.
-For methodology and pass criteria, see
-[docs/milestones/milestone1_step2.md](docs/milestones/milestone1_step2.md).
-
-## Hardware and workflow
-
-The target is an NVIDIA Jetson Orin Nano with 8 GB RAM. Development follows:
-
-`Mac -> USB project drive -> Jetson -> USB project drive -> Mac`
-
-Architecture-specific environments, packages, and model weights should live
-on the Jetson's native Linux filesystem rather than on the portable drive.
-See [RUN_ON_JETSON.md](RUN_ON_JETSON.md) for safe execution instructions.
+Stop at this gate. Do not begin audio capture or install speech models until
+the report is reviewed. See [RUN_ON_JETSON.md](RUN_ON_JETSON.md) for the exact
+transfer and verification procedure and
+[docs/milestones/milestone1_step3.md](docs/milestones/milestone1_step3.md) for
+the decision record and acceptance criteria.
 
 ## Repository privacy
 
-The intended GitHub repository is `Co-Wingman-Edge-AI`, private by design.
-Generated reports are ignored by default so that each can be reviewed for
-sensitive data before it is deliberately committed.
+The intended GitHub repository is private. `.gitignore` excludes credentials,
+model weights, recordings, transcripts, logs, and generated reports. Always
+review a report before deliberately adding it to version control.

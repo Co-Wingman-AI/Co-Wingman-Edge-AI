@@ -1,57 +1,96 @@
-# Run the inventory on the Jetson
+# Run Milestone 1 Step 3 on the Jetson
 
-The inventory script installs nothing, records no audio, changes no power or
-clock settings, and does not use `sudo`.
+This gate sends three short **synthetic text** requests to NVIDIA Nemotron
+through Nebius Token Factory. It does not open a microphone, read a recording,
+run a local model, install packages, or send raw audio/full transcripts. It
+does require Internet access and may incur a small Token Factory charge.
 
-## 1. Move the drive from macOS
+## 1. Validate on the Mac before moving the drive
 
-Close files and terminals using the project. In Finder, click the eject icon
-beside the USB drive and wait for it to disappear before disconnecting it.
-Do not unplug it while files are being written.
+```sh
+cd "/Volumes/Projects/Cowingman-jetson"
+python3 -m unittest discover -s tests -v
+python3 scripts/hybrid_nemotron_benchmark.py --dry-run --trials 3
+```
 
-## 2. Locate it on Jetson Linux
+The test run must finish with `OK`. The dry-run report must say `not_run`; it
+validates configuration and report generation without calling Nebius.
 
-Connect the drive, open a terminal, and inspect mounted filesystems:
+Close files and terminals using the project. In Finder, eject the USB drive
+and wait for it to disappear before disconnecting it.
+
+## 2. Locate the project on Jetson Linux
+
+Connect the drive and identify its actual mount path:
 
 ```sh
 lsblk -f
 findmnt
 ```
 
-Typical removable-media paths are under `/media/<user>/`, but use the path
-shown on your Jetson; do not copy that placeholder literally.
+Replace `/path/to/Co-Wingman-jetson` below with that path. Do not copy the
+placeholder literally.
 
-## 3. Enter the project and run the script
-
-Quote the path in case the drive label contains spaces:
+## 3. Run local tests on the Jetson
 
 ```sh
 cd "/path/to/Co-Wingman-jetson"
-python3 scripts/jetson_inventory.py
+python3 -m unittest discover -s tests -v
 ```
 
-No virtual environment or installed Python packages are required. The command
-prints the two exact report paths it created. It is safe for unavailable Jetson
-utilities to be reported as `not detected`.
+This project step uses only the Python standard library; do not create a
+virtual environment or install packages for it.
 
-## 4. Review the reports
+## 4. Supply the API key without saving it
+
+Create the API key in Nebius Token Factory. Enter it silently into the current
+shell and verify only that a value exists—never print the value:
 
 ```sh
-ls -lh reports/jetson_inventory_*.md reports/jetson_inventory_*.json
+read -rsp "Nebius API key: " NEBIUS_API_KEY && printf '\n'
+export NEBIUS_API_KEY
+test -n "$NEBIUS_API_KEY" && echo "NEBIUS_API_KEY is set"
 ```
 
-Bring back both files with the same timestamp:
+Do not put the key in `.env`, shell history, source files, reports, or Git.
 
-- `reports/jetson_inventory_YYYYMMDD_HHMMSS.md`
-- `reports/jetson_inventory_YYYYMMDD_HHMMSS.json`
+## 5. Run the live synthetic benchmark
 
-The script redacts common identifiers, but review the Markdown report before
-sharing or committing it.
+```sh
+python3 scripts/hybrid_nemotron_benchmark.py --live --trials 3
+unset NEBIUS_API_KEY
+```
 
-## 5. Safely remove the drive
+The defaults are:
 
-Leave the project directory, flush pending writes, identify the correct mount
-point with `findmnt`, and unmount that exact mount point:
+- endpoint: `https://api.tokenfactory.us-central1.nebius.com/v1`
+- model: `nvidia/nvidia-nemotron-3-nano-30b-a3b`
+- request timeout: 20 seconds
+- acceptance latency: every request at or below 5 seconds
+
+The script exits `0` on a pass and `1` on a completed failed gate. A missing
+key or invalid configuration exits `2`. Regardless of success or failure after
+requests begin, inspect the timestamp-matched report pair printed by the
+script.
+
+## 6. Inspect and return the reports
+
+```sh
+ls -lh reports/hybrid_nemotron_*.md reports/hybrid_nemotron_*.json
+python3 -m json.tool reports/hybrid_nemotron_YYYYMMDD_HHMMSS.json >/dev/null
+sed -n '1,220p' reports/hybrid_nemotron_YYYYMMDD_HHMMSS.md
+```
+
+Replace the timestamp placeholder with the exact timestamp printed by the
+benchmark. Return both matching files:
+
+- `reports/hybrid_nemotron_YYYYMMDD_HHMMSS.json`
+- `reports/hybrid_nemotron_YYYYMMDD_HHMMSS.md`
+
+The report intentionally excludes prompts, responses, credentials, raw audio,
+and transcripts. Still review it before sharing or committing it.
+
+## 7. Safely remove the drive and stop
 
 ```sh
 cd /
@@ -60,7 +99,9 @@ udisksctl unmount -b /dev/<usb-partition>
 udisksctl power-off -b /dev/<usb-device>
 ```
 
-Replace both placeholders using `lsblk -f`. Never guess a device name. If
+Resolve both device placeholders with `lsblk -f`; never guess. If
 `udisksctl` is unavailable, use the desktop file manager's eject control.
-Wait for confirmation before disconnecting the drive, then reconnect it to the
-Mac and provide both timestamp-matched reports to Codex.
+Wait for confirmation before disconnecting the drive.
+
+**Milestone gate:** stop here and return the two reports. Do not install or run
+Jetson speech/audio models yet.

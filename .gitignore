@@ -44,6 +44,8 @@ reports/jetson_inventory_*.md
 reports/jetson_inventory_*.json
 reports/nemotron_benchmark_*.md
 reports/nemotron_benchmark_*.json
+reports/hybrid_nemotron_*.md
+reports/hybrid_nemotron_*.json
 
 # Editors, operating systems, and temporary files
 .DS_Store
