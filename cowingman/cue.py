@@ -39,7 +39,7 @@ def parse_cue(content: str) -> Cue:
         raise ValueError("Invalid cue length.")
     if len(cue.split()) > MAX_CUE_WORDS:
         raise ValueError("Cue exceeds 12 words.")
-    if any(unicodedata.category(c).startswith("C") for c in cue):
+    if not cue.isprintable() or any(unicodedata.category(c).startswith("C") for c in cue):
         raise ValueError("Cue contains control characters.")
     if type(value["intent"]) is not str or value["intent"] not in {"resume", "clarify", "respond"}:
         raise ValueError("Invalid cue intent.")

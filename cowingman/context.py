@@ -77,9 +77,10 @@ class RollingContext:
         turn = BoundedContext.from_turns([ContextTurn(speaker, fragment)]).turns[0]
         self.expire()
         self._items.append((self.clock(), turn))
-        while len(self._items) > MAX_CONTEXT_TURNS or sum(
-            len(t.text) for _, t in self._items
-        ) > MAX_CONTEXT_CHARACTERS:
+        while (
+            len(self._items) > MAX_CONTEXT_TURNS
+            or sum(len(t.text) for _, t in self._items) > MAX_CONTEXT_CHARACTERS
+        ):
             self._items.pop(0)
 
     def take(self) -> BoundedContext:

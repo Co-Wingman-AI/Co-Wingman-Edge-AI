@@ -12,14 +12,25 @@ from cowingman.provider import NavigatorClient, NoRedirect, urllib_transport
 
 
 def response(cue="Could you repeat that?", **extra):
-    return {"choices": [{"message": {"content": json.dumps(dict(
-        cue=cue, intent="clarify", should_offer=True, **extra
-    ))}, "finish_reason": "stop"}]}
+    return {
+        "choices": [
+            {
+                "message": {
+                    "content": json.dumps(
+                        dict(cue=cue, intent="clarify", should_offer=True, **extra)
+                    )
+                },
+                "finish_reason": "stop",
+            }
+        ]
+    }
 
 
 class ConfigurationTests(unittest.TestCase):
     def test_defaults_and_key_selection(self):
-        config = Config.load(environ={"NAVIGATOR_TOOLKIT_API_KEY": "correct", "NEBIUS_API_KEY": "wrong"})
+        config = Config.load(
+            environ={"NAVIGATOR_TOOLKIT_API_KEY": "correct", "NEBIUS_API_KEY": "wrong"}
+        )
         self.assertEqual(config.api_key, "correct")
         self.assertNotIn("correct", repr(config))
         self.assertEqual(config.model, DEFAULT_MODEL)
@@ -28,22 +39,37 @@ class ConfigurationTests(unittest.TestCase):
         self.assertEqual(Config.load(offline=True, environ={}).api_key, "")
 
     def test_host_and_path_allowlist(self):
-        for url in ["http://api.ai.it.ufl.edu/v1", "https://api.ai.it.ufl.edu.evil.test/v1",
-                    "https://evilapi.ai.it.ufl.edu/v1", "https://api.ai.it.ufl.edu@evil.test/v1",
-                    "https://user@api.ai.it.ufl.edu/v1", "https://api.ai.it.ufl.edu:444/v1",
-                    "https://api.ai.it.ufl.edu/v1?", "https://api.ai.it.ufl.edu/v1#",
-                    "https://api.ai.it.ufl.edu/v1/../other", "https://api.ai.it.ufl.edu./v1",
-                    "https://api.ai.it.ufl.edu/v1\n", "https://[invalid/v1", "https://example.com/v1"]:
+        for url in [
+            "http://api.ai.it.ufl.edu/v1",
+            "https://api.ai.it.ufl.edu.evil.test/v1",
+            "https://evilapi.ai.it.ufl.edu/v1",
+            "https://api.ai.it.ufl.edu@evil.test/v1",
+            "https://user@api.ai.it.ufl.edu/v1",
+            "https://api.ai.it.ufl.edu:444/v1",
+            "https://api.ai.it.ufl.edu/v1?",
+            "https://api.ai.it.ufl.edu/v1#",
+            "https://api.ai.it.ufl.edu/v1/../other",
+            "https://api.ai.it.ufl.edu./v1",
+            "https://api.ai.it.ufl.edu/v1\n",
+            "https://[invalid/v1",
+            "https://example.com/v1",
+        ]:
             with self.subTest(url=url), self.assertRaises(ConfigurationError):
                 validate_cloud_configuration(url, DEFAULT_MODEL)
-        self.assertEqual(validate_cloud_configuration(DEFAULT_BASE_URL + "/", DEFAULT_MODEL)[0], DEFAULT_BASE_URL)
+        self.assertEqual(
+            validate_cloud_configuration(DEFAULT_BASE_URL + "/", DEFAULT_MODEL)[0], DEFAULT_BASE_URL
+        )
 
     def test_model_and_numeric_validation(self):
         for model in ["nvidia/nemotron-unknown", "gpt-4", "nemotron-3-nano-30b-a3b ", ""]:
             with self.assertRaises(ConfigurationError):
                 validate_cloud_configuration(DEFAULT_BASE_URL, model)
-        for name, value in [("COWINGMAN_TIMEOUT", "nan"), ("COWINGMAN_TIMEOUT", "31"),
-                            ("COWINGMAN_CONTEXT_TTL", "inf"), ("COWINGMAN_AUDIO_DEVICE", "-1")]:
+        for name, value in [
+            ("COWINGMAN_TIMEOUT", "nan"),
+            ("COWINGMAN_TIMEOUT", "31"),
+            ("COWINGMAN_CONTEXT_TTL", "inf"),
+            ("COWINGMAN_AUDIO_DEVICE", "-1"),
+        ]:
             with self.assertRaises(ConfigurationError):
                 Config.load(offline=True, environ={name: value})
 
@@ -52,9 +78,12 @@ class BoundaryTests(unittest.TestCase):
     def test_constructor_cannot_bypass_network_boundary(self):
         called = []
         client = NavigatorClient("key", transport=lambda *a: called.append(a))
-        for turns in [(ContextTurn("user", b"audio"),), (ContextTurn("user", "x" * 241),),
-                      tuple(ContextTurn("user", "a") for _ in range(5)),
-                      tuple(ContextTurn("user", "x" * 240) for _ in range(4))]:
+        for turns in [
+            (ContextTurn("user", b"audio"),),
+            (ContextTurn("user", "x" * 241),),
+            tuple(ContextTurn("user", "a") for _ in range(5)),
+            tuple(ContextTurn("user", "x" * 240) for _ in range(4)),
+        ]:
             with self.assertRaises(PrivacyBoundaryError):
                 client.request_cue(BoundedContext(turns))
         for audio in [b"raw", {"input_audio": "base64"}, [1, 2, 3]]:
@@ -80,29 +109,51 @@ class BoundaryTests(unittest.TestCase):
             context.take()
 
     def test_strict_schema_and_unsafe_results(self):
-        for content in ['{}', '[]', 'null', '{"cue":"a","cue":"b","intent":"resume","should_offer":true}',
-                        json.dumps({"cue":"a", "intent":[], "should_offer":True}),
-                        json.dumps({"cue":"a", "intent":"resume", "should_offer":1})]:
+        for content in [
+            "{}",
+            "[]",
+            "null",
+            '{"cue":"a","cue":"b","intent":"resume","should_offer":true}',
+            json.dumps({"cue": "a", "intent": [], "should_offer": True}),
+            json.dumps({"cue": "a", "intent": "resume", "should_offer": 1}),
+        ]:
             with self.assertRaises(ValueError):
                 parse_cue(content)
-        for cue in ["word " * 13, "a" * 161, "\x1b[31mhi", "hello\nworld", "You have anxiety.",
-                    "Give me your password", "Visit https://evil.test", "Kill them"]:
+        for cue in [
+            "word " * 13,
+            "a" * 161,
+            "\x1b[31mhi",
+            "hello\nworld",
+            "You have anxiety.",
+            "Give me your password",
+            "Visit https://evil.test",
+            "Kill them",
+        ]:
             with self.assertRaises(ValueError):
-                parse_cue(json.dumps({"cue":cue, "intent":"respond", "should_offer":True}))
+                parse_cue(json.dumps({"cue": cue, "intent": "respond", "should_offer": True}))
 
 
 class ProviderTests(unittest.TestCase):
     def test_request_shape_auth_and_content_free_metrics(self):
         captured = {}
+
         def transport(url, headers, payload, timeout):
-            captured.update(url=url, headers=copy.deepcopy(headers), payload=copy.deepcopy(payload), timeout=timeout)
+            captured.update(
+                url=url,
+                headers=copy.deepcopy(headers),
+                payload=copy.deepcopy(payload),
+                timeout=timeout,
+            )
             return response()
+
         client = NavigatorClient("test-secret", transport=transport)
-        cue, metrics = client.request_cue(BoundedContext.from_turns([ContextTurn("user", "private sentinel")]))
+        cue, metrics = client.request_cue(
+            BoundedContext.from_turns([ContextTurn("user", "private sentinel")])
+        )
         self.assertEqual(captured["url"], DEFAULT_BASE_URL + "/chat/completions")
         self.assertEqual(captured["headers"]["Authorization"], "Bearer test-secret")
         self.assertEqual(captured["payload"]["model"], DEFAULT_MODEL)
-        self.assertEqual(captured["payload"]["response_format"], {"type":"json_object"})
+        self.assertEqual(captured["payload"]["response_format"], {"type": "json_object"})
         self.assertTrue(all(type(m["content"]) is str for m in captured["payload"]["messages"]))
         self.assertEqual(captured["timeout"], 15)
         for private in ["test-secret", "private sentinel", cue.cue]:
@@ -111,26 +162,118 @@ class ProviderTests(unittest.TestCase):
         self.assertEqual(client._api_key, "")
 
     def test_failures_are_content_free(self):
-        for error in [TimeoutError("private secret"), OSError("private secret"), ValueError("private secret")]:
+        for error in [
+            TimeoutError("private secret"),
+            OSError("private secret"),
+            ValueError("private secret"),
+        ]:
+
             def fail(*args):
                 raise error
+
             with self.assertRaises(CloudRequestError) as caught:
-                NavigatorClient("key", transport=fail).request_cue(BoundedContext.from_turns([ContextTurn("user", "hello")]))
+                NavigatorClient("key", transport=fail).request_cue(
+                    BoundedContext.from_turns([ContextTurn("user", "hello")])
+                )
             self.assertNotIn("private", str(caught.exception))
         for result in [{}, {"choices": []}, response("unsafe", other=True)]:
             with self.assertRaises(CloudRequestError):
-                NavigatorClient("key", transport=lambda *a: result).request_cue(BoundedContext.from_turns([ContextTurn("user", "hello")]))
+                NavigatorClient("key", transport=lambda *a: result).request_cue(
+                    BoundedContext.from_turns([ContextTurn("user", "hello")])
+                )
 
     def test_redirects_rejected(self):
         with self.assertRaises(CloudRequestError):
             NoRedirect().redirect_request(None, None, 302, "", {}, "https://evil.test")
 
     def test_http_errors_and_transport_limits(self):
-        for code, expected in [(401, "access denied"), (403, "access denied"), (429, "rate limit"), (500, "service error")]:
-            with patch("urllib.request.OpenerDirector.open", side_effect=urllib.error.HTTPError("url", code, "secret", {}, None)):
+        for code, expected in [
+            (401, "access denied"),
+            (403, "access denied"),
+            (429, "rate limit"),
+            (500, "service error"),
+        ]:
+            with patch(
+                "urllib.request.OpenerDirector.open",
+                side_effect=urllib.error.HTTPError("url", code, "secret", {}, None),
+            ):
                 with self.assertRaisesRegex(CloudRequestError, expected):
                     urllib_transport(DEFAULT_BASE_URL, {}, {}, 1)
         with patch("urllib.request.OpenerDirector.open") as opened:
             opened.return_value.__enter__.return_value.read.return_value = b"x" * 16385
             with self.assertRaisesRegex(CloudRequestError, "oversized"):
                 urllib_transport(DEFAULT_BASE_URL, {}, {}, 1)
+
+
+class DeadlineAndReportTests(unittest.TestCase):
+    def test_wall_clock_timeout_terminates_request_worker(self):
+        from cowingman.provider import deadline_transport
+        from unittest.mock import Mock
+
+        parent, child = Mock(), Mock()
+        parent.poll.return_value = False
+        process = Mock(pid=123)
+        process.is_alive.side_effect = [True, False]
+        ctx = Mock()
+        ctx.Pipe.return_value = (parent, child)
+        ctx.Process.return_value = process
+        with patch("cowingman.provider.multiprocessing.get_context", return_value=ctx):
+            with self.assertRaisesRegex(CloudRequestError, "timed out"):
+                deadline_transport(DEFAULT_BASE_URL, {}, {}, 1)
+        parent.poll.assert_called_once_with(1)
+        process.terminate.assert_called_once()
+        parent.close.assert_called_once()
+
+    def test_invalid_and_truncated_results(self):
+        context = BoundedContext.from_turns([ContextTurn("user", "hello")])
+        invalid_results = [response(), response(), response()]
+        invalid_results[0]["choices"][0]["finish_reason"] = "length"
+        invalid_results[1]["choices"][0]["message"]["tool_calls"] = [{"id": "unexpected"}]
+        invalid_results[2]["choices"][0]["message"]["refusal"] = "refused"
+        for result in invalid_results:
+            with self.assertRaises(CloudRequestError):
+                NavigatorClient("key", transport=lambda *a: result).request_cue(context)
+        for content in [b"not-json", b"\xff", b"[]"]:
+            with patch("urllib.request.OpenerDirector.open") as opened:
+                opened.return_value.__enter__.return_value.read.return_value = content
+                if content == b"[]":
+                    self.assertEqual(urllib_transport(DEFAULT_BASE_URL, {}, {}, 1), [])
+                else:
+                    with self.assertRaises(CloudRequestError):
+                        urllib_transport(DEFAULT_BASE_URL, {}, {}, 1)
+
+    def test_reporting_and_logs_exclude_content(self):
+        from scripts.navigator_benchmark import run
+        from cowingman.provider import OfflineClient
+
+        with self.assertNoLogs():
+            report = run(OfflineClient(), 2)
+        serialized = json.dumps(report)
+        self.assertNotIn("Which feature", serialized)
+        self.assertNotIn("Could you repeat", serialized)
+        self.assertTrue(all(item["success"] for item in report["trials"]))
+
+
+def _synthetic_request_worker(connection, url, headers, payload, timeout):
+    """Spawnable fake server: exercise IPC and lifecycle without network access."""
+    valid = (
+        url == DEFAULT_BASE_URL + "/chat/completions"
+        and headers.get("Authorization") == "Bearer synthetic-key"
+        and payload["model"] == DEFAULT_MODEL
+    )
+    connection.send((True, response()) if valid else (False, "Unexpected request shape."))
+    connection.close()
+
+
+class SpawnedTransportTests(unittest.TestCase):
+    def test_spawned_transport_returns_validated_cue_and_reaps_child(self):
+        import multiprocessing
+
+        before = {child.pid for child in multiprocessing.active_children()}
+        with patch("cowingman.provider._request_worker", _synthetic_request_worker):
+            cue, metrics = NavigatorClient("synthetic-key").request_cue(
+                BoundedContext.from_turns([ContextTurn("user", "synthetic example")])
+            )
+        self.assertTrue(cue.should_offer)
+        self.assertTrue(metrics["response_schema_valid"])
+        self.assertEqual({child.pid for child in multiprocessing.active_children()}, before)

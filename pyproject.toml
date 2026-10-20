@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cowingman"
+version = "0.1.0"
+description = "Privacy-conscious conversational recovery cues with local NVIDIA speech and UF NaviGator"
+requires-python = ">=3.10"
+dependencies = []
+
+[project.optional-dependencies]
+audio = ["sounddevice==0.5.3", "numpy>=1.24,<2"]
+dev = ["ruff==0.14.1"]
+
+[tool.setuptools.packages.find]
+include = ["cowingman*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+exclude = ["archive", "scripts/jetson_inventory.py", "tests/test_jetson_inventory.py", "tests/test_nemotron_benchmark.py", "._*"]
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F"]

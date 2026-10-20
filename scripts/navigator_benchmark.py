@@ -18,11 +18,13 @@ from cowingman.provider import NavigatorClient, OfflineClient
 def run(client, trials):
     results = []
     for index in range(trials):
-        context = BoundedContext.from_turns([ContextTurn("partner", "Which feature should we demonstrate?")])
+        context = BoundedContext.from_turns(
+            [ContextTurn("partner", "Which feature should we demonstrate?")]
+        )
         try:
-            cue, metrics = client.request_cue(context)
+            _cue, metrics = client.request_cue(context)
             results.append({"trial": index + 1, "success": True, **metrics})
-            cue = None
+            _cue = None
         except CloudRequestError:
             results.append({"trial": index + 1, "success": False})
         finally:
@@ -34,13 +36,19 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--live", action="store_true")
     parser.add_argument("--trials", type=int, default=3)
-    parser.add_argument("--output", type=Path, help="Optional report directory; no files by default")
+    parser.add_argument(
+        "--output", type=Path, help="Optional report directory; no files by default"
+    )
     args = parser.parse_args()
     if not 1 <= args.trials <= 20:
         parser.error("Use 1–20 trials.")
     try:
         config = Config.load(offline=not args.live)
-        client = NavigatorClient(config.api_key, timeout_seconds=config.timeout_seconds) if args.live else OfflineClient()
+        client = (
+            NavigatorClient(config.api_key, timeout_seconds=config.timeout_seconds)
+            if args.live
+            else OfflineClient()
+        )
         try:
             report = run(client, args.trials)
         finally:

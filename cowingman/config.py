@@ -65,19 +65,26 @@ class Config:
     def load(cls, *, offline=False, environ=None):
         env = os.environ if environ is None else environ
         base_url, model = validate_cloud_configuration(
-            env.get("NAVIGATOR_BASE_URL", DEFAULT_BASE_URL), env.get("NAVIGATOR_MODEL", DEFAULT_MODEL)
+            env.get("NAVIGATOR_BASE_URL", DEFAULT_BASE_URL),
+            env.get("NAVIGATOR_MODEL", DEFAULT_MODEL),
         )
         key = "" if offline else env.get("NAVIGATOR_TOOLKIT_API_KEY", "")
         if not offline and (not key or any(c.isspace() for c in key) or not key.isascii()):
             raise ConfigurationError("Set NAVIGATOR_TOOLKIT_API_KEY to your UF Toolkit key.")
         try:
-            device = int(env["COWINGMAN_AUDIO_DEVICE"]) if env.get("COWINGMAN_AUDIO_DEVICE") else None
+            device = (
+                int(env["COWINGMAN_AUDIO_DEVICE"]) if env.get("COWINGMAN_AUDIO_DEVICE") else None
+            )
             if device is not None and device < 0:
                 raise ValueError
         except ValueError:
-            raise ConfigurationError("COWINGMAN_AUDIO_DEVICE must be a nonnegative device index.") from None
+            raise ConfigurationError(
+                "COWINGMAN_AUDIO_DEVICE must be a nonnegative device index."
+            ) from None
         return cls(
-            key, base_url, model,
+            key,
+            base_url,
+            model,
             number(env.get("COWINGMAN_TIMEOUT", "15"), "COWINGMAN_TIMEOUT", 1, 30),
             number(env.get("COWINGMAN_CONTEXT_TTL", "60"), "COWINGMAN_CONTEXT_TTL", 5, 120),
             env.get("COWINGMAN_ASR_MODEL_PATH", ""),

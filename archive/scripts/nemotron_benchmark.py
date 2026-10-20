@@ -630,4 +630,4 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    raise SystemExit("Archived experiment. Launch the product with: python3 -m cowingman")
