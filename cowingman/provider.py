@@ -53,6 +53,11 @@ def urllib_transport(url, headers, payload, timeout):
             message = "NaviGator rate limit reached; wait before requesting another cue."
         elif code == 404:
             message = "NaviGator model unavailable; check UF Toolkit access."
+        elif code == 400:
+            message = (
+                "NaviGator rejected the request options; check model support for "
+                "JSON output and non-reasoning mode."
+            )
         else:
             message = "NaviGator service error; retry later or use --offline."
         raise CloudRequestError(message) from None
@@ -112,6 +117,38 @@ def deadline_transport(url, headers, payload, timeout):
         child.close()
 
 
+def parse_response(response):
+    """Diagnose response failures without including model output or server messages."""
+    try:
+        choice = response["choices"][0]
+        reason = choice.get("finish_reason", "stop")
+        message = choice["message"]
+        if type(message) is not dict:
+            raise TypeError
+    except (KeyError, IndexError, TypeError, AttributeError):
+        raise CloudRequestError("NaviGator returned an unexpected response structure.") from None
+    if reason == "length":
+        raise CloudRequestError(
+            "NaviGator reached the output token limit before completing a cue. "
+            "The service may still be using reasoning mode."
+        )
+    if reason != "stop":
+        raise CloudRequestError("NaviGator did not complete a normal text response.")
+    if message.get("tool_calls") or message.get("refusal"):
+        raise CloudRequestError("NaviGator refused the cue or returned an unsupported tool call.")
+    content = message.get("content")
+    if content is None or (type(content) is str and not content.strip()):
+        raise CloudRequestError(
+            "NaviGator returned no cue text. Check the service's non-reasoning mode support."
+        )
+    try:
+        return parse_cue(content)
+    except ValueError:
+        raise CloudRequestError(
+            "NaviGator cue failed JSON, schema, length, or safety validation."
+        ) from None
+
+
 class NavigatorClient:
     def __init__(
         self,
@@ -149,7 +186,10 @@ class NavigatorClient:
                 {"role": "user", "content": checked.as_prompt()},
             ],
             "temperature": 0.0,
-            "max_tokens": 128,
+            "max_tokens": 256,
+            # NVIDIA's Nano vLLM recipe disables default reasoning this way.
+            # This is a raw HTTP body; SDK extra_body fields belong at top level.
+            "chat_template_kwargs": {"enable_thinking": False},
             "stream": False,
             "response_format": {"type": "json_object"},
         }
@@ -160,13 +200,7 @@ class NavigatorClient:
             response = self._transport(
                 f"{self.base_url}/chat/completions", headers, payload, self.timeout_seconds
             )
-            choice = response["choices"][0]
-            if choice.get("finish_reason", "stop") != "stop":
-                raise ValueError
-            message = choice["message"]
-            if message.get("tool_calls") or message.get("refusal"):
-                raise ValueError
-            cue = parse_cue(message["content"])
+            cue = parse_response(response)
             return cue, {
                 "duration_seconds": round(time.monotonic() - started, 3),
                 "request_turns": len(checked.turns),

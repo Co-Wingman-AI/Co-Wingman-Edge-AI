@@ -154,6 +154,8 @@ class ProviderTests(unittest.TestCase):
         self.assertEqual(captured["headers"]["Authorization"], "Bearer test-secret")
         self.assertEqual(captured["payload"]["model"], DEFAULT_MODEL)
         self.assertEqual(captured["payload"]["response_format"], {"type": "json_object"})
+        self.assertEqual(captured["payload"]["chat_template_kwargs"], {"enable_thinking": False})
+        self.assertEqual(captured["payload"]["max_tokens"], 256)
         self.assertTrue(all(type(m["content"]) is str for m in captured["payload"]["messages"]))
         self.assertEqual(captured["timeout"], 15)
         for private in ["test-secret", "private sentinel", cue.cue]:
@@ -188,6 +190,7 @@ class ProviderTests(unittest.TestCase):
 
     def test_http_errors_and_transport_limits(self):
         for code, expected in [
+            (400, "rejected the request options"),
             (401, "access denied"),
             (403, "access denied"),
             (429, "rate limit"),
@@ -206,6 +209,45 @@ class ProviderTests(unittest.TestCase):
 
 
 class DeadlineAndReportTests(unittest.TestCase):
+    def test_response_diagnostics_never_expose_content(self):
+        context = BoundedContext.from_turns([ContextTurn("user", "private input sentinel")])
+        cases = [
+            ({"error": {"message": "private response sentinel"}}, "unexpected response"),
+            ({"choices": None}, "unexpected response"),
+            ({"choices": [{"message": None}]}, "unexpected response"),
+        ]
+        for reason, content, extra, expected in [
+            ("length", "private response sentinel", {}, "output token limit"),
+            ("stop", None, {"reasoning_content": "private response sentinel"}, "no cue text"),
+            ("stop", "  ", {}, "no cue text"),
+            ("stop", "private response sentinel", {"refusal": "private refusal"}, "refused"),
+            ("private finish sentinel", "private response sentinel", {}, "normal text response"),
+            ("stop", "private response sentinel", {}, "JSON, schema, length, or safety"),
+        ]:
+            cases.append(
+                (
+                    {
+                        "choices": [
+                            {"finish_reason": reason, "message": {"content": content, **extra}}
+                        ]
+                    },
+                    expected,
+                )
+            )
+        for result, expected in cases:
+            with self.subTest(expected=expected), self.assertNoLogs():
+                with self.assertRaisesRegex(CloudRequestError, expected) as caught:
+                    NavigatorClient("private-key", transport=lambda *a: result).request_cue(context)
+                self.assertNotIn("private", str(caught.exception))
+
+    def test_separate_reasoning_is_not_used_as_cue(self):
+        context = BoundedContext.from_turns([ContextTurn("user", "hello")])
+        result = response()
+        result["choices"][0]["message"]["reasoning_content"] = "private reasoning sentinel"
+        cue, metrics = NavigatorClient("key", transport=lambda *a: result).request_cue(context)
+        self.assertEqual(cue.cue, "Could you repeat that?")
+        self.assertNotIn("private reasoning sentinel", json.dumps(metrics))
+
     def test_wall_clock_timeout_terminates_request_worker(self):
         from cowingman.provider import deadline_transport
         from unittest.mock import Mock

@@ -51,6 +51,15 @@ The README and Jetson clone commands now use Co-Wingman-AI/Co-Wingman-Edge-AI.
 No real UF key, Jetson, CUDA, microphone, or speech weights were available in this
 cloud continuation. Those remaining live-device checks still require an operator.
 
+A subsequent Jetson health-check attempt reported the old generic invalid-cue
+error. Its exact cause is unconfirmed without a new request. The client now asks
+for non-reasoning output using NVIDIA's documented Nano vLLM option, allows 256
+output tokens, and reports content-free error categories for truncation, empty
+content, refusal/tool calls, malformed envelopes, and invalid cue validation.
+All 54 offline tests passed, including request-option and diagnostic privacy
+coverage. UF acceptance and live health-check success remain unverified here;
+the operator should pull the update and rerun `python3 -m cowingman --health-check`.
+
 Follow RUN_ON_JETSON.md. Confirm the actual JetPack version and compatible NVIDIA
 torch/torchaudio before installing NeMo. Test `--health-check` with the operator's
 own UF key; never send it to a chat. Then exercise real microphone capture, ASR
