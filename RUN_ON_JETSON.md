@@ -7,7 +7,7 @@ HiPerGator allocation, or local LLM server is needed.
 ## Get the application and verify the fallback
 
 ```sh
-git clone https://github.com/Mrun9/Co-Wingman-Edge-AI.git
+git clone https://github.com/Co-Wingman-AI/Co-Wingman-Edge-AI.git
 cd Co-Wingman-Edge-AI
 python3 -m unittest discover -s tests -v
 python3 -m cowingman --offline --demo

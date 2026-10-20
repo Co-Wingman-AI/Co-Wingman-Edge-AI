@@ -98,7 +98,17 @@ class Application:
             return
         for kind, value in self.audio.poll():
             if kind == "fragment":
-                self.context.add(value)
+                try:
+                    self.context.add(value)
+                except PrivacyBoundaryError:
+                    self.context.clear()
+                    self.audio.close()
+                    self.ui.status("error")
+                    self.ui.message(
+                        "Local speech returned unsupported text. Audio stopped; "
+                        "type a fresh fragment or use :listen to retry."
+                    )
+                    break
             elif kind == "status":
                 self.ui.status(value)
             elif kind == "error":

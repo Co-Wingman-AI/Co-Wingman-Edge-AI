@@ -125,6 +125,30 @@ class ApplicationTests(unittest.TestCase):
         app.tick()
         self.assertEqual(len(app.ui.cues), 1)
 
+    def test_rejected_speech_discards_context_and_preserves_typed_fallback(self):
+        for rejected in ("private\x00speech", b"private audio bytes"):
+            with self.subTest(kind=type(rejected).__name__):
+                audio = Mock(process=object())
+                audio.poll.side_effect = [
+                    [("fragment", rejected), ("fragment", "stale pending speech")],
+                    [],
+                    [],
+                ]
+                ui = FakeUI(["fresh typed fragment", ":cue", ":quit"])
+                client = Mock(wraps=OfflineClient())
+                app = self.make_app(audio=audio, ui=ui, client=client)
+                app.add("earlier private fragment")
+                app.run()
+                self.assertTrue(app.closed)
+                audio.close.assert_called()
+                context = client.request_cue.call_args.args[0]
+                self.assertEqual([turn.text for turn in context.turns], ["fresh typed fragment"])
+                self.assertEqual(len(ui.cues), 1)
+                self.assertEqual(len(app.context), 0)
+                self.assertIn("Local speech returned unsupported text", " ".join(ui.messages))
+                self.assertNotIn("private", " ".join(ui.messages).replace("privately", ""))
+                self.assertNotIn("stale pending speech", " ".join(ui.messages))
+
     def test_clear_stops_in_flight_audio(self):
         audio = Mock(process=object())
         app = self.make_app(audio=audio)

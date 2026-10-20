@@ -41,6 +41,16 @@ historical Jetson local-LLM evidence is distinct from current application testin
 
 ## Continue with real-device verification
 
+The continuation session validated Linux x86_64 with Python 3.12.14: all 52
+unittests passed, including typed/offline subprocess and real pseudo-terminal
+flows. The offline demo, Ruff 0.14.1 lint/format, repository hygiene/syntax scan,
+dependency consistency, and diff whitespace checks also passed. Unsupported ASR
+text now stops audio and discards context while preserving the typed fallback;
+regression coverage verifies pending speech cannot leak into the next request.
+The README and Jetson clone commands now use Co-Wingman-AI/Co-Wingman-Edge-AI.
+No real UF key, Jetson, CUDA, microphone, or speech weights were available in this
+cloud continuation. Those remaining live-device checks still require an operator.
+
 Follow RUN_ON_JETSON.md. Confirm the actual JetPack version and compatible NVIDIA
 torch/torchaudio before installing NeMo. Test `--health-check` with the operator's
 own UF key; never send it to a chat. Then exercise real microphone capture, ASR

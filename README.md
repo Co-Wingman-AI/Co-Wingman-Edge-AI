@@ -17,7 +17,7 @@ access still need verification. No live speech or API success is implied.
 Python 3.10 or newer is required. Typed/offline modes use only the standard library:
 
 ```sh
-git clone https://github.com/Mrun9/Co-Wingman-Edge-AI.git
+git clone https://github.com/Co-Wingman-AI/Co-Wingman-Edge-AI.git
 cd Co-Wingman-Edge-AI
 python3 -m cowingman --offline --demo
 python3 -m cowingman --typed --offline
