@@ -56,3 +56,19 @@ Thumbs.db
 *~
 .vscode/
 .idea/
+
+# Additional speech models, media, generated artifacts
+*.nemo
+*.riva
+*.rmir
+*.wav
+*.flac
+*.mp3
+*.ogg
+*.pcm
+*.m4a
+reports/*
+!reports/.gitkeep
+build/
+dist/
+*.egg-info/

@@ -3,7 +3,7 @@ import unittest
 from pathlib import Path
 
 
-SCRIPT = Path(__file__).resolve().parents[1] / "scripts" / "nemotron_benchmark.py"
+SCRIPT = Path(__file__).resolve().parents[1] / "archive" / "scripts" / "nemotron_benchmark.py"
 SPEC = importlib.util.spec_from_file_location("nemotron_benchmark", SCRIPT)
 assert SPEC and SPEC.loader
 benchmark = importlib.util.module_from_spec(SPEC)

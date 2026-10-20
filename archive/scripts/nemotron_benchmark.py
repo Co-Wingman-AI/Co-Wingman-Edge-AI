@@ -26,7 +26,7 @@ from pathlib import Path
 from typing import Any
 
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
 REPORTS_DIR = PROJECT_ROOT / "reports"
 MODEL_REF = "nvidia/NVIDIA-Nemotron-3-Nano-4B-GGUF:Q4_K_M"
 MODEL_NAME = "NVIDIA Nemotron 3 Nano 4B Q4_K_M"
