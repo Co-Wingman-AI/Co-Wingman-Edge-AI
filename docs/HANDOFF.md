@@ -57,8 +57,33 @@ for non-reasoning output using NVIDIA's documented Nano vLLM option, allows 256
 output tokens, and reports content-free error categories for truncation, empty
 content, refusal/tool calls, malformed envelopes, and invalid cue validation.
 All 54 offline tests passed, including request-option and diagnostic privacy
-coverage. UF acceptance and live health-check success remain unverified here;
-the operator should pull the update and rerun `python3 -m cowingman --health-check`.
+coverage. The operator subsequently reported a successful live health check;
+see the device results below. The original failure's exact cause is unconfirmed.
+
+### Operator-reported Jetson results
+
+The operator supplied terminal output from the physical device confirming:
+
+- JetPack 6.2.1+b38, L4T 36.4.7, Python 3.10.12, CUDA toolkit 12.6.
+- Live NaviGator health check returned a valid approved-model cue in 0.86 seconds.
+- Bluetooth handsfree microphone exposed a 16 kHz mono input through PulseAudio.
+  Two three-second in-memory capture tests measured RMS levels 0.0607 and 0.0108,
+  with no audio overflow. These establish a signal, not ASR accuracy.
+- An isolated `.venv` installed torch 2.8.0 and torchaudio 2.8.0 from the Jetson
+  community CUDA 12.6 index. CUDA was available, the GPU identified as Orin, and
+  an actual CUDA tensor calculation passed.
+- With those versions constrained and NumPy below 2, `nemo_toolkit[asr]==2.4.0`
+  installed. Importing `ASRModel` and repeating the CUDA calculation passed.
+- `python3 scripts/prepare_speech_models.py --asr` downloaded the NVIDIA Conformer
+  CTC Small archive (49.1 MB) and reported the archive and integrity manifest ready.
+
+These results come from operator-provided console output, not agent access to
+the Jetson. Next, launch `python3 -m cowingman` in that `.venv`, with the key still
+exported and `COWINGMAN_ASR_MODEL_PATH` set to the absolute `models/asr.nemo` path.
+Recheck audio indices after device reconnection; the tested PulseAudio input was
+index 25 and the Bluetooth microphone was selected as the default PulseAudio source.
+Actual ASR model restore/inference, the microphone-to-cue application flow,
+repeated requests/resource cleanup, and optional TTS still need device validation.
 
 Follow RUN_ON_JETSON.md. Confirm the actual JetPack version and compatible NVIDIA
 torch/torchaudio before installing NeMo. Test `--health-check` with the operator's
@@ -67,8 +92,8 @@ accuracy/latency, repeated cue requests, fresh-context retry, disconnect recover
 memory headroom, and Ctrl-C cleanup. Verify optional TTS separately. Record only
 content-free measurements locally; generated reports remain ignored.
 
-The default small NVIDIA ASR and NeMo 2.4.0 setup are implementation choices
-awaiting device confirmation, not measured compatibility claims. If a dependency
+The small NVIDIA ASR and NeMo 2.4.0 setup has passed the operator's installation
+and import checks, but not yet live transcription or performance checks. If a dependency
 cannot be resolved safely on ARM, use `--typed` with NaviGator for the presentation.
 The offline fallback needs neither key, network, microphone, nor model files.
 
