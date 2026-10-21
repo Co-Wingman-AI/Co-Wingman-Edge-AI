@@ -204,3 +204,29 @@ committing each completed unit. Detailed product instructions remain in README,
   The package collision is locally reproduced, but the exact installed package on
   the Jetson was not inspected. Physical ASR/CUDA and microphone checks remain
   separate from these offline tests.
+
+## 2026-10-21 — Interactive public project website
+
+- **Session/device:** managed Linux cloud workspace; desktop Chromium browser.
+- **Source:** fast-forwarded clean working branch from `c568b67` to organization
+  main `172b7aa`, preserving upstream speech dependency, scanner, and prompt edits.
+- **Changes:** added an illustrated static showcase with three fictional cue
+  examples, an interactive architecture diagram, team attribution, prototype
+  boundaries, and privacy information. Added responsive layouts, keyboard tabs,
+  reduced-motion support, a content security policy, and deployment documentation.
+  The Pages workflow publishes only `website/`, never runtime data or credentials.
+- **Validation:** browser checks passed for three scenarios, replay, pending-cue
+  cancellation, keyboard tabs, FAQ interaction, five viewport widths (320–1440),
+  reduced motion, no-JavaScript fallback, and internal navigation. No external
+  requests or browser errors occurred. Axe WCAG A/AA checks reported zero
+  violations at desktop and mobile widths with the cue and cloud panel visible.
+  JavaScript syntax, repository hygiene (72 source files), Ruff lint/format, and
+  whitespace checks passed. Python discovery ran 128 tests: 127 passed and one
+  pre-existing provider test failed because it expects wording replaced by the
+  upstream system-prompt edit. Application code and that test were preserved.
+- **Remaining:** verify the GitHub Pages deployment and live URL. Git transport
+  works, but this workspace cannot use GitHub's API under its current network
+  policy. A narrowly scoped network configuration draft was saved for review;
+  it is not applied automatically. Pages may also need its source set to GitHub
+  Actions in repository settings. The website's simulated examples are not live
+  Jetson/ASR or model-quality validation.

@@ -1,5 +1,12 @@
 # Co-Wingman
 
+## Project website
+
+An illustrated, interactive project showcase is in [website/](website/).
+It includes scripted conversation examples, the edge–cloud architecture, team,
+and prototype boundaries. See [website preview and GitHub Pages setup](docs/WEBSITE.md)
+for publishing instructions; the Pages workflow uploads only the public site.
+
 ## Continuing work across devices
 
 Before editing, read [WORK_LOG.md](WORK_LOG.md), then inspect `git status` and the
