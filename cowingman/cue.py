@@ -89,10 +89,6 @@ def parse_cue(content: str) -> Cue:
         raise CueValidationError("type")
     if not cue.strip():
         raise CueValidationError("empty")
-    if len(cue.strip()) > MAX_CUE_CHARACTERS:
-        raise CueValidationError("length")
-    if len(cue.split()) > MAX_CUE_WORDS:
-        raise CueValidationError("words")
     if not cue.isprintable() or any(unicodedata.category(c).startswith("C") for c in cue):
         raise CueValidationError("characters")
     if type(value["intent"]) is not str or value["intent"] not in {"resume", "clarify", "respond"}:
@@ -108,4 +104,10 @@ def parse_cue(content: str) -> Cue:
         re.IGNORECASE,
     ):
         raise CueValidationError("safety")
+    # A length error may allow a separate portfolio fallback. Check all other
+    # constraints first, so length cannot hide a safety/schema/boolean failure.
+    if len(cue.strip()) > MAX_CUE_CHARACTERS:
+        raise CueValidationError("length")
+    if len(cue.split()) > MAX_CUE_WORDS:
+        raise CueValidationError("words")
     return Cue(cue.strip(), value["intent"], value["should_offer"])

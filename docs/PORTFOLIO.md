@@ -56,12 +56,22 @@ A multiword verbatim echo of a user/microphone
 fragment is withheld with an explicit error, rather than displayed as a useful cue.
 Context is discarded as with other rejected responses; there is no automatic retry.
 The check ignores case and punctuation but is not a general relevance evaluator.
-If the hosted response is valid JSON but exceeds only the word or character limit,
-portfolio mode can use one short clause from the highest-ranked selected fact.
-That local fallback is separately checked for schema, safety, 12 words, and 160
-characters, makes no second API request, and prints an explicit fallback status.
-Other response failures remain errors. This keeps the cue grounded when the hosted
-service accepts but does not enforce the requested JSON Schema constraints.
+For an explicit Enter/`:cue` request, portfolio mode can use a local reference
+phrase when the model returns a valid `should_offer: false` response or when its
+only validation failure is word/character length. The UI explicitly identifies
+this as a local fallback. It is a new phrase extracted from selected portfolio
+facts, not the model's declined text. No second API request is made.
+
+The fallback prefers complete short statements in retrieval order and can add
+"I" before a source action verb. It can omit an appended achievement clause from
+a long action sentence, but skips shortening if recognized qualifications such
+as "only", "not", or "simulated" occur. It does not select trailing comma/list
+fragments. Every candidate passes the normal schema, safety, 12-word, 160-character,
+and echo checks. These rules are conservative heuristics, not proof of semantic
+accuracy. If no suitable phrase exists, a valid decline stays a decline and an
+invalid response stays an error. Other validation failures and explicit API
+refusals do not trigger fallback. Automatic pause requests never use this fallback
+and preserve the model's decision not to offer a cue.
 
 Test another topic using fresh context:
 

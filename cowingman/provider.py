@@ -65,16 +65,30 @@ def is_verbatim_echo(cue, context):
 
 
 def portfolio_fact_fallback(facts):
-    """Build one short, grounded phrase when hosted output is only too long."""
+    """Choose a short source statement; never select trailing comma/list fragments."""
     candidates = []
-    for order, fact in enumerate(facts):
+    actions = r"(?:built|developed|implemented|designed|created|trained|evaluated|led|founded)\b"
+    qualifications = (
+        r"\b(?:but|however|only|not|never|except|unless|although|though|limited|"
+        r"simulated|simulation|synthetic|preliminary|unvalidated|may|might)\b"
+    )
+    for fact in facts:
         body = fact.split(":", 1)[-1].strip()
-        for part in re.split(r"(?<=[.!?])\s+|[,;]\s+", body):
-            phrase = part.strip(" -.,;:")
-            words = phrase.split()
-            if 4 <= len(words) <= 12 and len(phrase) <= 159:
-                candidates.append((order, len(words), phrase))
-    for _, _, phrase in sorted(candidates):
+        for sentence in re.split(r"(?<=[.!?])\s+", body):
+            phrase = sentence.strip(" -.,;:")
+            if len(phrase.split()) > 12 or len(phrase) > 159:
+                # Only an opening action clause can stand alone. Preserve any
+                # qualification by declining to shorten such sentences at all.
+                if not re.match(actions, phrase, re.I) or re.search(qualifications, phrase, re.I):
+                    continue
+                # Drop only an appended achievement clause, never arbitrary
+                # comma-delimited conditions, list items, or contrasting claims.
+                phrase = re.split(r",\s+achieving\b", phrase, maxsplit=1, flags=re.I)[0]
+            if re.match(actions, phrase, re.I):
+                phrase = "I " + phrase[0].lower() + phrase[1:]
+            if 4 <= len(phrase.split()) <= 12 and len(phrase) <= 159:
+                candidates.append(phrase)
+    for phrase in candidates:
         try:
             return parse_cue(
                 json.dumps({"cue": phrase + ".", "intent": "resume", "should_offer": True})
@@ -242,9 +256,11 @@ class NavigatorClient:
         self._api_key = ""
         self.portfolio = None
 
-    def request_cue(self, context):
+    def request_cue(self, context, *, automatic=False):
         if type(context) is not BoundedContext:
             raise PrivacyBoundaryError("Only BoundedContext may be submitted.")
+        if type(automatic) is not bool:
+            raise PrivacyBoundaryError("Invalid cue trigger.")
         # Revalidate at the network boundary, including direct dataclass construction.
         checked = BoundedContext.from_turns(context.turns)
         request_data = json.loads(checked.as_prompt())
@@ -262,10 +278,18 @@ class NavigatorClient:
             request_data["portfolio_facts"] = facts
         portfolio_characters = sum(map(len, facts))
         portfolio_passages = len(facts)
+        trigger = (
+            "This is optional automatic pause assistance. Set should_offer false if a cue "
+            "is not clearly useful."
+            if automatic
+            else "The user explicitly requested help now. Offer one useful continuation with "
+            "should_offer true when the supplied facts support it; do not treat this as "
+            "a decision about whether to interrupt."
+        )
         payload = {
             "model": self.model,
             "messages": [
-                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "system", "content": SYSTEM_PROMPT + "\n" + trigger},
                 {"role": "user", "content": json.dumps(request_data, ensure_ascii=True)},
             ],
             "temperature": 0.0,
@@ -281,6 +305,8 @@ class NavigatorClient:
         request_data.clear()
         started = time.monotonic()
         fallback_used = False
+        fallback_reason = None
+        response_schema_valid = True
         try:
             response = self._transport(
                 f"{self.base_url}/chat/completions", headers, payload, self.timeout_seconds
@@ -288,13 +314,16 @@ class NavigatorClient:
             try:
                 cue = parse_response(response)
             except CloudRequestError as exc:
+                response_schema_valid = False
                 if (
-                    facts
+                    not automatic
+                    and facts
                     and getattr(exc, "validation_code", None) in {"length", "words"}
                     and (fallback := portfolio_fact_fallback(facts)) is not None
                 ):
                     cue = fallback
                     fallback_used = True
+                    fallback_reason = "oversized"
                 else:
                     detail = (
                         f" {portfolio_passages} portfolio passages were supplied."
@@ -302,6 +331,12 @@ class NavigatorClient:
                         else ""
                     )
                     raise CloudRequestError(str(exc) + detail) from None
+            if not automatic and not cue.should_offer and facts:
+                fallback = portfolio_fact_fallback(facts)
+                if fallback is not None:
+                    cue = fallback
+                    fallback_used = True
+                    fallback_reason = "declined"
             if cue.should_offer and is_verbatim_echo(cue.cue, checked):
                 detail = (
                     f" {portfolio_passages} portfolio passages were supplied."
@@ -317,12 +352,13 @@ class NavigatorClient:
                 "request_turns": len(checked.turns),
                 "request_characters": checked.character_count,
                 "portfolio_characters": portfolio_characters,
-                "response_schema_valid": not fallback_used,
+                "response_schema_valid": response_schema_valid,
             }
             if self.portfolio is not None:
                 metrics["portfolio_passages"] = portfolio_passages
             if fallback_used:
                 metrics["portfolio_fallback"] = True
+                metrics["portfolio_fallback_reason"] = fallback_reason
             return cue, metrics
         except CloudRequestError:
             raise
@@ -366,8 +402,8 @@ class OfflineClient:
 
         self._client = NavigatorClient("offline-placeholder", transport=synthetic_transport)
 
-    def request_cue(self, context):
-        return self._client.request_cue(context)
+    def request_cue(self, context, *, automatic=False):
+        return self._client.request_cue(context, automatic=automatic)
 
     def close(self):
         self._client.close()

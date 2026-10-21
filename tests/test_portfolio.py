@@ -18,7 +18,7 @@ from cowingman.portfolio import (
     PortfolioHTML,
     import_honey,
 )
-from cowingman.provider import NavigatorClient
+from cowingman.provider import NavigatorClient, portfolio_fact_fallback
 from test_application import FakeUI
 
 
@@ -270,6 +270,140 @@ class PortfolioTests(unittest.TestCase):
             client.request_cue(context("Tell me about Project"))
         self.assertEqual(transport.call_count, 1)
         client.close()
+
+    def test_manual_decline_uses_portfolio_but_automatic_decline_stays_silent(self):
+        def transport(url, headers, payload, timeout):
+            systems.append(payload["messages"][0]["content"])
+            return {
+                "choices": [
+                    {
+                        "message": {
+                            "content": json.dumps(
+                                {
+                                    "cue": "Let me gather my thoughts.",
+                                    "intent": "resume",
+                                    "should_offer": False,
+                                }
+                            )
+                        }
+                    }
+                ]
+            }
+
+        systems = []
+        client = NavigatorClient("synthetic", portfolio=Portfolio(PASSAGES), transport=transport)
+        cue, metrics = client.request_cue(context("Tell me about ParcelFlow"))
+        self.assertTrue(cue.should_offer)
+        self.assertEqual(cue.cue, "Six Java microservices coordinate orders through Kafka.")
+        self.assertEqual(metrics["portfolio_fallback_reason"], "declined")
+        self.assertTrue(metrics["response_schema_valid"])
+        cue, metrics = client.request_cue(context("Tell me about ParcelFlow"), automatic=True)
+        self.assertFalse(cue.should_offer)
+        self.assertNotIn("portfolio_fallback", metrics)
+        self.assertIn("explicitly requested", systems[0])
+        self.assertIn("optional automatic", systems[1])
+        self.assertEqual(len(systems), 2)
+        client.close()
+
+    def test_decline_without_usable_fact_remains_a_decline(self):
+        transport = Mock(
+            return_value={
+                "choices": [
+                    {
+                        "message": {
+                            "content": json.dumps(
+                                {
+                                    "cue": "Let me gather my thoughts.",
+                                    "intent": "resume",
+                                    "should_offer": False,
+                                }
+                            )
+                        }
+                    }
+                ]
+            }
+        )
+        for profile in (None, Portfolio(("Project: one two three.",))):
+            client = NavigatorClient("synthetic", portfolio=profile, transport=transport)
+            cue, metrics = client.request_cue(context("Tell me about Project"))
+            self.assertFalse(cue.should_offer)
+            self.assertNotIn("portfolio_fallback", metrics)
+            client.close()
+        self.assertEqual(transport.call_count, 2)
+
+    def test_fallback_uses_standalone_action_and_keeps_qualifications(self):
+        facts = (
+            "Internship: Developed and debugged a modular Python-based machine-vision pipeline "
+            "integrating image preprocessing, feature extraction, model training, inference, "
+            "and evaluation across 1,500+ images.",
+            "Internship: Implemented and evaluated CNN and SVM algorithms using TensorFlow "
+            "and Scikit-learn, achieving 96% classification accuracy across vegetable categories.",
+        )
+        cue = portfolio_fact_fallback(facts)
+        self.assertEqual(
+            cue.cue,
+            "I implemented and evaluated CNN and SVM algorithms using TensorFlow and Scikit-learn.",
+        )
+        self.assertEqual(len(cue.cue.split()), 12)
+        qualified = (
+            "Project: Built a forecasting application for several industrial users, "
+            "but it has not been validated on any real-world data.",
+            "Project: Built a forecasting application for several industrial users, "
+            "achieving 90% accuracy only on simulated data.",
+        )
+        self.assertIsNone(portfolio_fact_fallback(qualified))
+
+    def test_oversized_cue_cannot_hide_other_invalid_fields(self):
+        for overrides in (
+            {"should_offer": "false"},
+            {"intent": "wrong"},
+            {"cue": "password " * 22},
+            {"cue": "word\n" * 35},
+        ):
+            fields = {"cue": "word " * 40, "intent": "resume", "should_offer": True}
+            fields.update(overrides)
+            transport = Mock(
+                return_value={"choices": [{"message": {"content": json.dumps(fields)}}]}
+            )
+            client = NavigatorClient(
+                "synthetic", portfolio=Portfolio(PASSAGES), transport=transport
+            )
+            with self.assertRaises(CloudRequestError):
+                client.request_cue(context("Tell me about ParcelFlow"))
+            self.assertEqual(transport.call_count, 1)
+            client.close()
+
+    def test_declined_response_uses_fallback_in_manual_ui_only(self):
+        for automatic in (False, True):
+            transport = Mock(
+                return_value={
+                    "choices": [
+                        {
+                            "message": {
+                                "content": json.dumps(
+                                    {
+                                        "cue": "Let me gather my thoughts.",
+                                        "intent": "resume",
+                                        "should_offer": False,
+                                    }
+                                )
+                            }
+                        }
+                    ]
+                }
+            )
+            client = NavigatorClient(
+                "synthetic", portfolio=Portfolio(PASSAGES), transport=transport
+            )
+            ui = FakeUI()
+            app = Application(Config.load(offline=True, environ={}), client, ui)
+            app.add("Tell me about ParcelFlow", "partner")
+            app.request_cue(automatic=automatic)
+            self.assertEqual(ui.cues[0].should_offer, not automatic)
+            self.assertEqual(any("local phrase supplied" in m for m in ui.messages), not automatic)
+            self.assertEqual(len(app.context), 0)
+            self.assertEqual(transport.call_count, 1)
+            app.close()
 
     def test_local_check_counts_without_consuming_refreshing_or_sending(self):
         now = [0.0]

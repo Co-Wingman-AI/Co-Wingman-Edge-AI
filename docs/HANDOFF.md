@@ -216,6 +216,20 @@ does not repair empty, wrong-type, malformed, unsafe, echo, or unrelated output.
 The response-schema-valid metric is false when fallback is used. This behavior is
 covered by mocked tests but still needs a live typed portfolio retest.
 
+The operator's next typed request returned a valid `should_offer: false`, so the
+length-only fallback was not used. Manual and automatic triggers are now passed
+separately to the provider: explicit requests ask for help immediately, while pause
+assistance can decline. Manual portfolio requests can extract a local phrase when
+the model validly declines; automatic requests have no local fallback. The normal
+decline text is not displayed or forced to true. The UI labels locally extracted
+phrases, and there is still only one API call. Extraction now avoids arbitrary
+trailing comma fragments (the old rule selected "and evaluation across 1,500+
+images"); the internship candidate is the 12-word first-person CNN/SVM statement.
+Length checks follow other schema and safety checks so a length failure cannot
+hide another invalid field. Tests cover manual/automatic routing, declines,
+unusable facts, qualifier preservation, and validation precedence. Live hosted
+generation remains variable; this local recovery path is explicitly reported.
+
 The user explicitly authorized committing and pushing tested changes during this
 session. Read current instructions in a new session rather than assuming that
 permission extends to unrelated work. Preserve local changes. Keep the one

@@ -55,7 +55,7 @@ class Application:
         except PrivacyBoundaryError as exc:
             self.ui.message(str(exc))
 
-    def request_cue(self):
+    def request_cue(self, *, automatic=False):
         self.pending_resume = False
         had_audio = self.audio is not None and self.audio.process is not None
         # Free all audio/model state, even on a network failure; no stale chunks.
@@ -67,14 +67,22 @@ class Application:
             context = self.context.take()
             self.last_request = self.clock()
             self.ui.status("requesting a cue")
-            cue, _metrics = self.client.request_cue(context)
+            if automatic:
+                cue, _metrics = self.client.request_cue(context, automatic=True)
+            else:
+                cue, _metrics = self.client.request_cue(context)
             context = None  # Drop request text before presenting or synthesizing.
             if "portfolio_passages" in _metrics:
                 self.ui.message(
                     f"Portfolio: {_metrics['portfolio_passages']} reference passages supplied."
                 )
             if _metrics.get("portfolio_fallback"):
-                self.ui.message("Portfolio: local grounded fallback used for an oversized cue.")
+                if _metrics.get("portfolio_fallback_reason") == "declined":
+                    self.ui.message(
+                        "Portfolio: local phrase supplied after the model offered no cue."
+                    )
+                else:
+                    self.ui.message("Portfolio: local grounded fallback used for an oversized cue.")
             self.ui.status("ready")
             self.ui.show_cue(cue)
             presented = True
@@ -142,7 +150,7 @@ class Application:
             elif kind == "pause" and self.pause_assist and len(self.context):
                 if self.clock() - self.last_request >= 30:
                     self.ui.message("Possible conversational pause. Requesting an optional cue.")
-                    self.request_cue()
+                    self.request_cue(automatic=True)
                     break
         value = None
 

@@ -149,12 +149,14 @@ class ApplicationTests(unittest.TestCase):
         audio = Mock(process=object())
         audio.poll.return_value = [("fragment", "hello"), ("pause", None)]
         now = [50.0]
-        app = self.make_app(audio=audio, clock=lambda: now[0])
+        client = Mock(wraps=OfflineClient())
+        app = self.make_app(audio=audio, clock=lambda: now[0], client=client)
         app.tick()
         self.assertEqual(len(app.ui.cues), 0)
         app.command(":assist on")
         app.tick()
         self.assertEqual(len(app.ui.cues), 1)
+        self.assertEqual(client.request_cue.call_args.kwargs, {"automatic": True})
         now[0] = 55
         app.tick()
         self.assertEqual(len(app.ui.cues), 1)

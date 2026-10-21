@@ -148,6 +148,9 @@ conversation excerpt. The profile is explicitly imported into ignored local JSON
 it is not fetched during a conversation. This feature does not identify speakers.
 With this option enabled, zero matching passages stops the cue request before
 the API call. Add a question naming the topic and use `:check` before retrying.
+Explicit Enter/`:cue` requests can use a validated local portfolio phrase if the
+model declines or returns an oversized cue; the UI identifies this fallback.
+Automatic pause requests respect model declines and do not use local fallback.
 
 ## Privacy contract
 
