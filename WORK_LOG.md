@@ -55,3 +55,21 @@ committing each completed unit. Detailed product instructions remain in README,
 - **Next:** check the GitHub Actions run for the shared-log commit, then continue
   real-device checks from `docs/HANDOFF.md`. Do not repeat the operator-reported
   Jetson/NaviGator test as if it were independently verified here.
+
+## 2026-10-21 — Poster architecture diagram
+
+- **Session/device:** Codex workspace; macOS arm64.
+- **Source:** organization `main` through merge commit `00f82e6`; the diagram files
+  were added in `db6e515` after syncing the shared handoff commit `0526cb3`.
+- **Changes:** added a poster-ready editable SVG and a 3600×2500 PNG describing
+  the Jetson and UF cloud trust zones, exact NVIDIA ASR/LLM/TTS models, local
+  process boundaries, NaviGator request settings, validation, cleanup, privacy,
+  and memory safeguards. Added a SHA-256 allowlist entry so the reviewed PNG is
+  accepted by the repository hygiene check while replacements remain detectable.
+- **Validation:** SVG passed `xmllint`; PNG format and 3600×2500 dimensions were
+  verified; the rendered poster was visually reviewed. On Python 3.12, all 80
+  unittests passed and the offline end-to-end demo completed. The repository scan
+  checked 47 source files, Ruff lint/format checks passed, and `git diff --check`
+  reported no whitespace errors.
+- **Remaining work:** no runtime behavior changed. A physical print proof and any
+  poster-specific typography adjustments remain optional.

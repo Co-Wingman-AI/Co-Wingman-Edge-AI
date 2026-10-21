@@ -2,6 +2,7 @@
 """Offline syntax, whitespace, and tracked-content hygiene checks; no values printed."""
 
 import ast
+import hashlib
 from pathlib import Path
 import re
 import subprocess
@@ -22,6 +23,11 @@ FORBIDDEN_SUFFIXES = {
     ".safetensors",
     ".key",
     ".pem",
+}
+REVIEWED_BINARY_FILES = {
+    "docs/co-wingman-architecture.png": (
+        "d06367f12cd4b3566ab8fec86f963837473ecc8f9774392d65f5cb02034cad4a"
+    ),
 }
 SECRET_PATTERNS = (
     re.compile(r"-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----"),
@@ -61,7 +67,9 @@ def check():
         try:
             content = path.read_text(encoding="utf-8")
         except UnicodeError:
-            errors.append(f"{name}: unreviewed binary")
+            digest = hashlib.sha256(path.read_bytes()).hexdigest()
+            if REVIEWED_BINARY_FILES.get(name) != digest:
+                errors.append(f"{name}: unreviewed binary")
             continue
         count += 1
         if any(pattern.search(content) for pattern in SECRET_PATTERNS):
