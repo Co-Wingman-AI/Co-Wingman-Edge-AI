@@ -119,9 +119,13 @@ class Application:
                 try:
                     # A personal microphone may capture either participant. NeMo
                     # does not identify speakers, so never label ASR as the user.
-                    # Merge adjacent windows when bounded space allows so a
-                    # question is less likely to fall out of the four-turn store.
-                    self.context.add(value, "unknown", merge=True)
+                    # Adjacent short windows merge, retaining the first capture time.
+                    if isinstance(value, tuple) and len(value) == 2:
+                        captured_at, fragment = value
+                    else:
+                        captured_at, fragment = None, value  # legacy/fake worker
+                    self.context.add(fragment, "unknown", merge=True, captured_at=captured_at)
+                    fragment = None
                     if len(self.context):
                         self.ui.message(
                             "Speech fragment accepted privately (speaker not identified). "

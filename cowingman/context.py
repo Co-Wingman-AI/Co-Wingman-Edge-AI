@@ -71,9 +71,20 @@ class RollingContext:
         cutoff = self.clock() - self.ttl_seconds
         self._items[:] = [(at, t) for at, t in self._items if at > cutoff]
 
-    def add(self, text: str, speaker: str = "user", *, merge=False) -> None:
+    def add(
+        self,
+        text: str,
+        speaker: str = "user",
+        *,
+        merge: bool = False,
+        captured_at: float | None = None,
+    ) -> None:
         if type(text) is not str:
             raise PrivacyBoundaryError("Only decoded text is permitted.")
+        now = self.clock()
+        timestamp = now if captured_at is None else captured_at
+        if not now - self.ttl_seconds < timestamp <= now:
+            return  # A slow ASR result must not revive expired speech.
         # Discard older words locally before they enter the rolling store.
         fragment = " ".join(text[-2048:].split())[-MAX_TURN_CHARACTERS:]
         if not fragment:
@@ -84,11 +95,10 @@ class RollingContext:
             first_seen, previous = self._items[-1]
             combined = f"{previous.text} {turn.text}"
             if len(combined) <= MAX_TURN_CHARACTERS:
-                # Preserve the oldest window's timestamp. Continued conversation
-                # must never refresh and retain older speech beyond the TTL.
-                self._items[-1] = (first_seen, ContextTurn(speaker, combined))
+                # Preserve the oldest capture time; ASR delay cannot extend the TTL.
+                self._items[-1] = (min(first_seen, timestamp), ContextTurn(speaker, combined))
                 return
-        self._items.append((self.clock(), turn))
+        self._items.append((timestamp, turn))
         while (
             len(self._items) > MAX_CONTEXT_TURNS
             or sum(len(t.text) for _, t in self._items) > MAX_CONTEXT_CHARACTERS
