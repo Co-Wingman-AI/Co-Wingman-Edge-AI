@@ -148,6 +148,21 @@ application references, not forensic erasure or UF server-side deletion.
 
 ## Safe development continuation
 
+The operator confirmed the revised typed cue test produced the expected answer.
+They then requested continuous personalized conversation assistance, speaker
+identification, and accurate hesitation/stutter triggering, and supplied their
+public portfolio URL. The portfolio stage is implemented with an explicit local
+import (`python3 -m cowingman.portfolio`) and `--portfolio private/portfolio.json`.
+The importer reads four pinned public HTML files from the portfolio's GitHub source.
+Local keyword retrieval selects at most two 600-character passages; these are
+separate from the existing 800-character conversation budget. Generated profiles
+live in ignored `private/` and must never be committed. Documentation describes
+the new persistence/transmission boundary. No runtime website requests are made.
+Mocked integration tests verify payload contents; live personalized cue quality
+still needs a Jetson check. Speaker enrollment, uninterrupted audio processing,
+and improved disfluency detection remain unimplemented. Do not describe portfolio
+retrieval as completing those capabilities.
+
 The user explicitly authorized committing and pushing tested changes during this
 session. Read current instructions in a new session rather than assuming that
 permission extends to unrelated work. Preserve local changes. Keep the one

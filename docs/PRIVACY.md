@@ -1,6 +1,6 @@
 # Data lifecycle and trust boundary
 
-The application owns no persistence layer. A local worker captures up to four
+Conversation data has no persistence layer. A local worker captures up to four
 seconds of mono float32 audio in RAM, runs direct NVIDIA CTC tensor inference,
 returns at most 240 text characters through local IPC, zeros its audio arrays,
 and drops intermediate tensors. It does not use a file-based transcription API.
@@ -19,6 +19,18 @@ The request subprocess enforces a wall-clock deadline, exits after the response,
 and never follows redirects or environment proxies. The main process drops the
 request context before display or TTS; it retains no response history. Only
 content-free timing/count/schema metrics may enter optional benchmark reports.
+
+The optional portfolio feature explicitly imports public reference text into an
+ignored local JSON file. This file persists until the operator deletes it; it is
+not conversation history and is not subject to the conversation TTL. Using
+`--portfolio` loads it locally and selects at most two 600-character passages for
+each cue. The outbound boundary revalidates this 1,200-character fact budget in
+addition to the 800-character conversation budget (2,000 source-text characters
+total, excluding serialization and the fixed prompt). The full profile and its
+source URLs are not sent. The importer is a separate setup command; conversational
+retrieval has no website access. Facts are untrusted reference data, not system
+instructions. Health checks and synthetic modes reject the portfolio option.
+See [portfolio setup](PORTFOLIO.md) for the snapshot source and deletion controls.
 
 “Full transcripts are not sent” means the application never builds or uploads a
 transcript archive. A very short input may fit entirely into the bounded excerpt.

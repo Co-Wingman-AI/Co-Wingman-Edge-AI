@@ -53,7 +53,7 @@ def check():
         if path.name == ".env" or (path.name.startswith(".env.") and path.name != ".env.example"):
             errors.append(f"{name}: private environment file")
         if path.suffix in FORBIDDEN_SUFFIXES or name.startswith(
-            ("recordings/", "transcripts/", "models/")
+            ("recordings/", "transcripts/", "models/", "private/")
         ):
             errors.append(f"{name}: private/model artifact")
         if name.startswith("reports/") and path.name != ".gitkeep":

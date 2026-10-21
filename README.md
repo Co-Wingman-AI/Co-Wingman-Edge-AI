@@ -8,9 +8,9 @@ recognition and bounded text inference through UF NaviGator AI Toolkit.
 The terminal displays component status and a short cue. A Mac can run the same
 application with hidden typed input, or a fully offline synthetic provider.
 
-The integrated application and hardware-independent tests work. Physical Jetson
-microphone/NeMo compatibility, performance, optional TTS, and real NaviGator
-access still need verification. No live speech or API success is implied.
+The operator has verified Jetson microphone capture, local NeMo ASR, NaviGator
+access, and an end-to-end cue. Conversation accuracy, sustained performance, and
+optional TTS still need measurement. See the handoff for the recorded setup.
 
 ## Install and try it
 
@@ -102,6 +102,8 @@ for predictable memory release. See [speech setup and limitations](docs/SPEECH.m
 | Complete synthetic offline demonstration | `python3 -m cowingman --offline --demo` |
 | Verify real API/model access | `python3 -m cowingman --health-check` |
 | List microphone indices | `python3 -m cowingman --list-audio` |
+| Import Honey's public portfolio snapshot locally | `python3 -m cowingman.portfolio` |
+| Personalized typed cues | `python3 -m cowingman --typed --portfolio private/portfolio.json` |
 | Optional local spoken cues | `python3 -m cowingman --tts` |
 | Opt-in pause-triggered cues | `python3 -m cowingman --pause-assist` |
 
@@ -133,6 +135,12 @@ after getting stuck. A single personal microphone can capture either participant
 but it cannot assign identities. For a controlled demo, `:partner short text`
 provides an explicit partner fragment before the user speaks or types a response.
 
+Optional [portfolio retrieval](docs/PORTFOLIO.md) selects up to two local passages
+about your projects, experience, or education. With `--portfolio`, each request
+can send up to 1,200 additional fact characters alongside the 800-character
+conversation excerpt. The profile is explicitly imported into ignored local JSON;
+it is not fetched during a conversation. This feature does not identify speakers.
+
 ## Privacy contract
 
 - Raw microphone audio stays in the local speech process; it is never an API input.
@@ -142,6 +150,9 @@ provides an explicit partner fragment before the user speaks or types a response
 - Each request selects only that bounded excerpt. The store is cleared on request,
   and temporary request references are dropped on success, failure, cancellation,
   and shutdown. Retry needs fresh context. No request is retried automatically.
+- With `--portfolio`, selected facts add at most 1,200 characters per request.
+  The imported profile persists locally until deleted; conversation TTL does not
+  apply to this reference file. Without the flag, no profile is loaded or sent.
 - Only HTTPS to the exact NaviGator host/path is allowed. Redirects and environment
   proxies are disabled. Requests have a wall-clock deadline and a bounded response.
 - Keys, authorization headers, transcripts, prompts, and cues are not logged or

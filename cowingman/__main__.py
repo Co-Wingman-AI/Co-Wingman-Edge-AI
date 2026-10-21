@@ -9,6 +9,7 @@ from .config import Config, number
 from .context import BoundedContext, ContextTurn
 from .errors import CloudRequestError, ConfigurationError, SpeechError
 from .provider import NavigatorClient, OfflineClient
+from .portfolio import Portfolio
 from .speech import SpeechSession
 from .ui import TerminalUI
 
@@ -32,6 +33,11 @@ def parser():
     result.add_argument("--list-audio", action="store_true", help="list local input-device indices")
     result.add_argument("--tts", action="store_true", help="optional sequential local NVIDIA TTS")
     result.add_argument(
+        "--portfolio",
+        metavar="PATH",
+        help="use a local portfolio JSON; send up to 1200 extra fact characters per cue",
+    )
+    result.add_argument(
         "--pause-assist",
         action="store_true",
         help="opt in to pause-triggered cues on a personal microphone",
@@ -52,6 +58,8 @@ def main(argv=None):
         parser().error("--pause-assist requires a personal microphone in live mode")
     if args.offline and args.tts:
         parser().error("--offline uses visual output and no model dependencies")
+    if args.portfolio and (args.offline or args.health_check or args.demo or args.list_audio):
+        parser().error("--portfolio requires a live conversation, not a synthetic or device check")
     try:
         if args.list_audio:
             try:
@@ -73,6 +81,7 @@ def main(argv=None):
             return 0
         config = Config.load(offline=args.offline)
         threshold = number(args.speech_threshold, "Speech threshold", 0.001, 0.2)
+        portfolio = Portfolio.load(args.portfolio) if args.portfolio else None
         client = (
             OfflineClient()
             if args.offline
@@ -81,6 +90,7 @@ def main(argv=None):
                 base_url=config.base_url,
                 model=config.model,
                 timeout_seconds=config.timeout_seconds,
+                portfolio=portfolio,
             )
         )
         if args.health_check:
@@ -98,11 +108,14 @@ def main(argv=None):
                 client.close()
             return 0
         audio = None if args.typed or args.offline else SpeechSession(config, threshold)
+        portfolio = None
         with TerminalUI(input_ttl=config.context_ttl) as ui:
             ui.message(
                 "Provider: "
                 + ("OFFLINE synthetic mock" if args.offline else "UF NaviGator / NVIDIA Nemotron")
             )
+            if args.portfolio:
+                ui.message("Portfolio: local retrieval enabled; up to two passages sent per cue.")
             ui.message(
                 "Audio: "
                 + ("disabled" if audio is None else "local NVIDIA ASR; four-second capture windows")
