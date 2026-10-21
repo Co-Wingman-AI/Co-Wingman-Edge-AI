@@ -186,3 +186,21 @@ committing each completed unit. Detailed product instructions remain in README,
   checks in `RUN_ON_JETSON.md`. No physical Jetson, CUDA, NeMo model, live service,
   or full Librosa-stack validation was performed in this workspace. Retire the
   compatibility bound after separately validating a newer speech/shadow stack.
+
+## 2026-10-21 — Resolve repository script imports in populated environments
+
+- **Session/device:** Codex workspace; macOS arm64, Python 3.14.7.
+- **Source:** fast-forwarded organization main from `4a1ecf3` to `66f72a4`,
+  preserving the upstream architecture and repository-scanner changes.
+- **Changes:** added `scripts/__init__.py` so an installed regular package named
+  `scripts` cannot shadow repository tools during tests run from the project root.
+  Added a subprocess regression with a competing package later on the import path,
+  checking all four tool modules imported by the test suite.
+- **Validation:** regression failed before the package marker and passed after it;
+  `python3 -m unittest discover -s tests -v` passed all 128 tests. Offline demo,
+  Ruff 0.14.1 lint/format checks, and `git diff --check` passed. Repository hygiene
+  passed for 65 source files using the upstream reviewed-image policy.
+- **Remaining:** pull on the Jetson and rerun discovery; expected count is now 128.
+  The package collision is locally reproduced, but the exact installed package on
+  the Jetson was not inspected. Physical ASR/CUDA and microphone checks remain
+  separate from these offline tests.
