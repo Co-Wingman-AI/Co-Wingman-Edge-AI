@@ -89,13 +89,14 @@ def _speech_worker(connection, asr_path, device, threshold):
             raise SpeechError("Less than 2 GiB RAM available. Close GPU workloads or use --typed.")
         model = NemoASR(asr_path)
         detector = PauseDetector(threshold=threshold)
-        connection.send(("status", "listening"))
         while True:
             if available_memory() < 1024**3:
                 raise SpeechError(
                     "Memory is low. Audio stopped; close other workloads or use --typed."
                 )
             microphone = Microphone(device).open()
+            connection.send(("status", "listening"))
+            captured_at = time.monotonic()
             samples = np.zeros(BLOCK_FRAMES * CHUNK_BLOCKS, dtype=np.float32)
             voiced = False
             pause = False
@@ -114,7 +115,7 @@ def _speech_worker(connection, asr_path, device, threshold):
                 connection.send(("status", "transcribing"))
                 text = model.transcribe(samples)
                 if text:
-                    connection.send(("fragment", text))
+                    connection.send(("fragment", (captured_at, text)))
                 else:
                     connection.send(("empty_fragment", None))
                 text = None
@@ -122,7 +123,6 @@ def _speech_worker(connection, asr_path, device, threshold):
             samples = None
             if pause:
                 connection.send(("pause", None))
-            connection.send(("status", "listening"))
     except SpeechError as exc:
         connection.send(("error", str(exc)))
     except Exception:

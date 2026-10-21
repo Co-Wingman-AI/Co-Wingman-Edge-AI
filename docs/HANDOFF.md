@@ -20,7 +20,7 @@ remote audio transcription, or local Nemotron.
 
 ## Validation performed in this implementation session
 
-- macOS arm64, Python 3.14.7: complete unittest suite passed.
+- macOS arm64, Python 3.14.7: complete 52-test unittest suite passed.
 - Offline end-to-end demo and interactive typed/offline subprocess flow passed.
 - Real pseudo-terminal test verified hidden input, visible cue, Ctrl-C exit, and
   terminal echo restoration. Partial pipe input no longer blocks the event loop.
@@ -249,3 +249,11 @@ ruff format --check .
 The operating docs describe exact commands and recovery actions; archive/ only
 contains prior research. The historical local-LLM script is intentionally disabled
 as an executable, while its parsing/resource regression tests remain.
+
+
+## Cross-device development log
+
+The root [WORK_LOG.md](../WORK_LOG.md) is the first-stop summary for another
+Codex/device session. Follow [AGENTS.md](../AGENTS.md) to inspect the checkout,
+preserve edits, and append a brief verification record before each push. This log
+contains project changes only; it must never include user data or runtime content.

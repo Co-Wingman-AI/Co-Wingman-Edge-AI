@@ -112,9 +112,9 @@ class BoundaryTests(unittest.TestCase):
     def test_unknown_audio_fragments_merge_within_privacy_bounds(self):
         now = [0.0]
         context = RollingContext(clock=lambda: now[0])
-        context.add("partner asks about the project", "unknown", merge=True)
+        context.add("partner asks about the project", "unknown", merge=True, captured_at=0.0)
         now[0] = 30.0
-        context.add("user begins explaining local privacy", "unknown", merge=True)
+        context.add("user begins explaining local privacy", "unknown", merge=True, captured_at=30.0)
         window = context.take()
         self.assertEqual(len(window.turns), 1)
         self.assertEqual(window.turns[0].speaker, "unknown")
@@ -123,19 +123,26 @@ class BoundaryTests(unittest.TestCase):
         self.assertLessEqual(window.character_count, 800)
 
         now[0] = 40.0
-        context.add("a" * 200, "unknown", merge=True)
-        context.add("b" * 100, "unknown", merge=True)
+        context.add("a" * 200, "unknown", merge=True, captured_at=40.0)
+        context.add("b" * 100, "unknown", merge=True, captured_at=40.0)
         window = context.take()
         self.assertEqual(len(window.turns), 2)
         self.assertTrue(all(len(turn.text) <= 240 for turn in window.turns))
 
         now[0] = 50.0
-        context.add("older speech", "unknown", merge=True)
+        context.add("older speech", "unknown", merge=True, captured_at=50.0)
         now[0] = 109.0
-        context.add("newer speech", "unknown", merge=True)
+        context.add("newer speech", "unknown", merge=True, captured_at=109.0)
         now[0] = 110.0
         context.expire()
         self.assertEqual(len(context), 0)
+
+    def test_delayed_asr_cannot_revive_expired_speech(self):
+        context = RollingContext(clock=lambda: 100.0)
+        context.add("expired fragment", captured_at=39.0)
+        self.assertEqual(len(context), 0)
+        context.add("recent fragment", captured_at=90.0)
+        self.assertEqual(len(context), 1)
 
     def test_strict_schema_and_unsafe_results(self):
         for content in [

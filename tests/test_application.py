@@ -147,7 +147,7 @@ class ApplicationTests(unittest.TestCase):
 
     def test_pause_opt_in_and_cooldown(self):
         audio = Mock(process=object())
-        audio.poll.return_value = [("fragment", "hello"), ("pause", None)]
+        audio.poll.return_value = [("fragment", (50.0, "hello")), ("pause", None)]
         now = [50.0]
         client = Mock(wraps=OfflineClient())
         app = self.make_app(audio=audio, clock=lambda: now[0], client=client)

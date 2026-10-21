@@ -1,5 +1,12 @@
 # Co-Wingman
 
+## Continuing work across devices
+
+Before editing, read [WORK_LOG.md](WORK_LOG.md), then inspect `git status` and the
+organization remote. Follow [AGENTS.md](AGENTS.md) to preserve work and append a
+privacy-safe change/verification entry before pushing. The log contains project
+handoff metadata only; Co-Wingman never logs conversation content.
+
 Co-Wingman helps a person who gets stuck in conversation request a short recovery
 cue. It is designed for an NVIDIA Jetson Orin Nano 8 GB, with local speech
 recognition and bounded text inference through UF NaviGator AI Toolkit.
