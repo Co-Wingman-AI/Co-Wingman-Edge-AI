@@ -117,3 +117,30 @@ committing each completed unit. Detailed product instructions remain in README,
   and upload/reuse. Summary compression is lossy; failed uploads have a RAM-only
   retry record, not a durable offline archive. The pre-existing architecture PNG
   remains flagged by the repository hygiene scanner as an unreviewed binary.
+
+## 2026-10-21 — Timing, experimental shadow scoring and S3 portfolio
+
+- **Session/device:** Codex cloud workspace; Linux x86_64, Python 3.12.14.
+- **Source:** organization main `7046445`; reviewed external research repository
+  revision `03288414382def0356e44ae1c4aca4d0fd6ad35d` for its pinned model adapter.
+- **Changes:** opt-in content-free UTC/monotonic timing reports cover capture,
+  ASR verification/load/inference, request-worker startup, HTTPS connection setup,
+  response wait/read, validation, cue handling, TTS, summaries and S3. Added a
+  synthetic interleaved comparison of four cue token budgets; production remains
+  256. Experimental disfluency scoring uses pinned local weights with Keras's
+  PyTorch CPU backend, warms before capture, and never triggers cues or infers
+  anxiety/identity. Fixed review markers support local inspection without audio
+  recording. Explicit S3 portfolio upload creates an archive and current snapshot;
+  startup retrieval validates it and retains bounded local passage selection.
+  Added private-bucket setup script and operator commands. No AWS upload occurred.
+- **Validation:** 119 offline tests passed; Ruff lint/format, CLI help, offline
+  demonstration and diff whitespace checks passed. Real pinned-model download and
+  SHA verification passed. A separate temporary PyTorch 2.8 CPU/Keras 3.10 runtime
+  loaded the real weights and scored three synthetic windows, including inside
+  the network-disabled speech environment. This establishes adapter compatibility,
+  not accuracy or Jetson latency. AWS tests use mocks; no live identity was available.
+- **Remaining:** configure the bucket and Jetson AWS profile, upload/reload the
+  portfolio, and collect baseline/shadow timings on the Jetson. Run the explicit
+  live token comparison before lowering limits. No ASR overlap or persistent
+  NaviGator transport was enabled. The existing architecture PNG still fails the
+  repository scanner's unreviewed-binary check and was preserved.

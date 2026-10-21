@@ -23,6 +23,8 @@ delay uploads: this is not an exact real-time or gap-free archive.
 ## Create the destination
 
 The application does not create AWS accounts, buckets, or credentials.
+The separate optional setup script below can create a new bucket; normal app startup
+never creates or changes bucket configuration.
 
 1. Sign in to your AWS account and open **S3 → Create bucket**.
 2. Select a region, for example **US East (N. Virginia), us-east-1**, and a unique
@@ -60,6 +62,78 @@ python3 -m pip install -e '.[cloud]'
 
 The app uses boto3's normal AWS credential chain. It does not request keys as
 conversation input, embed them in summaries, or upload them to NaviGator.
+
+## Command-line setup and portfolio upload
+
+If you prefer commands to the S3 console, run these on the Jetson in your existing
+virtual environment. AWS CLI must be installed first; on Ubuntu you can use
+`sudo apt-get update` followed by `sudo apt-get install -y awscli`.
+Use an IAM identity or SSO profile, not account-root access keys. The setup identity
+needs permission to create a bucket and configure ownership, public access blocking
+and encryption. A runtime identity needs only the prefix policy shown above.
+
+```bash
+python3 -m pip install -e '.[cloud]'
+aws configure --profile cowingman
+export AWS_PROFILE=cowingman
+aws sts get-caller-identity
+```
+
+Enter credentials locally when AWS CLI asks. If you already use SSO, skip
+`aws configure` and log in with your configured SSO profile instead. Do not paste
+credentials or configuration-file contents into chat. Choose an unused bucket name;
+the following derives a name from your account and region, without displaying keys:
+
+```bash
+export COWINGMAN_AWS_REGION=us-east-1
+export COWINGMAN_BUCKET="cowingman-$(aws sts get-caller-identity --query Account --output text)-${COWINGMAN_AWS_REGION}"
+python3 scripts/setup_s3_bucket.py --bucket "$COWINGMAN_BUCKET" --region "$COWINGMAN_AWS_REGION"
+```
+
+The script refuses an existing bucket, creates a new bucket with ACLs disabled,
+blocks public access, and sets SSE-S3 encryption. It prints the restricted runtime
+IAM policy for attachment through IAM. It does not create users/access keys or
+grant permissions. If the derived name is taken, set `COWINGMAN_BUCKET` to another
+unique name and retry. If you already created the bucket, set the two variables to
+its name and region and skip the setup script. Select the restricted runtime profile
+before ongoing use if setup used a different administrative identity.
+
+Upload the existing local portfolio explicitly, then verify it can be loaded:
+
+```bash
+python3 -m cowingman.portfolio_cloud upload --portfolio private/portfolio.json \
+  --s3 "s3://$COWINGMAN_BUCKET/cowingman/jetson" --aws-region "$COWINGMAN_AWS_REGION"
+python3 -m cowingman.portfolio_cloud check \
+  --s3 "s3://$COWINGMAN_BUCKET/cowingman/jetson" --aws-region "$COWINGMAN_AWS_REGION"
+```
+
+Each upload stores validated passages, a format version and UTC creation time in a
+timestamped `portfolios/` archive and `portfolio.json`. It does not include conversation
+text or audio. Both writes request encryption and no public ACL. Archive plus latest
+writes are not a transaction; retry an explicitly failed upload. S3 keeps saved files
+until you delete them or apply a lifecycle policy.
+
+Reuse the AWS portfolio along with minute summaries:
+
+```bash
+python3 -m cowingman --rolling --pause-assist --show-input \
+  --portfolio-s3 "s3://$COWINGMAN_BUCKET/cowingman/jetson" \
+  --summary-s3 "s3://$COWINGMAN_BUCKET/cowingman/jetson" \
+  --aws-region "$COWINGMAN_AWS_REGION" --timings private/aws-run-01.jsonl
+```
+
+`--portfolio-s3` replaces `--portfolio`; do not use both. It loads `portfolio.json`
+once at startup into RAM, with the same 256 KB / 256-passage validation as local
+files. Selection stays local and still supplies at most two passages / 1,200
+characters to NaviGator per cue. No S3 request occurs for each portfolio lookup.
+A failed startup download stops startup with a clear error rather than silently
+using an old portfolio. Re-upload after changing your local portfolio, then restart
+to load the updated copy. This is separate from summary history and speaker identity.
+
+The whole validated portfolio snapshot now persists in AWS when you run the upload
+command. The default app still uses no AWS portfolio and performs no automatic upload.
+Follow [profiling and shadow testing](PROFILING_AND_SHADOW.md) for detector installation
+and comparative measurements; those reports remain local.
 
 ## Run and verify
 

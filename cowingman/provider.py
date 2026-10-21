@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import http.client
 import multiprocessing
 import re
 import time
@@ -16,6 +17,7 @@ from .cue import CueValidationError, cue_response_format, parse_cue
 from .errors import CloudRequestError, ConfigurationError, PrivacyBoundaryError
 from .portfolio import checked_selection
 from .memory import checked_summary, MAX_SUMMARY_CHARACTERS
+from .timing import NO_TIMING
 
 SYSTEM_PROMPT = """Act as the user's discreet conversational wingman. Generate the
 exact short phrase the user can say next, at most 12 words and 160 characters.
@@ -115,16 +117,32 @@ class NoRedirect(urllib.request.HTTPRedirectHandler):
         )
 
 
-def urllib_transport(url, headers, payload, timeout):
+def urllib_transport(url, headers, payload, timeout, timing=NO_TIMING):
+    class TimedHTTPSConnection(http.client.HTTPSConnection):
+        def connect(self):
+            with timing.measure("network_setup"):
+                return super().connect()
+
+        def getresponse(self):
+            with timing.measure("server_response"):
+                return super().getresponse()
+
+    class TimedHTTPSHandler(urllib.request.HTTPSHandler):
+        def https_open(self, request):
+            return self.do_open(TimedHTTPSConnection, request, context=self._context)
+
     request = urllib.request.Request(
         url, data=json.dumps(payload).encode("utf-8"), headers=dict(headers), method="POST"
     )
     # Environment proxy settings must not reroute private request text.
-    opener = urllib.request.build_opener(urllib.request.ProxyHandler({}), NoRedirect())
+    opener = urllib.request.build_opener(
+        urllib.request.ProxyHandler({}), NoRedirect(), TimedHTTPSHandler()
+    )
     try:
         with opener.open(request, timeout=timeout) as response:
             # A single bounded read avoids unbounded response allocations.
-            data = response.read(MAX_RESPONSE_BYTES + 1)
+            with timing.measure("response_read"):
+                data = response.read(MAX_RESPONSE_BYTES + 1)
             if len(data) > MAX_RESPONSE_BYTES:
                 raise CloudRequestError("NaviGator returned an oversized response; try again.")
             return json.loads(data)
@@ -157,9 +175,10 @@ def urllib_transport(url, headers, payload, timeout):
         request.headers.clear()
 
 
-def _request_worker(connection, url, headers, payload, timeout):
+def _request_worker(connection, url, headers, payload, timeout, timing=NO_TIMING, started=None):
     try:
-        connection.send((True, urllib_transport(url, headers, payload, timeout)))
+        timing.event("network_worker_start", started)
+        connection.send((True, urllib_transport(url, headers, payload, timeout, timing)))
     except CloudRequestError as exc:
         connection.send((False, str(exc)))
     except Exception:
@@ -170,12 +189,14 @@ def _request_worker(connection, url, headers, payload, timeout):
         connection.close()
 
 
-def deadline_transport(url, headers, payload, timeout):
+def deadline_transport(url, headers, payload, timeout, timing=NO_TIMING):
     """Enforce a wall-clock deadline, including DNS and a stalled response body."""
     ctx = multiprocessing.get_context("spawn")
     parent, child = ctx.Pipe(duplex=False)
     process = ctx.Process(
-        target=_request_worker, args=(child, url, headers, payload, timeout), daemon=True
+        target=_request_worker,
+        args=(child, url, headers, payload, timeout, timing, time.monotonic()),
+        daemon=True,
     )
     try:
         process.start()
@@ -249,6 +270,8 @@ class NavigatorClient:
         timeout_seconds=15.0,
         transport: Transport = deadline_transport,
         portfolio=None,
+        timing=NO_TIMING,
+        max_tokens=256,
     ):
         self.base_url, self.model = validate_cloud_configuration(base_url, model)
         if (
@@ -262,6 +285,20 @@ class NavigatorClient:
         self.timeout_seconds = number(timeout_seconds, "Timeout", 1, 30)
         self._transport = transport
         self.portfolio = portfolio
+        self.timing = timing
+        if type(max_tokens) is not int or max_tokens not in {96, 128, 192, 256}:
+            raise ConfigurationError("Cue token budget must be 96, 128, 192 or 256.")
+        self.max_tokens = max_tokens
+
+    def _send(self, url, headers, payload, timeout):
+        with self.timing.measure("transport", max_tokens=payload["max_tokens"]):
+            if self._transport is deadline_transport:
+                return self._transport(url, headers, payload, timeout, timing=self.timing)
+            return self._transport(url, headers, payload, timeout)
+
+    def _validate(self, response):
+        with self.timing.measure("validation"):
+            return parse_response(response)
 
     def close(self):
         self._api_key = ""
@@ -328,7 +365,7 @@ class NavigatorClient:
         headers = {"Authorization": f"Bearer {self._api_key}", "Content-Type": "application/json"}
         response = None
         try:
-            response = self._transport(
+            response = self._send(
                 f"{self.base_url}/chat/completions", headers, payload, self.timeout_seconds
             )
             choice = response["choices"][0]
@@ -406,7 +443,7 @@ class NavigatorClient:
                 {"role": "user", "content": json.dumps(request_data, ensure_ascii=True)},
             ],
             "temperature": 0.0,
-            "max_tokens": 256,
+            "max_tokens": self.max_tokens,
             # NVIDIA's Nano vLLM recipe disables default reasoning this way.
             # This is a raw HTTP body; SDK extra_body fields belong at top level.
             "chat_template_kwargs": {"enable_thinking": False},
@@ -425,11 +462,11 @@ class NavigatorClient:
         shortening_characters = 0
         draft = None
         try:
-            response = self._transport(
+            response = self._send(
                 f"{self.base_url}/chat/completions", headers, payload, self.timeout_seconds
             )
             try:
-                cue = parse_response(response)
+                cue = self._validate(response)
             except CloudRequestError as exc:
                 response_schema_valid = False
                 draft = getattr(exc, "draft", None)
@@ -472,10 +509,10 @@ class NavigatorClient:
                 response = None
                 request_count = 2
                 try:
-                    response = self._transport(
+                    response = self._send(
                         f"{self.base_url}/chat/completions", headers, payload, remaining
                     )
-                    cue = parse_response(response)
+                    cue = self._validate(response)
                 except CloudRequestError as repair_error:
                     raise CloudRequestError(
                         "NaviGator shortening failed; cue withheld. " + str(repair_error)

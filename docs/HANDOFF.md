@@ -293,3 +293,17 @@ The root [WORK_LOG.md](../WORK_LOG.md) is the first-stop summary for another
 Codex/device session. Follow [AGENTS.md](../AGENTS.md) to inspect the checkout,
 preserve edits, and append a brief verification record before each push. This log
 contains project changes only; it must never include user data or runtime content.
+
+## Profiling, experimental shadow scores and S3 portfolio
+
+New opt-in paths: `--timings`, `--disfluency-shadow` (requires rolling microphone
+and timings), and `--portfolio-s3` with `--aws-region`. Read
+[PROFILING_AND_SHADOW.md](PROFILING_AND_SHADOW.md) for baseline/comparison commands,
+model provenance and detection limitations. Shadow output never causes a cue.
+Read [AWS_SUMMARIES.md](AWS_SUMMARIES.md) for bucket creation, explicit portfolio
+upload/check, startup retrieval and summary reuse. A bucket and Jetson credentials
+still need to be configured by the operator; no real AWS data was uploaded here.
+
+The production cue budget remains 256; `scripts/token_benchmark.py --live` compares
+four budgets on synthetic cases. Do not select a smaller limit without live results.
+No connection reuse, ASR overlap or shorter ASR window has been introduced.

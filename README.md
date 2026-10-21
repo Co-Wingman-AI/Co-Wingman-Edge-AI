@@ -141,6 +141,18 @@ RAM-only. To persist timestamped summaries and load them in later sessions, foll
 `--resume-summary` loads the latest record or a selected archived window.
 This does not provide speaker identification or a complete transcript archive.
 
+Optional [profiling and shadow testing](docs/PROFILING_AND_SHADOW.md) adds
+`--timings private/run-01.jsonl` for numeric stage measurements and
+`--disfluency-shadow models/disfluency.keras` for experimental local scores.
+Shadow scores never trigger cues or infer anxiety. The model requires explicit
+setup and is evaluated independently of pause assistance. Production cue tokens
+remain 256; an explicit synthetic benchmark compares smaller budgets.
+
+You can also [upload your portfolio to S3](docs/AWS_SUMMARIES.md) and start with
+`--portfolio-s3 s3://YOUR_BUCKET/cowingman/jetson --aws-region us-east-1`.
+The profile loads once into RAM; passage retrieval stays local. Uploads are explicit,
+timestamped, and separate from conversation summaries.
+
 `--typed` displays entered text by default. `--show-input` also enables visible
 commands in microphone mode; `--hide-input` restores hidden testing. In rolling
 mode, `:summary` updates/displays the summary, `:save` saves a partial window,

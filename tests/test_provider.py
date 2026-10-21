@@ -416,7 +416,9 @@ class DeadlineAndReportTests(unittest.TestCase):
         self.assertTrue(all(item["success"] for item in report["trials"]))
 
 
-def _synthetic_request_worker(connection, url, headers, payload, timeout):
+def _synthetic_request_worker(
+    connection, url, headers, payload, timeout, timing=None, started=None
+):
     """Spawnable fake server: exercise IPC and lifecycle without network access."""
     valid = (
         url == DEFAULT_BASE_URL + "/chat/completions"

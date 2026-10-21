@@ -99,3 +99,25 @@ The schema rejects excess fields, duplicate keys, long text, controls, URLs,
 markup, and several unsafe patterns. This is conservative validation, not proof
 of semantic safety or correctness. Cues can be unhelpful; the user decides whether
 to use them. The app never treats pauses, word choice, or disfluency as a diagnosis.
+
+## Optional profiling, shadow scores and AWS portfolio storage
+
+`--timings` explicitly persists local numeric measurements, UTC/monotonic timestamps
+and fixed review markers in a new permission-0600 file. It records no transcripts,
+cues, portfolio facts, credentials or exception bodies. Reports may reveal session
+activity and are not automatically deleted or uploaded. Use ignored `private/` paths.
+
+`--disfluency-shadow` keeps the pinned research model in the local speech worker,
+with network access disabled. It uses CPU inference, stores only numeric scores
+in the timing report, and never triggers cues, identifies speakers or infers anxiety.
+Five-second classifier windows reuse four-second ASR captures plus a one-second
+RAM tail. Temporary raw buffers are cleared after use; no recordings are written.
+`:mark fluent/stuck/partner/quiet` records a fixed self-reported review marker only.
+
+The explicit `cowingman.portfolio_cloud upload` command sends the whole validated
+portfolio snapshot to your chosen private S3 prefix. It persists as a timestamped
+archive and `portfolio.json` with SSE-S3 encryption. `--portfolio-s3` loads this
+snapshot once at startup into RAM, validates the existing profile limits, and keeps
+per-cue retrieval local with the same two-passage/1,200-character outbound limit.
+S3 portfolio storage is independent of minute summaries; neither contains raw audio.
+Saved objects remain until deleted or expired by your bucket's lifecycle policy.

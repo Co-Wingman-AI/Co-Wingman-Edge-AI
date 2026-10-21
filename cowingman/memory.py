@@ -9,6 +9,7 @@ from uuid import uuid4
 
 from .context import RollingContext
 from .errors import CloudRequestError, ConfigurationError, PrivacyBoundaryError
+from .timing import NO_TIMING
 
 MAX_SUMMARY_CHARACTERS = 1200
 
@@ -57,7 +58,8 @@ def checked_record(value):
 
 
 class S3SummaryStore:
-    def __init__(self, uri, region, *, client=None):
+    def __init__(self, uri, region, *, client=None, timing=NO_TIMING):
+        self.timing = timing
         parsed = urlsplit(uri)
         if (
             parsed.scheme != "s3"
@@ -97,6 +99,8 @@ class S3SummaryStore:
         record = checked_record(record)
         key = record["window_end"].replace(":", "-") + "-" + record["session_id"] + ".json"
         body = json.dumps(record, ensure_ascii=True).encode("utf-8")
+        started = time.monotonic()
+        ok = False
         try:
             for name in ("windows/" + key, "latest.json"):
                 self.client.put_object(
@@ -106,27 +110,35 @@ class S3SummaryStore:
                     ContentType="application/json",
                     ServerSideEncryption="AES256",
                 )
+            ok = True
         except Exception:
             raise CloudRequestError(
                 "S3 summary upload failed. Check AWS credentials, bucket permissions, region and network."
             ) from None
+        finally:
+            self.timing.event("s3_upload", started, ok=ok)
 
     def load(self, key="latest.json"):
         if not re.fullmatch(r"latest\.json|windows/[A-Za-z0-9_.-]+\.json", key):
             raise ConfigurationError("Use latest.json or a windows/ summary key from this prefix.")
         body = None
+        started = time.monotonic()
+        ok = False
         try:
             response = self.client.get_object(Bucket=self.bucket, Key=self.prefix + "/" + key)
             body = response["Body"]
             data = body.read(16385)
             if len(data) > 16384:
                 raise ValueError
-            return checked_record(json.loads(data))
+            record = checked_record(json.loads(data))
+            ok = True
+            return record
         except Exception:
             raise ConfigurationError(
                 "Cannot load the latest S3 summary. Check access, or start without --resume-summary."
             ) from None
         finally:
+            self.timing.event("s3_load", started, ok=ok)
             if body is not None:
                 body.close()
 

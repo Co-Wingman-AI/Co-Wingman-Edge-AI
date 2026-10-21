@@ -4,6 +4,7 @@ from .errors import SpeechError
 import queue
 import threading
 import time
+from .timing import NO_TIMING
 
 SAMPLE_RATE = 16000
 BLOCK_FRAMES = 4000
@@ -67,7 +68,7 @@ class Microphone:
 class ContinuousMicrophone:
     """One capture thread and one queued window; discard older backlog explicitly."""
 
-    def __init__(self, device, threshold):
+    def __init__(self, device, threshold, timing=NO_TIMING):
         self.microphone = Microphone(device)
         self.threshold = threshold
         self.windows = queue.Queue(maxsize=1)
@@ -76,6 +77,7 @@ class ContinuousMicrophone:
         self.error = None
         self.dropped = 0
         self.thread = None
+        self.timing = timing
 
     def open(self):
         self.thread = threading.Thread(target=self._capture, daemon=True)
@@ -93,6 +95,7 @@ class ContinuousMicrophone:
                 old = self.windows.get_nowait()
                 old[1].fill(0)
                 self.dropped += 1
+                self.timing.event("audio_drop", count=1)
             except queue.Empty:
                 pass
             self.windows.put_nowait(window)
@@ -104,7 +107,8 @@ class ContinuousMicrophone:
             from .pause import PauseDetector
 
             detector = PauseDetector(threshold=self.threshold)
-            self.microphone.open()
+            with self.timing.measure("microphone_open"):
+                self.microphone.open()
             self.ready.set()
             while not self.stopped.is_set():
                 captured_at = time.monotonic()
@@ -119,6 +123,7 @@ class ContinuousMicrophone:
                     pause = detector.observe(rms, 0.25) or pause
                     samples[index * BLOCK_FRAMES : (index + 1) * BLOCK_FRAMES] = block
                     block.fill(0)
+                self.timing.event("capture", captured_at, window_start=captured_at)
                 self._offer((captured_at, samples, voiced, pause))
                 samples = None
         except Exception:

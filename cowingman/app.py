@@ -7,6 +7,7 @@ import time
 from .context import RollingContext
 from .errors import CloudRequestError, ConfigurationError, PrivacyBoundaryError, SpeechError
 from .speech import speak
+from .timing import NO_TIMING
 
 
 class Application:
@@ -23,6 +24,7 @@ class Application:
         memory=None,
         speaker=speak,
         clock=time.monotonic,
+        timing=NO_TIMING,
     ):
         self.config = config
         self.client = client
@@ -34,6 +36,7 @@ class Application:
         self.memory = memory
         self.speaker = speaker
         self.clock = clock
+        self.timing = timing
         self.context = RollingContext(
             60.0 if rolling else config.context_ttl, clock, rolling=rolling
         )
@@ -70,6 +73,7 @@ class Application:
             self.audio.close()
         context = cue = None
         presented = False
+        started = time.monotonic()
         try:
             context = self.context.snapshot() if self.rolling else self.context.take()
             self.last_request = self.clock()
@@ -101,7 +105,8 @@ class Application:
             presented = True
             if self.tts and cue.should_offer:
                 try:
-                    self.speaker(cue.cue, self.config)
+                    with self.timing.measure("tts"):
+                        self.speaker(cue.cue, self.config)
                 except SpeechError as exc:
                     self.ui.message(str(exc))
                     self.ui.show_cue(cue)
@@ -116,6 +121,7 @@ class Application:
                 else "Context discarded. Add new context before retrying."
             )
         finally:
+            self.timing.event("cue_total", started, ok=presented)
             if not self.rolling:
                 self.context.clear()
             context = cue = None
@@ -177,6 +183,8 @@ class Application:
                 self.ui.message(
                     "Audio processing fell behind; an older capture window was dropped."
                 )
+            elif kind == "notice":
+                self.ui.message(value)
             elif kind == "error":
                 self.context.clear()
                 self.ui.status("error")
@@ -233,6 +241,12 @@ class Application:
             self.add(line[len(":partner ") :], "partner")
         elif line == ":check":
             self.check_context()
+        elif line in {":mark fluent", ":mark stuck", ":mark partner", ":mark quiet"}:
+            if self.timing.path:
+                self.timing.event("review_" + line.split()[1])
+                self.ui.message("Local review marker saved; cue behavior unchanged.")
+            else:
+                self.ui.message("Review markers require --timings.")
         elif line in {":summary", ":save"}:
             self.save_memory()
             if line == ":summary" and self.memory:
@@ -250,7 +264,7 @@ class Application:
         elif line.startswith(":"):
             self.ui.message(
                 "Commands: :cue, :check, :listen, :pause, :clear, :assist on/off, "
-                ":summary, :save, :forget, :quit."
+                ":summary, :save, :forget, :mark fluent/stuck/partner/quiet, :quit."
             )
         else:
             self.add(line)
@@ -271,7 +285,9 @@ class Application:
         if self.memory is None:
             return
         try:
-            if self.memory.flush() and not quiet:
+            with self.timing.measure("summary_total"):
+                updated = self.memory.flush()
+            if updated and not quiet:
                 self.ui.message(
                     "Timestamped one-minute summary saved to S3."
                     if self.memory.store
