@@ -26,6 +26,9 @@ FORBIDDEN_SUFFIXES = {
     ".pem",
 }
 REVIEWED_BINARY_FILES = {
+    "docs/co-wingman-architecture-current.png": (
+        "ac77b02e30a68a1e99fdbba2272de1f7f32f0b258948c03dcfbf9fe23265c637"
+    ),
     "docs/co-wingman-architecture.png": (
         "d06367f12cd4b3566ab8fec86f963837473ecc8f9774392d65f5cb02034cad4a"
     ),
