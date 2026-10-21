@@ -12,11 +12,47 @@ import unittest
 
 
 class TerminalIntegrationTests(unittest.TestCase):
-    def test_hidden_input_visual_cue_and_interrupt_restores_terminal(self):
+    def test_typed_mode_shows_input_and_restores_terminal(self):
         master, slave = pty.openpty()
         original = termios.tcgetattr(slave)
         process = subprocess.Popen(
             [sys.executable, "-m", "cowingman", "--typed", "--offline"],
+            stdin=slave,
+            stdout=slave,
+            stderr=slave,
+        )
+        captured = bytearray()
+
+        def await_text(needle):
+            deadline = time.monotonic() + 5
+            while needle not in captured and time.monotonic() < deadline:
+                if select.select([master], [], [], 0.1)[0]:
+                    captured.extend(os.read(master, 8192))
+            self.assertIn(needle, captured)
+
+        try:
+            await_text(b"[ready]")
+            self.assertTrue(termios.tcgetattr(slave)[3] & termios.ECHO)
+            os.write(master, b":partner synthetic visible question\n")
+            await_text(b"synthetic visible question")
+            os.write(master, b":cue\n")
+            await_text(b"CUE:")
+            os.write(master, b":quit\n")
+            process.wait(timeout=5)
+            self.assertEqual(process.returncode, 0)
+            self.assertEqual(termios.tcgetattr(slave), original)
+        finally:
+            if process.poll() is None:
+                process.kill()
+                process.wait()
+            os.close(master)
+            os.close(slave)
+
+    def test_hidden_input_visual_cue_and_interrupt_restores_terminal(self):
+        master, slave = pty.openpty()
+        original = termios.tcgetattr(slave)
+        process = subprocess.Popen(
+            [sys.executable, "-m", "cowingman", "--typed", "--offline", "--hide-input"],
             stdin=slave,
             stdout=slave,
             stderr=slave,

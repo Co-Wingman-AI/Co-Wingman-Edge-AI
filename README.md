@@ -13,7 +13,7 @@ recognition and bounded text inference through UF NaviGator AI Toolkit.
 
 **Launch: `python3 -m cowingman`.** Press Enter or type `:cue` to request a cue.
 The terminal displays component status and a short cue. A Mac can run the same
-application with hidden typed input, or a fully offline synthetic provider.
+application with visible typed input, or a fully offline synthetic provider.
 
 The operator has verified Jetson microphone capture, local NeMo ASR, NaviGator
 access, and an end-to-end cue. Conversation accuracy, sustained performance, and
@@ -32,7 +32,7 @@ python3 -m cowingman --typed --offline
 
 The first command runs a synthetic example and exits. In the interactive fallback,
 enter a short fragment, press Enter to accept it, then press Enter again or enter
-`:cue`. Input is hidden to keep transcript text out of terminal history. The cue
+`:cue`. Typed mode shows entered text; add `--hide-input` for hidden entry. The cue
 appears only when stdout is a terminal; redirected output contains status only.
 Use `:quit`, Ctrl-C, or end-of-input to exit. A cue clears after 20 seconds.
 
@@ -118,18 +118,33 @@ for predictable memory release. See [speech setup and limitations](docs/SPEECH.m
 | Personalized typed cues | `python3 -m cowingman --typed --portfolio private/portfolio.json` |
 | Optional local spoken cues | `python3 -m cowingman --tts` |
 | Opt-in pause-triggered cues | `python3 -m cowingman --pause-assist` |
+| Rolling minute, continuous listening and pause cues | `python3 -m cowingman --rolling --pause-assist --show-input` |
 
 | Input while running | Effect |
 | --- | --- |
-| A short line, then Enter | Accept a hidden local text fragment |
+| A short line, then Enter | Accept a local text fragment; visible in typed mode |
 | Enter on an empty line, or `:cue` | Request a recovery cue |
 | `:check` | Show local fragment counts and portfolio matches without an API call |
 | `:partner short text` | Accept a typed partner fragment |
 | `:listen` | Start/restart microphone processing, including after a cue |
-| `:pause` | Stop microphone and discard context |
+| `:pause` | Stop microphone; rolling mode keeps recent context until expiry |
 | `:clear` | Clear context/display and stop microphone |
 | `:assist on` / `:assist off` | Enable/disable automatic pause-triggered requests |
 | `:quit` or Ctrl-C | Release resources and exit |
+
+For rolling conversation, add `--rolling`: four-second captures update a
+60-second window, and cues no longer stop listening or clear the recent window.
+Cues still require a pause (`--pause-assist`) or a manual request. A separate
+minute timer summarizes recent text through NaviGator. Without S3, the summary is
+RAM-only. To persist timestamped summaries and load them in later sessions, follow
+[AWS summary setup](docs/AWS_SUMMARIES.md). `--summary-s3` enables rolling mode;
+`--resume-summary` loads the latest record or a selected archived window.
+This does not provide speaker identification or a complete transcript archive.
+
+`--typed` displays entered text by default. `--show-input` also enables visible
+commands in microphone mode; `--hide-input` restores hidden testing. In rolling
+mode, `:summary` updates/displays the summary, `:save` saves a partial window,
+and `:forget` clears local memory without deleting saved S3 objects.
 
 Pause assistance measures audio energy followed by sustained silence, with a
 minimum speech duration and a 30-second cooldown. It can send bounded text
@@ -169,10 +184,13 @@ Automatic declines and declines during shortening are always respected.
 ## Privacy contract
 
 - Raw microphone audio stays in the local speech process; it is never an API input.
-- No recordings or transcripts are written by the application. There is no session archive.
-- The rolling store is at most four fragments, 240 characters each, 800 characters
-  total. Fragments expire after 60 seconds by default; idle cleanup runs every loop.
-- Each request selects only that bounded excerpt. The store is cleared on request,
+- No audio recordings or full transcript archive are written. Opt-in S3 mode
+  persists timestamped model-generated summaries, up to 1,200 characters each.
+- Default context is at most four fragments / 800 characters. `--rolling` uses
+  fifteen fragments / 3,600 characters over 60 seconds. Each fragment is at most
+  240 characters. Rolling mode can add 1,200 historical summary characters per cue.
+- Each request selects only that bounded excerpt. Default mode clears it on request;
+  rolling mode retains it until expiry or explicit clearing. In both modes,
   and temporary request references are dropped on success, failure, cancellation,
   and shutdown. Transport failures are not retried. A length-only failure can
   trigger one shortening call containing only the bounded model-generated draft,
@@ -180,8 +198,9 @@ Automatic declines and declines during shortening are always respected.
 - With `--portfolio`, selected facts add at most 1,200 characters per request.
   The imported profile persists locally until deleted; conversation TTL does not
   apply to this reference file. Without the flag, no profile is loaded or sent.
-- Only HTTPS to the exact NaviGator host/path is allowed. Redirects and environment
-  proxies are disabled. Requests have a wall-clock deadline and a bounded response.
+- Model requests use only the exact approved NaviGator HTTPS host/path. Redirects
+  and environment proxies are disabled for that client. Optional S3 requests use
+  boto3's AWS endpoints/credential chain. Requests have timeouts and bounded data.
 - Keys, authorization headers, transcripts, prompts, and cues are not logged or
   included in benchmark reports. Cue text is intentionally visible on the terminal
   and, with `--tts`, audible; redirected stdout suppresses it.

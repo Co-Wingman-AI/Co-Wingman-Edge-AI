@@ -36,7 +36,8 @@ Delete the local JSON when it is no longer wanted. Never commit personal profile
 
 ## Controlled test
 
-Type each line separately, pressing Enter after each. Input remains hidden:
+Type each line separately, pressing Enter after each. Typed input is visible;
+add `--hide-input` to hide it:
 
 ```text
 :partner Tell me about OrderFlow. What did you build?
@@ -116,15 +117,18 @@ accuracy. A long exchange or the 60-second TTL can still remove the typed questi
 Retrieval uses local keyword ranking with a few question aliases (for example,
 "study" maps to education). It loads no embedding model and uses no additional
 GPU memory. Only matches are selected; no match stops the request before any API
-call. This applies to all requests while `--portfolio` is enabled. Launch without
+call unless a rolling conversation summary is available as historical context.
+Launch without
 that flag for general conversation cues that do not require portfolio matches. It may
 miss paraphrases or select an irrelevant passage. Selected facts stay separate
 from conversation roles: portfolio text is reference data, never a spoken turn.
 
 Each live request can contain up to **two passages, 600 characters each**, in
-addition to the existing **800-character** conversation window. Thus the new
-maximum source-text content is **2,000 characters**, plus JSON and the fixed system
-prompt. Selection is validated again before transmission. No full profile or
+addition to the default **800-character** conversation window (**2,000 characters**
+total). With `--rolling`, the conversation budget is **3,600 characters**, plus
+up to **1,200** historical summary characters and **1,200** portfolio characters
+(**6,000** total). These limits exclude JSON and the fixed system prompt.
+Selection is validated again before transmission. No full profile or
 source URLs are sent, and the application does not browse during conversations.
 UF receives those selected facts as well as the bounded conversation excerpt.
 

@@ -1,4 +1,4 @@
-"""Bounded, expiring RAM-only fragments; no conversation archive."""
+"""Bounded, expiring RAM fragments for default and opt-in rolling conversation."""
 
 from __future__ import annotations
 
@@ -22,11 +22,17 @@ class ContextTurn:
 @dataclass(frozen=True, repr=False)
 class BoundedContext:
     turns: tuple[ContextTurn, ...]
+    rolling: bool = False
 
     @classmethod
-    def from_turns(cls, turns: Sequence[ContextTurn]) -> BoundedContext:
-        if not isinstance(turns, (tuple, list)) or not 1 <= len(turns) <= MAX_CONTEXT_TURNS:
-            raise PrivacyBoundaryError("Use one to four recent text fragments.")
+    def from_turns(cls, turns: Sequence[ContextTurn], *, rolling=False) -> BoundedContext:
+        if type(rolling) is not bool:
+            raise PrivacyBoundaryError("Invalid rolling context mode.")
+        max_turns, max_characters = (
+            (15, 3600) if rolling else (MAX_CONTEXT_TURNS, MAX_CONTEXT_CHARACTERS)
+        )
+        if not isinstance(turns, (tuple, list)) or not 1 <= len(turns) <= max_turns:
+            raise PrivacyBoundaryError("Too many or no recent text fragments.")
         checked = []
         for turn in turns:
             if not isinstance(turn, ContextTurn) or turn.speaker not in {
@@ -44,9 +50,9 @@ class BoundedContext:
             if not 1 <= len(text) <= MAX_TURN_CHARACTERS:
                 raise PrivacyBoundaryError("Each fragment must contain 1–240 characters.")
             checked.append(ContextTurn(turn.speaker, text))
-        if sum(len(t.text) for t in checked) > MAX_CONTEXT_CHARACTERS:
-            raise PrivacyBoundaryError("Selected context exceeds 800 characters.")
-        return cls(tuple(checked))
+        if sum(len(t.text) for t in checked) > max_characters:
+            raise PrivacyBoundaryError("Selected context exceeds its character budget.")
+        return cls(tuple(checked), rolling=rolling)
 
     @property
     def character_count(self) -> int:
@@ -65,6 +71,7 @@ class BoundedContext:
 class RollingContext:
     ttl_seconds: float = 60.0
     clock: Callable[[], float] = time.monotonic
+    rolling: bool = False
     _items: list[tuple[float, ContextTurn]] = field(default_factory=list, init=False)
 
     def expire(self) -> None:
@@ -99,10 +106,9 @@ class RollingContext:
                 self._items[-1] = (min(first_seen, timestamp), ContextTurn(speaker, combined))
                 return
         self._items.append((timestamp, turn))
-        while (
-            len(self._items) > MAX_CONTEXT_TURNS
-            or sum(len(t.text) for _, t in self._items) > MAX_CONTEXT_CHARACTERS
-        ):
+        while len(self._items) > (15 if self.rolling else MAX_CONTEXT_TURNS) or sum(
+            len(t.text) for _, t in self._items
+        ) > (3600 if self.rolling else MAX_CONTEXT_CHARACTERS):
             self._items.pop(0)
 
     def take(self) -> BoundedContext:
@@ -114,7 +120,7 @@ class RollingContext:
     def snapshot(self) -> BoundedContext:
         """Read only unexpired fragments without consuming or refreshing them."""
         self.expire()
-        return BoundedContext.from_turns([t for _, t in self._items])
+        return BoundedContext.from_turns([t for _, t in self._items], rolling=self.rolling)
 
     def clear(self) -> None:
         self._items.clear()

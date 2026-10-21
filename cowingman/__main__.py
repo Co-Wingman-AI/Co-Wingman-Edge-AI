@@ -12,12 +12,13 @@ from .provider import NavigatorClient, OfflineClient
 from .portfolio import Portfolio
 from .speech import SpeechSession
 from .ui import TerminalUI
+from .memory import ConversationMemory, S3SummaryStore
 
 
 def parser():
     result = argparse.ArgumentParser(description="Co-Wingman conversational recovery assistant")
     result.add_argument(
-        "--typed", action="store_true", help="hidden typed input; no audio dependencies"
+        "--typed", action="store_true", help="visible typed input; no audio dependencies"
     )
     result.add_argument(
         "--offline", action="store_true", help="synthetic cue provider; no API or microphone"
@@ -45,11 +46,47 @@ def parser():
     result.add_argument(
         "--speech-threshold", default="0.015", help="local speech energy threshold, 0.001–0.2"
     )
+    visibility = result.add_mutually_exclusive_group()
+    visibility.add_argument(
+        "--show-input", action="store_true", help="show typed text and commands"
+    )
+    visibility.add_argument(
+        "--hide-input", action="store_true", help="hide typed text and commands"
+    )
+    result.add_argument(
+        "--rolling",
+        action="store_true",
+        help="retain a rolling minute and keep listening after cues",
+    )
+    result.add_argument(
+        "--summary-s3",
+        metavar="S3_URI",
+        help="save timestamped minute summaries to an S3 prefix; enables rolling mode",
+    )
+    result.add_argument("--aws-region", help="AWS region of the summary bucket")
+    result.add_argument(
+        "--resume-summary",
+        nargs="?",
+        const="latest.json",
+        metavar="KEY",
+        help="load latest summary, or a windows/ key from the selected S3 prefix",
+    )
     return result
 
 
 def main(argv=None):
     args = parser().parse_args(argv)
+    args.rolling = args.rolling or bool(args.summary_s3)
+    if args.rolling and (
+        args.tts or args.offline or args.demo or args.health_check or args.list_audio
+    ):
+        parser().error(
+            "--rolling requires live visual-cue conversation mode; omit --tts and synthetic checks"
+        )
+    if args.resume_summary and not args.summary_s3:
+        parser().error("--resume-summary requires --summary-s3")
+    if args.summary_s3 and not args.aws_region:
+        parser().error("--summary-s3 requires --aws-region")
     if args.demo and not (args.offline or args.typed):
         parser().error("--demo requires --offline or --typed")
     if args.health_check and (args.offline or args.demo):
@@ -107,9 +144,20 @@ def main(argv=None):
                 context = None
                 client.close()
             return 0
-        audio = None if args.typed or args.offline else SpeechSession(config, threshold)
+        audio = (
+            None
+            if args.typed or args.offline
+            else SpeechSession(config, threshold, continuous=args.rolling)
+        )
+        store = S3SummaryStore(args.summary_s3, args.aws_region) if args.summary_s3 else None
+        memory = (
+            ConversationMemory(client, store, resume=args.resume_summary) if args.rolling else None
+        )
         portfolio = None
-        with TerminalUI(input_ttl=config.context_ttl) as ui:
+        with TerminalUI(
+            input_ttl=config.context_ttl,
+            visible_input=(args.typed or args.show_input) and not args.hide_input,
+        ) as ui:
             ui.message(
                 "Provider: "
                 + ("OFFLINE synthetic mock" if args.offline else "UF NaviGator / NVIDIA Nemotron")
@@ -129,7 +177,14 @@ def main(argv=None):
                 )
             )
             application = Application(
-                config, client, ui, audio=audio, tts=args.tts, pause_assist=args.pause_assist
+                config,
+                client,
+                ui,
+                audio=audio,
+                tts=args.tts,
+                pause_assist=args.pause_assist,
+                rolling=args.rolling,
+                memory=memory,
             )
             application.run(demo=args.demo)
         return 0

@@ -251,6 +251,21 @@ shortening and metrics contain only counts/flags, never the draft. Mocked tests
 cover request boundaries, timeout sharing, automatic routing, and rejected repairs.
 Live model shortening quality and semantic fidelity remain unverified.
 
+The operator next requested rolling context, visible manual input, and timestamped
+one-minute summary records in AWS. They clarified that cues should remain manual
+or pause-triggered, not requested every four seconds. `--rolling` now keeps a
+60-second/15-fragment/3,600-character window and keeps microphone capture running
+across ASR inference and cue requests with a bounded one-window backlog. `--typed`
+shows input by default; `--show-input` and `--hide-input` control echo explicitly.
+NaviGator summarizes each active minute; `--summary-s3` saves only the summary and
+timestamps through boto3, and `--resume-summary [KEY]` explicitly reloads a record.
+Summary history adds at most 1,200 text characters to a later cue. Raw audio stays
+local; the expanded text boundary and persistence are opt-in and documented.
+The operator has an AWS account but no bucket yet, and the cloud workspace has no
+AWS identity. The integration is tested with mocks, not a live upload. Follow
+`docs/AWS_SUMMARIES.md` for bucket/IAM/profile setup and live verification. A failed
+upload is held in RAM only; do not claim gap-free archiving or complete recall.
+
 The user explicitly authorized committing and pushing tested changes during this
 session. Read current instructions in a new session rather than assuming that
 permission extends to unrelated work. Preserve local changes. Keep the one

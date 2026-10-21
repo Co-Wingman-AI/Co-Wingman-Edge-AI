@@ -75,42 +75,52 @@ def prepare_worker():
     socket.socket = LocalSocket
 
 
-def _speech_worker(connection, asr_path, device, threshold):
+def _speech_worker(connection, asr_path, device, threshold, continuous=False):
     prepare_worker()
     microphone = None
     samples = None
+    capture = None
     try:
         import numpy as np
         from .asr import NemoASR
-        from .audio import BLOCK_FRAMES, CHUNK_BLOCKS, Microphone
+        from .audio import BLOCK_FRAMES, CHUNK_BLOCKS, Microphone, ContinuousMicrophone
         from .pause import PauseDetector
 
         if available_memory() < 2 * 1024**3:
             raise SpeechError("Less than 2 GiB RAM available. Close GPU workloads or use --typed.")
         model = NemoASR(asr_path)
         detector = PauseDetector(threshold=threshold)
+        if continuous:
+            capture = ContinuousMicrophone(device, threshold).open()
+            connection.send(("status", "rolling listening"))
         while True:
             if available_memory() < 1024**3:
                 raise SpeechError(
                     "Memory is low. Audio stopped; close other workloads or use --typed."
                 )
-            microphone = Microphone(device).open()
-            connection.send(("status", "listening"))
-            captured_at = time.monotonic()
-            samples = np.zeros(BLOCK_FRAMES * CHUNK_BLOCKS, dtype=np.float32)
-            voiced = False
-            pause = False
-            try:
-                for index in range(CHUNK_BLOCKS):
-                    block = microphone.read()
-                    rms = float(np.sqrt(np.mean(block * block)))
-                    voiced = voiced or rms >= threshold
-                    pause = detector.observe(rms, 0.25) or pause
-                    samples[index * BLOCK_FRAMES : (index + 1) * BLOCK_FRAMES] = block
-                    block.fill(0)
-            finally:
-                microphone.close()
-                microphone = None
+            if capture:
+                captured_at, samples, voiced, pause = capture.read()
+                if capture.dropped:
+                    connection.send(("audio_gap", capture.dropped))
+                    capture.dropped = 0
+            else:
+                microphone = Microphone(device).open()
+                connection.send(("status", "listening"))
+                captured_at = time.monotonic()
+                samples = np.zeros(BLOCK_FRAMES * CHUNK_BLOCKS, dtype=np.float32)
+                voiced = False
+                pause = False
+                try:
+                    for index in range(CHUNK_BLOCKS):
+                        block = microphone.read()
+                        rms = float(np.sqrt(np.mean(block * block)))
+                        voiced = voiced or rms >= threshold
+                        pause = detector.observe(rms, 0.25) or pause
+                        samples[index * BLOCK_FRAMES : (index + 1) * BLOCK_FRAMES] = block
+                        block.fill(0)
+                finally:
+                    microphone.close()
+                    microphone = None
             if voiced:
                 connection.send(("status", "transcribing"))
                 text = model.transcribe(samples)
@@ -133,6 +143,8 @@ def _speech_worker(connection, asr_path, device, threshold):
             )
         )
     finally:
+        if capture:
+            capture.close()
         if microphone is not None:
             microphone.close()
         if samples is not None:
@@ -158,9 +170,10 @@ def _tts_worker(connection, cue, fastpitch_path, hifigan_path):
 
 
 class SpeechSession:
-    def __init__(self, config, threshold=0.015):
+    def __init__(self, config, threshold=0.015, *, continuous=False):
         self.config = config
         self.threshold = threshold
+        self.continuous = continuous
         self.process = None
         self.connection = None
         self.last_event = 0.0
@@ -177,6 +190,7 @@ class SpeechSession:
                 self.config.asr_path,
                 self.config.audio_device,
                 self.threshold,
+                self.continuous,
             ),
             daemon=True,
         )

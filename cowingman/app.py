@@ -5,7 +5,7 @@ from __future__ import annotations
 import time
 
 from .context import RollingContext
-from .errors import CloudRequestError, PrivacyBoundaryError, SpeechError
+from .errors import CloudRequestError, ConfigurationError, PrivacyBoundaryError, SpeechError
 from .speech import speak
 
 
@@ -19,6 +19,8 @@ class Application:
         audio=None,
         tts=False,
         pause_assist=False,
+        rolling=False,
+        memory=None,
         speaker=speak,
         clock=time.monotonic,
     ):
@@ -28,9 +30,13 @@ class Application:
         self.audio = audio
         self.tts = tts
         self.pause_assist = pause_assist
+        self.rolling = rolling
+        self.memory = memory
         self.speaker = speaker
         self.clock = clock
-        self.context = RollingContext(config.context_ttl, clock)
+        self.context = RollingContext(
+            60.0 if rolling else config.context_ttl, clock, rolling=rolling
+        )
         self.last_request = -30.0
         self.closed = False
         self.pending_resume = False
@@ -50,6 +56,7 @@ class Application:
     def add(self, text, speaker="user"):
         try:
             self.context.add(text, speaker)
+            self.remember(text, speaker)
             self.ui.status("ready")
             self.ui.message("Recent fragment accepted privately. Enter or :cue requests a cue.")
         except PrivacyBoundaryError as exc:
@@ -58,16 +65,20 @@ class Application:
     def request_cue(self, *, automatic=False):
         self.pending_resume = False
         had_audio = self.audio is not None and self.audio.process is not None
-        # Free all audio/model state, even on a network failure; no stale chunks.
-        if self.audio is not None:
+        # Default mode releases speech resources; rolling mode keeps capture active.
+        if self.audio is not None and not self.rolling:
             self.audio.close()
         context = cue = None
         presented = False
         try:
-            context = self.context.take()
+            context = self.context.snapshot() if self.rolling else self.context.take()
             self.last_request = self.clock()
             self.ui.status("requesting a cue")
-            if automatic:
+            if self.memory:
+                cue, _metrics = self.client.request_cue(
+                    context, automatic=automatic, summary=self.memory.text
+                )
+            elif automatic:
                 cue, _metrics = self.client.request_cue(context, automatic=True)
             else:
                 cue, _metrics = self.client.request_cue(context)
@@ -99,11 +110,16 @@ class Application:
         except CloudRequestError as exc:
             self.ui.status("error")
             self.ui.message(str(exc))
-            self.ui.message("Context discarded. Add new context before retrying.")
+            self.ui.message(
+                "Recent context retained until expiry. Continue or request another cue."
+                if self.rolling
+                else "Context discarded. Add new context before retrying."
+            )
         finally:
-            self.context.clear()
+            if not self.rolling:
+                self.context.clear()
             context = cue = None
-        if had_audio:
+        if had_audio and not self.rolling:
             # Wait for explicit resume so the display remains visible and a speaker
             # cannot feed the generated cue back into the microphone.
             self.pending_resume = True
@@ -114,9 +130,8 @@ class Application:
     def tick(self):
         self.context.expire()
         self.ui.tick()
-        if self.audio is None:
-            return
-        for kind, value in self.audio.poll():
+        pause_requested = False
+        for kind, value in self.audio.poll() if self.audio else []:
             if kind == "fragment":
                 try:
                     # A personal microphone may capture either participant. NeMo
@@ -126,9 +141,16 @@ class Application:
                         captured_at, fragment = value
                     else:
                         captured_at, fragment = None, value  # legacy/fake worker
-                    self.context.add(fragment, "unknown", merge=True, captured_at=captured_at)
+                    if captured_at is not None and not (
+                        self.clock() - self.context.ttl_seconds < captured_at <= self.clock()
+                    ):
+                        continue
+                    self.context.add(
+                        fragment, "unknown", merge=not self.rolling, captured_at=captured_at
+                    )
+                    self.remember(fragment, "unknown", captured_at=captured_at)
                     fragment = None
-                    if len(self.context):
+                    if len(self.context) and not self.rolling:
                         self.ui.message(
                             "Speech fragment accepted privately (speaker not identified). "
                             "Press Enter or :cue for a cue."
@@ -143,25 +165,42 @@ class Application:
                     )
                     break
             elif kind == "empty_fragment":
-                self.ui.message(
-                    "No words recognized in this window. "
-                    "Try a short clear phrase or type a fragment."
-                )
+                if not self.rolling:
+                    self.ui.message(
+                        "No words recognized in this window. "
+                        "Try a short clear phrase or type a fragment."
+                    )
             elif kind == "status":
-                self.ui.status(value)
+                if not self.rolling or value == "rolling listening":
+                    self.ui.status(value)
+            elif kind == "audio_gap":
+                self.ui.message(
+                    "Audio processing fell behind; an older capture window was dropped."
+                )
             elif kind == "error":
                 self.context.clear()
                 self.ui.status("error")
                 self.ui.message(value)
             elif kind == "pause" and self.pause_assist and len(self.context):
                 if self.clock() - self.last_request >= 30:
-                    self.ui.message("Possible conversational pause. Requesting an optional cue.")
-                    self.request_cue(automatic=True)
-                    break
+                    if self.rolling:
+                        pause_requested = True
+                    else:
+                        self.ui.message(
+                            "Possible conversational pause. Requesting an optional cue."
+                        )
+                        self.request_cue(automatic=True)
+                        break
+        if self.memory and self.memory.due():
+            self.save_memory(quiet=True)
+        if pause_requested and len(self.context):
+            self.ui.message("Possible conversational pause. Requesting an optional cue.")
+            self.request_cue(automatic=True)
         value = None
 
     def command(self, line):
         if line == ":quit":
+            self.save_memory()
             return False
         if line in {"", ":cue"}:
             self.request_cue()
@@ -169,6 +208,8 @@ class Application:
             if self.audio:
                 self.audio.close()
             self.context.clear()
+            if self.memory:
+                self.memory.clear_recent()
             self.ui.clear_cue()
             self.ui.message("Context cleared; microphone stopped. Use :listen to resume.")
         elif line == ":listen":
@@ -177,7 +218,10 @@ class Application:
         elif line == ":pause":
             if self.audio:
                 self.audio.close()
-            self.context.clear()
+            if self.rolling:
+                self.save_memory()
+            else:
+                self.context.clear()
             self.ui.status("paused")
         elif line in {":assist on", ":assist off"}:
             self.pause_assist = line.endswith(" on")
@@ -189,17 +233,69 @@ class Application:
             self.add(line[len(":partner ") :], "partner")
         elif line == ":check":
             self.check_context()
+        elif line in {":summary", ":save"}:
+            self.save_memory()
+            if line == ":summary" and self.memory:
+                self.ui.show_summary(self.memory.text)
+        elif line == ":forget":
+            if self.memory:
+                try:
+                    self.memory.forget()
+                    self.context.clear()
+                    self.ui.message(
+                        "In-memory summary and recent context cleared. Saved S3 records remain."
+                    )
+                except ConfigurationError as exc:
+                    self.ui.message(str(exc))
         elif line.startswith(":"):
             self.ui.message(
-                "Commands: :cue, :check, :listen, :pause, :clear, :assist on/off, :quit."
+                "Commands: :cue, :check, :listen, :pause, :clear, :assist on/off, "
+                ":summary, :save, :forget, :quit."
             )
         else:
             self.add(line)
         return True
 
+    def remember(self, text, speaker, *, captured_at=None):
+        if self.memory is None:
+            return
+        try:
+            fragment = " ".join(text[-2048:].split())[-240:]
+            if fragment:
+                self.memory.add(fragment, speaker, captured_at=captured_at)
+        except (CloudRequestError, ConfigurationError, PrivacyBoundaryError) as exc:
+            self.ui.message(str(exc))
+            self.ui.message("Summary update failed; this fragment was not added to memory.")
+
+    def save_memory(self, *, quiet=False):
+        if self.memory is None:
+            return
+        try:
+            if self.memory.flush() and not quiet:
+                self.ui.message(
+                    "Timestamped one-minute summary saved to S3."
+                    if self.memory.store
+                    else "Rolling summary updated in memory."
+                )
+        except (CloudRequestError, ConfigurationError, PrivacyBoundaryError) as exc:
+            self.ui.message(str(exc))
+            self.ui.message("Summary update or upload failed. Use :save to retry.")
+
     def check_context(self):
         """Local count-only check; never print text, call the API, or refresh TTL."""
         window = None
+        if self.memory:
+            self.ui.message(
+                f"Summary: {len(self.memory.text)} characters; "
+                f"{len(self.memory.recent)} recent fragments."
+            )
+            if self.memory.store:
+                self.ui.message(
+                    "S3 upload pending retry."
+                    if self.memory.pending_upload
+                    else "S3 last saved window end: "
+                    + (self.memory.last_upload_end or "none this session")
+                )
         try:
             window = self.context.snapshot()
             counts = {
@@ -222,13 +318,27 @@ class Application:
     def run(self, *, demo=False):
         try:
             self.ui.message("Co-Wingman | local audio · bounded text · explicit recovery cues")
-            self.ui.message("Input is hidden. Type a short fragment, Enter; then Enter or :cue.")
+            visibility = "visible" if getattr(self.ui, "visible_input", False) else "hidden"
+            self.ui.message(
+                f"Input is {visibility}. Type a short fragment, Enter; then Enter or :cue."
+            )
             self.ui.message(
                 ":check shows local context counts and portfolio matches without an API call."
             )
             self.ui.message(
-                ":listen resumes audio after a cue; :pause stops it; :clear erases context; :quit exits."
+                "Rolling mode: listening continues after cues. :pause stops; :listen resumes."
+                if self.rolling
+                else ":listen resumes audio after a cue; :pause stops it; :clear erases context; :quit exits."
             )
+            if self.memory:
+                self.ui.message(
+                    "Summary: :summary inspects; :save updates; :forget clears local memory. "
+                    + (
+                        "One-minute summaries saved to S3."
+                        if self.memory.store
+                        else "Kept only this session."
+                    )
+                )
             self.ui.message(
                 "Cue display expires after 20 seconds. Pause assistance is not a stress detector."
             )
@@ -266,6 +376,8 @@ class Application:
                 self.audio.close()
         finally:
             self.context.clear()
+            if self.memory:
+                self.memory.close()
             self.client.close()
             self.ui.clear_cue()
             self.ui.status("stopped; temporary context discarded")

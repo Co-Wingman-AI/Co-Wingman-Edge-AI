@@ -93,3 +93,27 @@ committing each completed unit. Detailed product instructions remain in README,
   pre-existing architecture PNG as an unreviewed binary; it remains unchanged.
 - **Remaining:** live hosted-model and Jetson test of shortening quality, semantic
   fidelity, and latency. Mocked responses do not establish live model compliance.
+
+## 2026-10-21 — Rolling minute, visible testing, and optional S3 summaries
+
+- **Session/device:** Codex cloud workspace; Linux x86_64, Python 3.12.14.
+- **Source:** organization main `b04f69f`.
+- **Changes:** opt-in rolling mode retains a 60-second, 15-fragment/3,600-character
+  window across cues. Local capture continues in four-second windows during ASR
+  and visual cue requests, with a bounded queue and reported drops. Cues remain
+  manual/pause-triggered. Typed input is visible by default with explicit show/hide
+  flags. A separate minute timer asks the approved model for a bounded summary.
+  Optional boto3 integration saves timestamped summary JSON to a selected private
+  S3 prefix and supports explicit latest/archived-record reuse. No audio or full
+  transcript archive is uploaded. Added bucket/IAM/profile operating instructions
+  and documented expanded text budgets and summary persistence.
+- **Validation:** 103 unit/integration tests passed, including real terminal echo
+  and restoration, capture-window queue bounds, rolling expiry, minute boundaries,
+  summary validation, mocked S3 encryption/upload/reload, and failed-upload retry.
+  Ruff lint/format checks, offline demo, CLI help, and `git diff --check` passed.
+  No Jetson hardware or AWS identity was available for live verification.
+- **Remaining:** create the destination bucket and configure the Jetson's AWS
+  profile, then verify physical rolling capture, live summary quality, latency,
+  and upload/reuse. Summary compression is lossy; failed uploads have a RAM-only
+  retry record, not a durable offline archive. The pre-existing architecture PNG
+  remains flagged by the repository hygiene scanner as an unreviewed binary.
