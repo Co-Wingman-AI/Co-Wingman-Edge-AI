@@ -108,6 +108,34 @@ class BoundaryTests(unittest.TestCase):
         with self.assertRaises(PrivacyBoundaryError):
             context.take()
 
+    def test_unknown_audio_fragments_merge_within_privacy_bounds(self):
+        now = [0.0]
+        context = RollingContext(clock=lambda: now[0])
+        context.add("partner asks about the project", "unknown", merge=True)
+        now[0] = 30.0
+        context.add("user begins explaining local privacy", "unknown", merge=True)
+        window = context.take()
+        self.assertEqual(len(window.turns), 1)
+        self.assertEqual(window.turns[0].speaker, "unknown")
+        self.assertIn("partner asks", window.turns[0].text)
+        self.assertIn("local privacy", window.turns[0].text)
+        self.assertLessEqual(window.character_count, 800)
+
+        now[0] = 40.0
+        context.add("a" * 200, "unknown", merge=True)
+        context.add("b" * 100, "unknown", merge=True)
+        window = context.take()
+        self.assertEqual(len(window.turns), 2)
+        self.assertTrue(all(len(turn.text) <= 240 for turn in window.turns))
+
+        now[0] = 50.0
+        context.add("older speech", "unknown", merge=True)
+        now[0] = 109.0
+        context.add("newer speech", "unknown", merge=True)
+        now[0] = 110.0
+        context.expire()
+        self.assertEqual(len(context), 0)
+
     def test_strict_schema_and_unsafe_results(self):
         for content in [
             "{}",
@@ -156,6 +184,11 @@ class ProviderTests(unittest.TestCase):
         self.assertEqual(captured["payload"]["response_format"], {"type": "json_object"})
         self.assertEqual(captured["payload"]["chat_template_kwargs"], {"enable_thinking": False})
         self.assertEqual(captured["payload"]["max_tokens"], 256)
+        self.assertIn(
+            'An "unknown" label is local microphone ASR',
+            captured["payload"]["messages"][0]["content"],
+        )
+        self.assertNotIn("resume|clarify|respond", captured["payload"]["messages"][0]["content"])
         self.assertTrue(all(type(m["content"]) is str for m in captured["payload"]["messages"]))
         self.assertEqual(captured["timeout"], 15)
         for private in ["test-secret", "private sentinel", cue.cue]:

@@ -103,10 +103,15 @@ class Application:
         for kind, value in self.audio.poll():
             if kind == "fragment":
                 try:
-                    self.context.add(value)
+                    # A personal microphone may capture either participant. NeMo
+                    # does not identify speakers, so never label ASR as the user.
+                    # Merge adjacent windows when bounded space allows so a
+                    # question is less likely to fall out of the four-turn store.
+                    self.context.add(value, "unknown", merge=True)
                     if len(self.context):
                         self.ui.message(
-                            "Speech fragment accepted privately. Press Enter or :cue for a cue."
+                            "Speech fragment accepted privately (speaker not identified). "
+                            "Press Enter or :cue for a cue."
                         )
                 except PrivacyBoundaryError:
                     self.context.clear()

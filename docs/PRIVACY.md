@@ -9,6 +9,9 @@ and remove credential environment variables before loading models. This guards
 against accidental library requests; it is not a hostile-code security sandbox.
 
 The main process retains at most four timestamped fragments / 800 characters.
+Consecutive local-ASR windows may be combined only while the resulting fragment
+remains at most 240 characters. Microphone fragments carry an `unknown` speaker
+label because the application performs no diarization or identity inference.
 Expired entries are removed in the event loop (normally within 0.1 seconds).
 A cue request stops the speech worker, atomically takes and clears the store, and
 submits only validated bounded text. A failed request also consumes the context.

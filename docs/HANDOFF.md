@@ -106,6 +106,19 @@ scan, and diff whitespace checks passed. The operator must pull and repeat a
 fresh spoken request, waiting for “Speech fragment accepted privately” first.
 The precise cause of the previous rejected response remains unknown.
 
+The operator then supplied screenshots of successful solo, manual-conversation,
+and automatic-pause cues. The conversation cues were valid but overly generic,
+including requests for the partner to clarify rather than a useful continuation.
+The likely cause was confirmed in code: every ASR fragment was labeled `user`,
+although one microphone can capture either participant, and a longer exchange
+could evict its opening question after four ASR windows. Microphone fragments are
+now labeled `unknown`; adjacent ASR windows merge when the combined fragment stays
+within 240 characters. The four-fragment, 800-character, and TTL bounds remain.
+The system prompt now requests an exact phrase the user can say next, prioritizing
+a supported answer or continuation over generic clarification while explaining
+that unknown speech may contain either participant. These changes passed all 58
+cloud tests; their effect on live cue usefulness still requires operator review.
+
 Follow RUN_ON_JETSON.md. Confirm the actual JetPack version and compatible NVIDIA
 torch/torchaudio before installing NeMo. Test `--health-check` with the operator's
 own UF key; never send it to a chat. Then exercise real microphone capture, ASR

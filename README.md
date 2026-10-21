@@ -78,6 +78,11 @@ Audio is captured in four-second windows; capture pauses during transcription.
 Only a short suffix of each result enters the rolling store. This is a simple
 windowed prototype, not a continuous streaming transcription service. Partial
 words at window boundaries may reduce accuracy. It does not keep a full transcript.
+Adjacent microphone windows are combined when they fit within the existing
+240-character fragment bound, so a short exchange is less likely to lose its
+opening question. Microphone text is labeled `unknown`, because local ASR does
+not identify which participant spoke. The cue model is instructed to infer the
+direction only from supported wording and produce an exact phrase the user can say.
 
 The recorded Jetson is an Orin Nano on L4T 36.4.7. Earlier local Nemotron inference
 left only about 294 MiB available memory and grew swap; the application never
@@ -122,6 +127,11 @@ Use a consenting operator's personal close-talk microphone. This version has no
 biometric enrollment, speaker verification, or diarization; it cannot distinguish
 the operator from another nearby voice. Do not claim it identifies an enrolled
 speaker. See [privacy details](docs/PRIVACY.md).
+
+For the best conversation cue, keep the exchange short and request the cue soon
+after getting stuck. A single personal microphone can capture either participant,
+but it cannot assign identities. For a controlled demo, `:partner short text`
+provides an explicit partner fragment before the user speaks or types a response.
 
 ## Privacy contract
 

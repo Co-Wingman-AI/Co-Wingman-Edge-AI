@@ -94,6 +94,9 @@ python3 -m cowingman
 
 Wait for `[listening]`. Speak a short synthetic phrase, allow a four-second capture
 window plus local transcription, and wait for “Speech fragment accepted privately.”
+The notice also says the speaker was not identified; this is expected when one
+microphone captures two people. Keep a test exchange brief and request the cue
+soon after the user gets stuck so the relevant question remains in bounded context.
 Then press Enter or enter `:cue`. A “No words recognized” notice means that window
 produced no usable text; try again or use a typed fragment. The cue appears
 for up to 20 seconds. The microphone/model stops for the request and stays paused

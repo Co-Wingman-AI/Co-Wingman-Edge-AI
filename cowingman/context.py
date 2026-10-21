@@ -29,7 +29,11 @@ class BoundedContext:
             raise PrivacyBoundaryError("Use one to four recent text fragments.")
         checked = []
         for turn in turns:
-            if not isinstance(turn, ContextTurn) or turn.speaker not in {"user", "partner"}:
+            if not isinstance(turn, ContextTurn) or turn.speaker not in {
+                "user",
+                "partner",
+                "unknown",
+            }:
                 raise PrivacyBoundaryError("Invalid text fragment.")
             if type(turn.text) is not str:
                 raise PrivacyBoundaryError("Only decoded text is permitted.")
@@ -67,7 +71,7 @@ class RollingContext:
         cutoff = self.clock() - self.ttl_seconds
         self._items[:] = [(at, t) for at, t in self._items if at > cutoff]
 
-    def add(self, text: str, speaker: str = "user") -> None:
+    def add(self, text: str, speaker: str = "user", *, merge=False) -> None:
         if type(text) is not str:
             raise PrivacyBoundaryError("Only decoded text is permitted.")
         # Discard older words locally before they enter the rolling store.
@@ -76,6 +80,14 @@ class RollingContext:
             return
         turn = BoundedContext.from_turns([ContextTurn(speaker, fragment)]).turns[0]
         self.expire()
+        if merge and self._items and self._items[-1][1].speaker == speaker:
+            first_seen, previous = self._items[-1]
+            combined = f"{previous.text} {turn.text}"
+            if len(combined) <= MAX_TURN_CHARACTERS:
+                # Preserve the oldest window's timestamp. Continued conversation
+                # must never refresh and retain older speech beyond the TTL.
+                self._items[-1] = (first_seen, ContextTurn(speaker, combined))
+                return
         self._items.append((self.clock(), turn))
         while (
             len(self._items) > MAX_CONTEXT_TURNS
