@@ -96,11 +96,15 @@ class RollingContext:
             self._items.pop(0)
 
     def take(self) -> BoundedContext:
-        self.expire()
         try:
-            return BoundedContext.from_turns([t for _, t in self._items])
+            return self.snapshot()
         finally:
             self.clear()
+
+    def snapshot(self) -> BoundedContext:
+        """Read only unexpired fragments without consuming or refreshing them."""
+        self.expire()
+        return BoundedContext.from_turns([t for _, t in self._items])
 
     def clear(self) -> None:
         self._items.clear()

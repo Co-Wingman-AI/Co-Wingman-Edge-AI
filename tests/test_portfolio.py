@@ -149,15 +149,52 @@ class PortfolioTests(unittest.TestCase):
         self.assertNotIn("GestureTutor", json.dumps(requests))
         self.assertNotIn("ParcelFlow", json.dumps(metrics))
         self.assertEqual(metrics["portfolio_characters"], sum(map(len, PASSAGES[:2])))
-        client.request_cue(context("How was your weekend?"))
-        self.assertNotIn("portfolio_facts", json.loads(requests[-1]["messages"][1]["content"]))
+        with self.assertRaisesRegex(CloudRequestError, "No NaviGator request made"):
+            client.request_cue(context("How was your weekend?"))
         for result in [["x"] * 3, ["x" * 601], [b"audio"], ["bad\ntext"]]:
             client.portfolio = Mock(select=Mock(return_value=result))
             with self.assertRaises(PrivacyBoundaryError):
                 client.request_cue(context("ParcelFlow"))
-        self.assertEqual(len(requests), 2)
+        self.assertEqual(len(requests), 1)
         client.close()
         self.assertIsNone(client.portfolio)
+
+    def test_missing_match_never_calls_api_or_displays_invented_cue(self):
+        transport = Mock()
+        client = NavigatorClient("synthetic", portfolio=Portfolio(PASSAGES), transport=transport)
+        ui = FakeUI()
+        app = Application(Config.load(offline=True, environ={}), client, ui)
+        app.add("I built it using", "unknown")
+        app.request_cue()
+        transport.assert_not_called()
+        self.assertFalse(ui.cues)
+        self.assertEqual(len(app.context), 0)
+        self.assertIn("0 matching passages", " ".join(ui.messages))
+        self.assertNotIn("I built it using", " ".join(ui.messages))
+        app.close()
+
+    def test_local_check_counts_without_consuming_refreshing_or_sending(self):
+        now = [0.0]
+        transport = Mock()
+        client = NavigatorClient("synthetic", portfolio=Portfolio(PASSAGES), transport=transport)
+        ui = FakeUI()
+        app = Application(Config.load(offline=True, environ={}), client, ui, clock=lambda: now[0])
+        app.command(":partner Tell me about ParcelFlow")
+        app.context.add("I built it using", "unknown")
+        now[0] = 59.0
+        app.command(":check")
+        self.assertIn(
+            "Context: 1 typed partner, 0 typed user, 1 microphone fragments.", ui.messages
+        )
+        self.assertIn("Portfolio: 2 matching passages.", ui.messages)
+        self.assertNotIn("ParcelFlow", " ".join(ui.messages))
+        self.assertEqual(len(app.context), 2)
+        now[0] = 60.0
+        app.command(":check")
+        self.assertEqual(len(app.context), 0)
+        self.assertIn("No recent context. Add a short fragment before :check.", ui.messages)
+        transport.assert_not_called()
+        app.close()
 
     def test_live_typed_entrypoint_loads_profile_and_hides_facts(self):
         original = NavigatorClient

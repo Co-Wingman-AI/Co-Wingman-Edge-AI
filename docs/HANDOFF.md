@@ -176,6 +176,18 @@ context is cleared with no automatic retry. Live generation quality remains
 unverified after this change; mocked tests prove retrieval and echo rejection,
 not the behavior of the hosted model.
 
+The subsequent live typed test returned a relevant Kafka cue with two passages.
+The microphone test then selected zero passages and copied the synthetic SQLite
+example from the system prompt. The log showed no typed-fragment acknowledgement;
+it cannot establish whether the intended partner question reached the context or
+what ASR recognized. All concrete cue examples have now been removed from the
+system prompt. With a profile enabled, zero matches stops before any API call
+and reports the missing facts explicitly. General conversation without a profile
+continues as before. The new `:check` command reports only current role counts and
+matching-passage count, without consuming/refreshing context or making a request.
+Use it after a typed partner question and before resuming microphone capture.
+This is a retrieval diagnostic, not ASR accuracy or semantic grounding validation.
+
 The user explicitly authorized committing and pushing tested changes during this
 session. Read current instructions in a new session rather than assuming that
 permission extends to unrelated work. Preserve local changes. Keep the one

@@ -171,16 +171,45 @@ class Application:
             )
         elif line.startswith(":partner "):
             self.add(line[len(":partner ") :], "partner")
+        elif line == ":check":
+            self.check_context()
         elif line.startswith(":"):
-            self.ui.message("Commands: :cue, :listen, :pause, :clear, :assist on/off, :quit.")
+            self.ui.message(
+                "Commands: :cue, :check, :listen, :pause, :clear, :assist on/off, :quit."
+            )
         else:
             self.add(line)
         return True
+
+    def check_context(self):
+        """Local count-only check; never print text, call the API, or refresh TTL."""
+        window = None
+        try:
+            window = self.context.snapshot()
+            counts = {
+                role: sum(t.speaker == role for t in window.turns)
+                for role in ("partner", "user", "unknown")
+            }
+            self.ui.message(
+                f"Context: {counts['partner']} typed partner, {counts['user']} typed user, "
+                f"{counts['unknown']} microphone fragments."
+            )
+            portfolio = getattr(self.client, "portfolio", None)
+            if portfolio is not None:
+                self.ui.message(f"Portfolio: {len(portfolio.select(window))} matching passages.")
+            self.ui.message("Local check only; no API request made. Context expiry unchanged.")
+        except PrivacyBoundaryError:
+            self.ui.message("No recent context. Add a short fragment before :check.")
+        finally:
+            window = None
 
     def run(self, *, demo=False):
         try:
             self.ui.message("Co-Wingman | local audio · bounded text · explicit recovery cues")
             self.ui.message("Input is hidden. Type a short fragment, Enter; then Enter or :cue.")
+            self.ui.message(
+                ":check shows local context counts and portfolio matches without an API call."
+            )
             self.ui.message(
                 ":listen resumes audio after a cue; :pause stops it; :clear erases context; :quit exits."
             )

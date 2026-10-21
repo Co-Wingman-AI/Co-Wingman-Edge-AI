@@ -49,8 +49,10 @@ The exact wording varies. It should refer to the portfolio facts rather than ask
 for generic clarification.
 
 The status `Portfolio: 2 reference passages supplied.` reports how many local
-passages were included in the request, without printing them. A zero count means
-retrieval found no keyword match. A multiword verbatim echo of a user/microphone
+passages were included in the request, without printing them. If retrieval finds
+zero matches, portfolio mode stops before the API request and displays an explicit
+no-match message. Add fresh context naming the project or topic before retrying.
+A multiword verbatim echo of a user/microphone
 fragment is withheld with an explicit error, rather than displayed as a useful cue.
 Context is discarded as with other rejected responses; there is no automatic retry.
 The check ignores case and punctuation but is not a general relevance evaluator.
@@ -74,11 +76,21 @@ After each cue, `:listen` resumes audio. Pause assistance still uses speech ener
 and silence, cannot recognize your identity, and can mistake normal turn-taking
 for a hesitation. Typed tests isolate retrieval from microphone/ASR quality.
 
+For a controlled microphone test, use `:pause` first, then type the `:partner`
+question and press Enter. Use `:check` to verify one typed partner fragment and
+two matching passages. Then use `:listen`, speak one short unfinished answer,
+wait for the accepted-fragment message, and request a cue. `:check` reports only
+counts: no conversation text is printed, no API request is made, and the context
+is neither consumed nor kept beyond its original expiry. It cannot verify ASR
+accuracy. A long exchange or the 60-second TTL can still remove the typed question.
+
 ## Retrieval, limits, and verification
 
 Retrieval uses local keyword ranking with a few question aliases (for example,
 "study" maps to education). It loads no embedding model and uses no additional
-GPU memory. Only matches are selected; no match sends no portfolio facts. It may
+GPU memory. Only matches are selected; no match stops the request before any API
+call. This applies to all requests while `--portfolio` is enabled. Launch without
+that flag for general conversation cues that do not require portfolio matches. It may
 miss paraphrases or select an irrelevant passage. Selected facts stay separate
 from conversation roles: portfolio text is reference data, never a spoken turn.
 

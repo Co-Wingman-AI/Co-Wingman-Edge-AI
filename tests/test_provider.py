@@ -188,10 +188,12 @@ class ProviderTests(unittest.TestCase):
             'An "unknown" label is local microphone ASR',
             captured["payload"]["messages"][0]["content"],
         )
-        self.assertIn(
+        self.assertNotIn(
             "Only a small text excerpt leaves the device.",
             captured["payload"]["messages"][0]["content"],
         )
+        self.assertNotIn("SQLite", captured["payload"]["messages"][0]["content"])
+        self.assertNotIn("TrailNotes", captured["payload"]["messages"][0]["content"])
         self.assertNotIn(
             'Example: {"cue":"Could you clarify the last point?"',
             captured["payload"]["messages"][0]["content"],

@@ -111,6 +111,7 @@ for predictable memory release. See [speech setup and limitations](docs/SPEECH.m
 | --- | --- |
 | A short line, then Enter | Accept a hidden local text fragment |
 | Enter on an empty line, or `:cue` | Request a recovery cue |
+| `:check` | Show local fragment counts and portfolio matches without an API call |
 | `:partner short text` | Accept a typed partner fragment |
 | `:listen` | Start/restart microphone processing, including after a cue |
 | `:pause` | Stop microphone and discard context |
@@ -140,6 +141,8 @@ about your projects, experience, or education. With `--portfolio`, each request
 can send up to 1,200 additional fact characters alongside the 800-character
 conversation excerpt. The profile is explicitly imported into ignored local JSON;
 it is not fetched during a conversation. This feature does not identify speakers.
+With this option enabled, zero matching passages stops the cue request before
+the API call. Add a question naming the topic and use `:check` before retrying.
 
 ## Privacy contract
 
