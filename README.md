@@ -13,7 +13,7 @@ recognition and bounded text inference through UF NaviGator AI Toolkit.
 
 **Launch: `python3 -m cowingman`.** Press Enter or type `:cue` to request a cue.
 The terminal displays component status and a short cue. A Mac can run the same
-application with hidden typed input, or a fully offline synthetic provider.
+application with visible typed input, or a fully offline synthetic provider.
 
 The operator has verified Jetson microphone capture, local NeMo ASR, NaviGator
 access, and an end-to-end cue. Conversation accuracy, sustained performance, and
@@ -32,7 +32,7 @@ python3 -m cowingman --typed --offline
 
 The first command runs a synthetic example and exits. In the interactive fallback,
 enter a short fragment, press Enter to accept it, then press Enter again or enter
-`:cue`. Input is hidden to keep transcript text out of terminal history. The cue
+`:cue`. Typed mode shows entered text; add `--hide-input` for hidden entry. The cue
 appears only when stdout is a terminal; redirected output contains status only.
 Use `:quit`, Ctrl-C, or end-of-input to exit. A cue clears after 20 seconds.
 
@@ -118,18 +118,45 @@ for predictable memory release. See [speech setup and limitations](docs/SPEECH.m
 | Personalized typed cues | `python3 -m cowingman --typed --portfolio private/portfolio.json` |
 | Optional local spoken cues | `python3 -m cowingman --tts` |
 | Opt-in pause-triggered cues | `python3 -m cowingman --pause-assist` |
+| Rolling minute, continuous listening and pause cues | `python3 -m cowingman --rolling --pause-assist --show-input` |
 
 | Input while running | Effect |
 | --- | --- |
-| A short line, then Enter | Accept a hidden local text fragment |
+| A short line, then Enter | Accept a local text fragment; visible in typed mode |
 | Enter on an empty line, or `:cue` | Request a recovery cue |
 | `:check` | Show local fragment counts and portfolio matches without an API call |
 | `:partner short text` | Accept a typed partner fragment |
 | `:listen` | Start/restart microphone processing, including after a cue |
-| `:pause` | Stop microphone and discard context |
+| `:pause` | Stop microphone; rolling mode keeps recent context until expiry |
 | `:clear` | Clear context/display and stop microphone |
 | `:assist on` / `:assist off` | Enable/disable automatic pause-triggered requests |
 | `:quit` or Ctrl-C | Release resources and exit |
+
+For rolling conversation, add `--rolling`: four-second captures update a
+60-second window, and cues no longer stop listening or clear the recent window.
+Cues still require a pause (`--pause-assist`) or a manual request. A separate
+minute timer summarizes recent text through NaviGator. Without S3, the summary is
+RAM-only. To persist timestamped summaries and load them in later sessions, follow
+[AWS summary setup](docs/AWS_SUMMARIES.md). `--summary-s3` enables rolling mode;
+`--resume-summary` loads the latest record or a selected archived window.
+This does not provide speaker identification or a complete transcript archive.
+
+Optional [profiling and shadow testing](docs/PROFILING_AND_SHADOW.md) adds
+`--timings private/run-01.jsonl` for numeric stage measurements and
+`--disfluency-shadow models/disfluency.keras` for experimental local scores.
+Shadow scores never trigger cues or infer anxiety. The model requires explicit
+setup and is evaluated independently of pause assistance. Production cue tokens
+remain 256; an explicit synthetic benchmark compares smaller budgets.
+
+You can also [upload your portfolio to S3](docs/AWS_SUMMARIES.md) and start with
+`--portfolio-s3 s3://YOUR_BUCKET/cowingman/jetson --aws-region us-east-1`.
+The profile loads once into RAM; passage retrieval stays local. Uploads are explicit,
+timestamped, and separate from conversation summaries.
+
+`--typed` displays entered text by default. `--show-input` also enables visible
+commands in microphone mode; `--hide-input` restores hidden testing. In rolling
+mode, `:summary` updates/displays the summary, `:save` saves a partial window,
+and `:forget` clears local memory without deleting saved S3 objects.
 
 Pause assistance measures audio energy followed by sustained silence, with a
 minimum speech duration and a 30-second cooldown. It can send bounded text
@@ -155,24 +182,37 @@ conversation excerpt. The profile is explicitly imported into ignored local JSON
 it is not fetched during a conversation. This feature does not identify speakers.
 With this option enabled, zero matching passages stops the cue request before
 the API call. Add a question naming the topic and use `:check` before retrying.
-Explicit Enter/`:cue` requests can use a validated local portfolio phrase if the
-model declines or returns an oversized cue; the UI identifies this fallback.
-Automatic pause requests respect model declines and do not use local fallback.
+Oversized model answers go through one shortening request to the same model.
+Only its bounded draft is sent back; the result must pass the normal 12-word,
+160-character, schema, safety, and echo checks. This works in manual and automatic
+mode, with or without a portfolio. It replaces the oversized-answer portfolio
+fallback: an invalid shortening result is withheld, never silently replaced.
+The UI reports when shortening was used. It can add one API call and latency
+within the original request timeout. Meaning preservation still needs live review.
+Separately, an explicit Enter/`:cue` request can use a validated local portfolio
+phrase if the original model response validly declines; the UI labels that fallback.
+Automatic declines and declines during shortening are always respected.
 
 ## Privacy contract
 
 - Raw microphone audio stays in the local speech process; it is never an API input.
-- No recordings or transcripts are written by the application. There is no session archive.
-- The rolling store is at most four fragments, 240 characters each, 800 characters
-  total. Fragments expire after 60 seconds by default; idle cleanup runs every loop.
-- Each request selects only that bounded excerpt. The store is cleared on request,
+- No audio recordings or full transcript archive are written. Opt-in S3 mode
+  persists timestamped model-generated summaries, up to 1,200 characters each.
+- Default context is at most four fragments / 800 characters. `--rolling` uses
+  fifteen fragments / 3,600 characters over 60 seconds. Each fragment is at most
+  240 characters. Rolling mode can add 1,200 historical summary characters per cue.
+- Each request selects only that bounded excerpt. Default mode clears it on request;
+  rolling mode retains it until expiry or explicit clearing. In both modes,
   and temporary request references are dropped on success, failure, cancellation,
-  and shutdown. Retry needs fresh context. No request is retried automatically.
+  and shutdown. Transport failures are not retried. A length-only failure can
+  trigger one shortening call containing only the bounded model-generated draft,
+  without resending the conversation or retrieving more portfolio passages.
 - With `--portfolio`, selected facts add at most 1,200 characters per request.
   The imported profile persists locally until deleted; conversation TTL does not
   apply to this reference file. Without the flag, no profile is loaded or sent.
-- Only HTTPS to the exact NaviGator host/path is allowed. Redirects and environment
-  proxies are disabled. Requests have a wall-clock deadline and a bounded response.
+- Model requests use only the exact approved NaviGator HTTPS host/path. Redirects
+  and environment proxies are disabled for that client. Optional S3 requests use
+  boto3's AWS endpoints/credential chain. Requests have timeouts and bounded data.
 - Keys, authorization headers, transcripts, prompts, and cues are not logged or
   included in benchmark reports. Cue text is intentionally visible on the terminal
   and, with `--tts`, audible; redirected stdout suppresses it.
@@ -191,7 +231,7 @@ explicit setup script, never as a conversation-time fallback.
 | Missing/denied API key | Set `NAVIGATOR_TOOLKIT_API_KEY`; grant that key the approved model in UF Toolkit; run `--health-check`. |
 | Timeout, rate limit, or service failure | Context is discarded. Wait, add fresh context, and request again; use `--typed --offline` for a network-free demonstration. |
 | Output token limit or no cue text | Update with `git pull --ff-only`, then rerun `--health-check`. The service may still be using reasoning mode. Error messages distinguish truncation, empty output, refusal, and invalid cue format without exposing response text. |
-| Cue validation failure | The error identifies invalid JSON, fields, intent, boolean type, length, control characters, or safety rejection without printing output. Update the app, then use fresh context; there is no automatic retry. |
+| Cue validation failure | Length-only failures on offered cues get one bounded shortening request. If it fails, or another validation check fails, the cue is withheld. Add fresh context to try again. |
 | Transcription runs but no context is ready | Wait for “Speech fragment accepted privately” before pressing Enter. “No words recognized” means ASR produced no usable text for that window. After a request, use `:listen` before speaking again. |
 | Request options rejected | Confirm UF supports strict JSON Schema with string-length/pattern constraints and `chat_template_kwargs.enable_thinking=false` for the approved model. No automatic fallback or retry is made. |
 | Microphone missing or disconnected | Connect a USB input; run `--list-audio`; export `COWINGMAN_AUDIO_DEVICE` to its numeric index. Try `:listen`; typed input remains usable after audio errors. |

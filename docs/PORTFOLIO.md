@@ -36,7 +36,8 @@ Delete the local JSON when it is no longer wanted. Never commit personal profile
 
 ## Controlled test
 
-Type each line separately, pressing Enter after each. Input remains hidden:
+Type each line separately, pressing Enter after each. Typed input is visible;
+add `--hide-input` to hide it:
 
 ```text
 :partner Tell me about OrderFlow. What did you build?
@@ -54,13 +55,23 @@ zero matches, portfolio mode stops before the API request and displays an explic
 no-match message. Add fresh context naming the project or topic before retrying.
 A multiword verbatim echo of a user/microphone
 fragment is withheld with an explicit error, rather than displayed as a useful cue.
-Context is discarded as with other rejected responses; there is no automatic retry.
+Context is discarded as with other rejected responses; transport failures are not retried.
 The check ignores case and punctuation but is not a general relevance evaluator.
-For an explicit Enter/`:cue` request, portfolio mode can use a local reference
-phrase when the model returns a valid `should_offer: false` response or when its
-only validation failure is word/character length. The UI explicitly identifies
-this as a local fallback. It is a new phrase extracted from selected portfolio
-facts, not the model's declined text. No second API request is made.
+When an offered cue fails only word/character length validation, one additional
+request asks the same model to shorten its own answer. Only the bounded draft and
+its intent are sent back as untrusted data; no conversation or portfolio passages
+are resent. The shortening prompt requires preservation of meaning, negation,
+uncertainty, and qualifications, without adding facts. The result must pass all
+normal checks and preserve the intent. There is no further repair or local fact
+fallback if shortening fails. Both calls share the configured request timeout.
+The UI reports `NaviGator: length check required one shortening request.`
+This is model-generated condensation, not clipping at character 160. Validation
+enforces length and structure; it does not prove factual or semantic fidelity.
+
+Separately, for an explicit Enter/`:cue` request, portfolio mode can use a local
+reference phrase when the original model returns a valid `should_offer: false`.
+The UI identifies this as a local phrase. It is extracted from selected portfolio
+facts, not the model's declined text. This separate path makes no second request.
 
 The fallback prefers complete short statements in retrieval order and can add
 "I" before a source action verb. It can omit an appended achievement clause from
@@ -70,8 +81,9 @@ fragments. Every candidate passes the normal schema, safety, 12-word, 160-charac
 and echo checks. These rules are conservative heuristics, not proof of semantic
 accuracy. If no suitable phrase exists, a valid decline stays a decline and an
 invalid response stays an error. Other validation failures and explicit API
-refusals do not trigger fallback. Automatic pause requests never use this fallback
-and preserve the model's decision not to offer a cue.
+refusals do not trigger fallback. Automatic pause requests never use local fact
+fallback. A false offer decision never triggers shortening, and a decline returned
+by shortening is respected in both manual and automatic modes.
 
 Test another topic using fresh context:
 
@@ -105,15 +117,18 @@ accuracy. A long exchange or the 60-second TTL can still remove the typed questi
 Retrieval uses local keyword ranking with a few question aliases (for example,
 "study" maps to education). It loads no embedding model and uses no additional
 GPU memory. Only matches are selected; no match stops the request before any API
-call. This applies to all requests while `--portfolio` is enabled. Launch without
+call unless a rolling conversation summary is available as historical context.
+Launch without
 that flag for general conversation cues that do not require portfolio matches. It may
 miss paraphrases or select an irrelevant passage. Selected facts stay separate
 from conversation roles: portfolio text is reference data, never a spoken turn.
 
 Each live request can contain up to **two passages, 600 characters each**, in
-addition to the existing **800-character** conversation window. Thus the new
-maximum source-text content is **2,000 characters**, plus JSON and the fixed system
-prompt. Selection is validated again before transmission. No full profile or
+addition to the default **800-character** conversation window (**2,000 characters**
+total). With `--rolling`, the conversation budget is **3,600 characters**, plus
+up to **1,200** historical summary characters and **1,200** portfolio characters
+(**6,000** total). These limits exclude JSON and the fixed system prompt.
+Selection is validated again before transmission. No full profile or
 source URLs are sent, and the application does not browse during conversations.
 UF receives those selected facts as well as the bounded conversation excerpt.
 

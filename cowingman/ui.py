@@ -1,4 +1,4 @@
-"""Terminal presentation with hidden input and no cue text on redirected output."""
+"""Terminal presentation with explicit input visibility and private redirected output."""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ import time
 
 
 class TerminalUI:
-    def __init__(self, stdin=None, stdout=None, input_ttl=60.0):
+    def __init__(self, stdin=None, stdout=None, input_ttl=60.0, visible_input=False):
         self.input = sys.stdin if stdin is None else stdin
         self.output = sys.stdout if stdout is None else stdout
         self._terminal = self.output.isatty()
@@ -21,8 +21,10 @@ class TerminalUI:
         self._discard_line = False
         self._eof = False
         self._cue_lines = 0
+        self._cue_input_lines = 0
         self._input_ttl = input_ttl
         self._input_until = 0.0
+        self.visible_input = visible_input
 
     def __enter__(self):
         if self.input.isatty():
@@ -30,7 +32,10 @@ class TerminalUI:
 
             self._saved = termios.tcgetattr(self.input.fileno())
             hidden = termios.tcgetattr(self.input.fileno())
-            hidden[3] &= ~(termios.ECHO | termios.ECHONL)
+            if self.visible_input:
+                hidden[3] |= termios.ECHO
+            else:
+                hidden[3] &= ~(termios.ECHO | termios.ECHONL)
             termios.tcsetattr(self.input.fileno(), termios.TCSANOW, hidden)
         return self
 
@@ -45,6 +50,13 @@ class TerminalUI:
     def message(self, message):
         self.clear_cue()
         print(message, file=self.output, flush=True)
+
+    def show_summary(self, summary):
+        self.message(
+            "Summary: " + (summary or "No summary yet.")
+            if self._terminal
+            else "Summary display suppressed on redirected output."
+        )
 
     def status(self, state):
         if state != self._status:
@@ -65,6 +77,9 @@ class TerminalUI:
             lines = textwrap.wrap(cue.cue, width=max(5, (columns - 9) // 2))
             self._cue_lines = len(lines)
             self.output.write("\r\033[2K  CUE: " + "\n       ".join(lines))
+            if self.visible_input:
+                self.output.write("\n")
+                self._cue_input_lines = 0
             self.output.flush()
             self._cue_until = time.monotonic() + 20
         else:
@@ -72,9 +87,18 @@ class TerminalUI:
 
     def clear_cue(self):
         if self._cue_until:
-            self.output.write("\r\033[2K")
-            for _ in range(self._cue_lines - 1):
-                self.output.write("\033[1A\r\033[2K")
+            if self.visible_input:
+                # Keep an in-progress visible input line intact when a cue expires.
+                self.output.write("\0337")
+                if self._cue_input_lines:
+                    self.output.write(f"\033[{self._cue_input_lines}A")
+                for _ in range(self._cue_lines):
+                    self.output.write("\033[1A\r\033[2K")
+                self.output.write("\0338")
+            else:
+                self.output.write("\r\033[2K")
+                for _ in range(self._cue_lines - 1):
+                    self.output.write("\033[1A\r\033[2K")
             self.output.flush()
             self._cue_until = 0.0
             self._cue_lines = 0
@@ -120,6 +144,12 @@ class TerminalUI:
         except UnicodeError:
             self.message("Input must be text in UTF-8.")
             return None
+        if self.visible_input and self._cue_until:
+            try:
+                columns = os.get_terminal_size(self.output.fileno()).columns
+            except (OSError, ValueError):
+                columns = 80
+            self._cue_input_lines += 1 + len(text) // max(1, columns)
         if len(text) > 2048:
             self.message("Input too long. Enter a short recent fragment.")
             return None

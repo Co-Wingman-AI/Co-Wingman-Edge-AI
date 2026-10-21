@@ -220,7 +220,7 @@ The operator's next typed request returned a valid `should_offer: false`, so the
 length-only fallback was not used. Manual and automatic triggers are now passed
 separately to the provider: explicit requests ask for help immediately, while pause
 assistance can decline. Manual portfolio requests can extract a local phrase when
-the model validly declines; automatic requests have no local fallback. The normal
+the model validly declines; automatic requests do not override declines. The normal
 decline text is not displayed or forced to true. The UI labels locally extracted
 phrases, and there is still only one API call. Extraction now avoids arbitrary
 trailing comma fragments (the old rule selected "and evaluation across 1,500+
@@ -229,6 +229,42 @@ Length checks follow other schema and safety checks so a length failure cannot
 hide another invalid field. Tests cover manual/automatic routing, declines,
 unusable facts, qualifier preservation, and validation precedence. Live hosted
 generation remains variable; this local recovery path is explicitly reported.
+
+The live Jetson test subsequently confirmed automatic pause detection and a hosted
+response, but that response exceeded 160 characters with two portfolio passages
+supplied. Automatic requests now use the existing validated local fact fallback
+for length-only failures when the model explicitly returned `should_offer: true`.
+The parser carries only that validated boolean with the length error; malformed,
+unsafe, refused, or false-offer responses cannot enable automatic fallback.
+Regression tests cover both length limits, offer decisions, one-request behavior,
+and validation precedence. The hardware path still needs the operator's retest.
+
+The next operator request supersedes the oversized-answer fallback above: shorten
+the model's own answer instead of replacing it with a portfolio phrase. There is
+now one bounded shortening call for otherwise-valid offered responses that fail
+only length. It sends only the draft and intent to the same endpoint/model, keeps
+the original overall timeout, and validates the second response completely.
+Invalid repair output is withheld without another repair or portfolio fallback.
+Direct valid declines may still use the existing manual-only local phrase path;
+declines returned during shortening are always respected. The UI labels successful
+shortening and metrics contain only counts/flags, never the draft. Mocked tests
+cover request boundaries, timeout sharing, automatic routing, and rejected repairs.
+Live model shortening quality and semantic fidelity remain unverified.
+
+The operator next requested rolling context, visible manual input, and timestamped
+one-minute summary records in AWS. They clarified that cues should remain manual
+or pause-triggered, not requested every four seconds. `--rolling` now keeps a
+60-second/15-fragment/3,600-character window and keeps microphone capture running
+across ASR inference and cue requests with a bounded one-window backlog. `--typed`
+shows input by default; `--show-input` and `--hide-input` control echo explicitly.
+NaviGator summarizes each active minute; `--summary-s3` saves only the summary and
+timestamps through boto3, and `--resume-summary [KEY]` explicitly reloads a record.
+Summary history adds at most 1,200 text characters to a later cue. Raw audio stays
+local; the expanded text boundary and persistence are opt-in and documented.
+The operator has an AWS account but no bucket yet, and the cloud workspace has no
+AWS identity. The integration is tested with mocks, not a live upload. Follow
+`docs/AWS_SUMMARIES.md` for bucket/IAM/profile setup and live verification. A failed
+upload is held in RAM only; do not claim gap-free archiving or complete recall.
 
 The user explicitly authorized committing and pushing tested changes during this
 session. Read current instructions in a new session rather than assuming that
@@ -257,3 +293,17 @@ The root [WORK_LOG.md](../WORK_LOG.md) is the first-stop summary for another
 Codex/device session. Follow [AGENTS.md](../AGENTS.md) to inspect the checkout,
 preserve edits, and append a brief verification record before each push. This log
 contains project changes only; it must never include user data or runtime content.
+
+## Profiling, experimental shadow scores and S3 portfolio
+
+New opt-in paths: `--timings`, `--disfluency-shadow` (requires rolling microphone
+and timings), and `--portfolio-s3` with `--aws-region`. Read
+[PROFILING_AND_SHADOW.md](PROFILING_AND_SHADOW.md) for baseline/comparison commands,
+model provenance and detection limitations. Shadow output never causes a cue.
+Read [AWS_SUMMARIES.md](AWS_SUMMARIES.md) for bucket creation, explicit portfolio
+upload/check, startup retrieval and summary reuse. A bucket and Jetson credentials
+still need to be configured by the operator; no real AWS data was uploaded here.
+
+The production cue budget remains 256; `scripts/token_benchmark.py --live` compares
+four budgets on synthetic cases. Do not select a smaller limit without live results.
+No connection reuse, ASR overlap or shorter ASR window has been introduced.

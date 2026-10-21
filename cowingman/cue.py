@@ -54,8 +54,11 @@ class CueValidationError(ValueError):
         "safety": "cue failed the safety check.",
     }
 
-    def __init__(self, code):
+    def __init__(self, code, *, draft=None):
         self.code = code
+        # Only length failures carry a bounded, otherwise-validated draft.
+        # Its repr is suppressed and it must never enter diagnostics or logs.
+        self.draft = draft
         super().__init__(self.MESSAGES[code])
 
 
@@ -104,10 +107,11 @@ def parse_cue(content: str) -> Cue:
         re.IGNORECASE,
     ):
         raise CueValidationError("safety")
-    # A length error may allow a separate portfolio fallback. Check all other
+    # A length error may allow one shortening request. Check all other
     # constraints first, so length cannot hide a safety/schema/boolean failure.
-    if len(cue.strip()) > MAX_CUE_CHARACTERS:
-        raise CueValidationError("length")
+    draft = Cue(cue.strip(), value["intent"], value["should_offer"])
+    if len(draft.cue) > MAX_CUE_CHARACTERS:
+        raise CueValidationError("length", draft=draft)
     if len(cue.split()) > MAX_CUE_WORDS:
-        raise CueValidationError("words")
-    return Cue(cue.strip(), value["intent"], value["should_offer"])
+        raise CueValidationError("words", draft=draft)
+    return draft

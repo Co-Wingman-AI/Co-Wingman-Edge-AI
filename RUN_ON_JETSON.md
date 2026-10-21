@@ -28,7 +28,8 @@ python3 -m cowingman --health-check
 python3 -m cowingman --typed
 ```
 
-Type one short fragment and press Enter, then enter `:cue`. Input stays hidden;
+Type one short fragment and press Enter, then enter `:cue`. Typed input is visible
+unless you add `--hide-input`;
 only the cue is displayed. Enter `:quit` before setting up speech. This is also
 the live presentation fallback if audio installation cannot be completed.
 

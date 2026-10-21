@@ -11,6 +11,8 @@ dependencies = []
 
 [project.optional-dependencies]
 audio = ["sounddevice==0.5.3", "numpy>=1.24,<2"]
+cloud = ["boto3>=1.34,<2"]
+shadow = ["keras==3.10.0", "librosa==0.10.1"]
 dev = ["ruff==0.14.1"]
 
 [tool.setuptools.packages.find]

@@ -11,6 +11,7 @@ import time
 
 from .config import ASR_MODEL
 from .errors import SpeechError
+from .timing import NO_TIMING
 
 FASTPITCH_MODEL = "tts_en_fastpitch"
 HIFIGAN_MODEL = "tts_en_hifigan"
@@ -75,45 +76,92 @@ def prepare_worker():
     socket.socket = LocalSocket
 
 
-def _speech_worker(connection, asr_path, device, threshold):
+def _speech_worker(
+    connection,
+    asr_path,
+    device,
+    threshold,
+    continuous=False,
+    timing=NO_TIMING,
+    disfluency_path=None,
+):
     prepare_worker()
+    if disfluency_path:
+        os.environ["KERAS_BACKEND"] = "torch"
     microphone = None
     samples = None
+    capture = None
+    shadow = None
     try:
         import numpy as np
         from .asr import NemoASR
-        from .audio import BLOCK_FRAMES, CHUNK_BLOCKS, Microphone
+        from .audio import BLOCK_FRAMES, CHUNK_BLOCKS, Microphone, ContinuousMicrophone
         from .pause import PauseDetector
 
         if available_memory() < 2 * 1024**3:
             raise SpeechError("Less than 2 GiB RAM available. Close GPU workloads or use --typed.")
-        model = NemoASR(asr_path)
+        with timing.measure("asr_load"):
+            model = NemoASR(asr_path)
+        if disfluency_path:
+            from .disfluency import ShadowDetector
+
+            try:
+                with timing.measure("disfluency_load"):
+                    shadow = ShadowDetector(disfluency_path, timing)
+            except Exception:
+                timing.event("disfluency_disabled", ok=False)
+                connection.send(
+                    ("notice", "Experimental disfluency model unavailable; ASR continues.")
+                )
         detector = PauseDetector(threshold=threshold)
+        if continuous:
+            capture = ContinuousMicrophone(device, threshold, timing).open()
+            connection.send(("status", "rolling listening"))
         while True:
             if available_memory() < 1024**3:
                 raise SpeechError(
                     "Memory is low. Audio stopped; close other workloads or use --typed."
                 )
-            microphone = Microphone(device).open()
-            connection.send(("status", "listening"))
-            captured_at = time.monotonic()
-            samples = np.zeros(BLOCK_FRAMES * CHUNK_BLOCKS, dtype=np.float32)
-            voiced = False
-            pause = False
-            try:
-                for index in range(CHUNK_BLOCKS):
-                    block = microphone.read()
-                    rms = float(np.sqrt(np.mean(block * block)))
-                    voiced = voiced or rms >= threshold
-                    pause = detector.observe(rms, 0.25) or pause
-                    samples[index * BLOCK_FRAMES : (index + 1) * BLOCK_FRAMES] = block
-                    block.fill(0)
-            finally:
-                microphone.close()
-                microphone = None
+            if capture:
+                captured_at, samples, voiced, pause = capture.read()
+                if capture.dropped:
+                    connection.send(("audio_gap", capture.dropped))
+                    capture.dropped = 0
+            else:
+                with timing.measure("microphone_open"):
+                    microphone = Microphone(device).open()
+                connection.send(("status", "listening"))
+                captured_at = time.monotonic()
+                samples = np.zeros(BLOCK_FRAMES * CHUNK_BLOCKS, dtype=np.float32)
+                voiced = False
+                pause = False
+                try:
+                    for index in range(CHUNK_BLOCKS):
+                        block = microphone.read()
+                        rms = float(np.sqrt(np.mean(block * block)))
+                        voiced = voiced or rms >= threshold
+                        pause = detector.observe(rms, 0.25) or pause
+                        samples[index * BLOCK_FRAMES : (index + 1) * BLOCK_FRAMES] = block
+                        block.fill(0)
+                finally:
+                    microphone.close()
+                    microphone = None
+                timing.event("capture", captured_at, window_start=captured_at)
+            timing.event("capture_age", captured_at, window_start=captured_at)
+            if shadow is not None:
+                try:
+                    shadow.observe(samples, captured_at, voiced)
+                except Exception:
+                    shadow.close()
+                    shadow = None
+                    timing.event("disfluency_disabled", ok=False)
+                    connection.send(
+                        ("notice", "Experimental disfluency scoring stopped; ASR continues.")
+                    )
             if voiced:
                 connection.send(("status", "transcribing"))
-                text = model.transcribe(samples)
+                with timing.measure("asr_inference", window_start=captured_at):
+                    text = model.transcribe(samples)
                 if text:
                     connection.send(("fragment", (captured_at, text)))
                 else:
@@ -133,6 +181,10 @@ def _speech_worker(connection, asr_path, device, threshold):
             )
         )
     finally:
+        if shadow:
+            shadow.close()
+        if capture:
+            capture.close()
         if microphone is not None:
             microphone.close()
         if samples is not None:
@@ -158,16 +210,22 @@ def _tts_worker(connection, cue, fastpitch_path, hifigan_path):
 
 
 class SpeechSession:
-    def __init__(self, config, threshold=0.015):
+    def __init__(
+        self, config, threshold=0.015, *, continuous=False, timing=NO_TIMING, disfluency_path=None
+    ):
         self.config = config
         self.threshold = threshold
+        self.continuous = continuous
+        self.timing = timing
+        self.disfluency_path = disfluency_path
         self.process = None
         self.connection = None
         self.last_event = 0.0
 
     def start(self):
         self.close()
-        verify_model(self.config.asr_path, ASR_MODEL)
+        with self.timing.measure("asr_verify"):
+            verify_model(self.config.asr_path, ASR_MODEL)
         ctx = multiprocessing.get_context("spawn")
         self.connection, child = ctx.Pipe(duplex=False)
         self.process = ctx.Process(
@@ -177,6 +235,9 @@ class SpeechSession:
                 self.config.asr_path,
                 self.config.audio_device,
                 self.threshold,
+                self.continuous,
+                self.timing,
+                self.disfluency_path,
             ),
             daemon=True,
         )

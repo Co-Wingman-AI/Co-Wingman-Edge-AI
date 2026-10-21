@@ -10,6 +10,7 @@ import sys
 
 ROOT = Path(__file__).resolve().parents[1]
 FORBIDDEN_SUFFIXES = {
+    ".keras",
     ".wav",
     ".mp3",
     ".pcm",

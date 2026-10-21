@@ -77,10 +77,24 @@ class Portfolio:
         try:
             with Path(path).open("rb") as stream:
                 data = stream.read(MAX_FILE_BYTES + 1)
+            return cls.from_bytes(data)
+        except OSError:
+            raise ConfigurationError(
+                "Portfolio unavailable or invalid. Import it with python3 -m cowingman.portfolio."
+            ) from None
+
+    @classmethod
+    def from_bytes(cls, data):
+        """Apply the same bounds to local files and explicit S3 downloads."""
+        try:
             if len(data) > MAX_FILE_BYTES:
                 raise ValueError
             value = json.loads(data)
-            if type(value) is not dict or value.get("version") != 1:
+            if (
+                type(value) is not dict
+                or type(value.get("version")) is not int
+                or value["version"] != 1
+            ):
                 raise ValueError
             records = value["passages"]
             if type(records) is not list or not 1 <= len(records) <= MAX_PASSAGES:

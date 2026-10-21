@@ -23,6 +23,15 @@ compatibility. The selected software stack still requires physical validation.
 
 ## Runtime behavior
 
+The default behavior below remains available. With `--rolling`, a separate capture
+thread keeps the microphone open while NeMo transcribes the previous four-second
+window. One additional completed window can wait in RAM; older queued audio is
+zeroed/discarded with a gap notice when inference cannot keep up. The application
+keeps ASR running during and after visual cues. `:pause` stops it; `:listen` restarts
+it. This mode excludes TTS. Text context spans at most one minute, and summary/S3
+behavior is documented in [AWS_SUMMARIES.md](AWS_SUMMARIES.md). Continuous capture
+still needs sustained physical Jetson testing; no gap-free performance is claimed.
+
 - Capture: sounddevice / PortAudio, mono float32, 16,000 Hz, 0.25-second blocks.
 - Window: 16 blocks / four seconds in RAM. The microphone closes while each window
   is transcribed. There is no disk audio, resampler, stream queue, or recording file.
