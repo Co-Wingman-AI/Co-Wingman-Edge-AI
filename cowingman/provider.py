@@ -12,7 +12,7 @@ from typing import Any, Callable, Mapping
 
 from .config import DEFAULT_BASE_URL, DEFAULT_MODEL, number, validate_cloud_configuration
 from .context import BoundedContext
-from .cue import CueValidationError, parse_cue
+from .cue import CueValidationError, cue_response_format, parse_cue
 from .errors import CloudRequestError, ConfigurationError, PrivacyBoundaryError
 from .portfolio import checked_selection
 
@@ -93,10 +93,11 @@ def urllib_transport(url, headers, payload, timeout):
             message = "NaviGator rate limit reached; wait before requesting another cue."
         elif code == 404:
             message = "NaviGator model unavailable; check UF Toolkit access."
-        elif code == 400:
+        elif code in {400, 422}:
             message = (
                 "NaviGator rejected the request options; check model support for "
-                "JSON output and non-reasoning mode."
+                "strict JSON Schema output (string length and word-pattern constraints) "
+                "and non-reasoning mode. No automatic fallback or retry was made."
             )
         else:
             message = "NaviGator service error; retry later or use --offline."
@@ -251,7 +252,7 @@ class NavigatorClient:
             # This is a raw HTTP body; SDK extra_body fields belong at top level.
             "chat_template_kwargs": {"enable_thinking": False},
             "stream": False,
-            "response_format": {"type": "json_object"},
+            "response_format": cue_response_format(),
         }
         headers = {"Authorization": f"Bearer {self._api_key}", "Content-Type": "application/json"}
         response = None

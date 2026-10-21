@@ -47,9 +47,14 @@ python3 -m cowingman --typed
 The health check sends one **synthetic** bounded request and validates the result;
 it does not print the cue. A valid key must also have access to the exact model.
 Requests disable Nemotron reasoning using `chat_template_kwargs.enable_thinking`
-and allow 256 output tokens; validated cues still have a 12-word/160-character
-limit. This follows [NVIDIA's Nano vLLM recipe](https://github.com/NVIDIA-NeMo/Nemotron/blob/main/usage-cookbook/Nemotron-3-Nano/vllm_cookbook.ipynb).
-UF's acceptance of these options must be confirmed with the health check.
+and allow 256 output tokens. They request strict `json_schema` output with a
+nonempty cue string, a 160-character limit, a 12-word pattern, three required
+fields, and no extra fields. Local validation still checks every response.
+The non-reasoning option follows [NVIDIA's Nano vLLM recipe](https://github.com/NVIDIA-NeMo/Nemotron/blob/main/usage-cookbook/Nemotron-3-Nano/vllm_cookbook.ipynb).
+UF's acceptance of the schema and non-reasoning options must be confirmed with
+the health check. HTTP 400/422 reports rejected options; there is no automatic
+fallback to unconstrained JSON or retry. A valid response alone does not prove
+the backend enforces every schema constraint.
 To run a scripted live example: `python3 -m cowingman --typed --demo`.
 After the demonstration: `unset NAVIGATOR_TOOLKIT_API_KEY`.
 
@@ -178,7 +183,7 @@ explicit setup script, never as a conversation-time fallback.
 | Output token limit or no cue text | Update with `git pull --ff-only`, then rerun `--health-check`. The service may still be using reasoning mode. Error messages distinguish truncation, empty output, refusal, and invalid cue format without exposing response text. |
 | Cue validation failure | The error identifies invalid JSON, fields, intent, boolean type, length, control characters, or safety rejection without printing output. Update the app, then use fresh context; there is no automatic retry. |
 | Transcription runs but no context is ready | Wait for “Speech fragment accepted privately” before pressing Enter. “No words recognized” means ASR produced no usable text for that window. After a request, use `:listen` before speaking again. |
-| Request options rejected | Confirm UF supports JSON output and `chat_template_kwargs.enable_thinking=false` for the approved model. Do not disable validation or switch models to bypass the error. |
+| Request options rejected | Confirm UF supports strict JSON Schema with string-length/pattern constraints and `chat_template_kwargs.enable_thinking=false` for the approved model. No automatic fallback or retry is made. |
 | Microphone missing or disconnected | Connect a USB input; run `--list-audio`; export `COWINGMAN_AUDIO_DEVICE` to its numeric index. Try `:listen`; typed input remains usable after audio errors. |
 | ASR dependency/model/CUDA failure | Follow [RUN_ON_JETSON.md](RUN_ON_JETSON.md); use `--typed` until the NVIDIA stack is verified. |
 | Low memory | Close other GPU workloads. Check `free -h` and `tegrastats`; keep visual output. Startup needs 2 GiB available, with a 1 GiB runtime guard. These checks cannot guarantee no OOM. |

@@ -197,6 +197,16 @@ one useful point, and no whole-passage copying. These changes improve diagnosis;
 they are not evidence that live schema failures are resolved. Retest with a fresh
 typed internship question to isolate generation from ASR before microphone tests.
 
+The new typed internship test confirmed an overlong cue with two portfolio
+passages supplied. Request formatting now uses strict `json_schema` instead of
+`json_object`: cue is a nonempty string with maxLength 160 and a 1–12-word regex;
+intent is an enum, should_offer is boolean, all fields are required, and extras
+are forbidden. Local validation remains unchanged and rejects bad responses even
+if the backend ignores the schema. UF compatibility is unverified: the next
+operator step is `python3 -m cowingman --health-check` without the portfolio.
+HTTP 400/422 reports unsupported request options with no fallback or retry.
+Offline tests verify request shape and boundaries, not live constrained decoding.
+
 The user explicitly authorized committing and pushing tested changes during this
 session. Read current instructions in a new session rather than assuming that
 permission extends to unrelated work. Preserve local changes. Keep the one

@@ -9,6 +9,33 @@ MAX_CUE_WORDS = 12
 MAX_CUE_CHARACTERS = 160
 
 
+def cue_response_format():
+    """Fresh API schema for constrained output; local validation remains mandatory."""
+    return {
+        "type": "json_schema",
+        "json_schema": {
+            "name": "conversation_cue",
+            "strict": True,
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "cue": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": MAX_CUE_CHARACTERS,
+                        # Single spaces between 1–12 words; no leading/trailing whitespace.
+                        "pattern": rf"^\S+(?: \S+){{0,{MAX_CUE_WORDS - 1}}}$",
+                    },
+                    "intent": {"type": "string", "enum": ["resume", "clarify", "respond"]},
+                    "should_offer": {"type": "boolean"},
+                },
+                "required": ["cue", "intent", "should_offer"],
+                "additionalProperties": False,
+            },
+        },
+    }
+
+
 class CueValidationError(ValueError):
     """Fixed diagnostic messages only; never include response content."""
 

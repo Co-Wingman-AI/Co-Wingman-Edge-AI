@@ -1,12 +1,13 @@
 import copy
 import json
+import re
 import unittest
 from unittest.mock import patch
 import urllib.error
 
 from cowingman.config import Config, DEFAULT_BASE_URL, DEFAULT_MODEL, validate_cloud_configuration
 from cowingman.context import BoundedContext, ContextTurn, RollingContext
-from cowingman.cue import parse_cue
+from cowingman.cue import cue_response_format, parse_cue
 from cowingman.errors import ConfigurationError, CloudRequestError, PrivacyBoundaryError
 from cowingman.provider import NavigatorClient, NoRedirect, urllib_transport
 
@@ -181,7 +182,17 @@ class ProviderTests(unittest.TestCase):
         self.assertEqual(captured["url"], DEFAULT_BASE_URL + "/chat/completions")
         self.assertEqual(captured["headers"]["Authorization"], "Bearer test-secret")
         self.assertEqual(captured["payload"]["model"], DEFAULT_MODEL)
-        self.assertEqual(captured["payload"]["response_format"], {"type": "json_object"})
+        response_format = captured["payload"]["response_format"]
+        self.assertEqual(response_format["type"], "json_schema")
+        self.assertIs(response_format["json_schema"]["strict"], True)
+        schema = response_format["json_schema"]["schema"]
+        self.assertEqual(schema["type"], "object")
+        self.assertEqual(set(schema["required"]), {"cue", "intent", "should_offer"})
+        self.assertFalse(schema["additionalProperties"])
+        self.assertEqual(schema["properties"]["cue"]["minLength"], 1)
+        self.assertEqual(schema["properties"]["cue"]["maxLength"], 160)
+        self.assertEqual(schema["properties"]["intent"]["enum"], ["resume", "clarify", "respond"])
+        self.assertEqual(schema["properties"]["should_offer"], {"type": "boolean"})
         self.assertEqual(captured["payload"]["chat_template_kwargs"], {"enable_thinking": False})
         self.assertEqual(captured["payload"]["max_tokens"], 256)
         self.assertIn(
@@ -205,6 +216,29 @@ class ProviderTests(unittest.TestCase):
             self.assertNotIn(private, json.dumps(metrics))
         client.close()
         self.assertEqual(client._api_key, "")
+
+    def test_schema_word_pattern_and_local_validation_boundaries(self):
+        # Check the wire regex at its boundaries without assuming the hosted model
+        # honors it. Existing mocked invalid responses exercise local rejection.
+        properties = cue_response_format()["json_schema"]["schema"]["properties"]
+        pattern = properties["cue"]["pattern"]
+        for count in (1, 12):
+            phrase = " ".join(["word"] * count)
+            self.assertIsNotNone(re.fullmatch(pattern, phrase))
+            parse_cue(json.dumps({"cue": phrase, "intent": "resume", "should_offer": True}))
+        for phrase in ("", " ", " word", "word ", "word\nword", " ".join(["word"] * 13)):
+            self.assertIsNone(re.fullmatch(pattern, phrase))
+        for length in (160, 161):
+            data = json.dumps({"cue": "a" * length, "intent": "resume", "should_offer": True})
+            if length == properties["cue"]["maxLength"]:
+                parse_cue(data)
+            else:
+                with self.assertRaises(ValueError):
+                    parse_cue(data)
+        properties["cue"]["maxLength"] = 999
+        self.assertEqual(
+            cue_response_format()["json_schema"]["schema"]["properties"]["cue"]["maxLength"], 160
+        )
 
     def test_failures_are_content_free(self):
         for error in [
@@ -234,6 +268,7 @@ class ProviderTests(unittest.TestCase):
     def test_http_errors_and_transport_limits(self):
         for code, expected in [
             (400, "rejected the request options"),
+            (422, "strict JSON Schema"),
             (401, "access denied"),
             (403, "access denied"),
             (429, "rate limit"),
