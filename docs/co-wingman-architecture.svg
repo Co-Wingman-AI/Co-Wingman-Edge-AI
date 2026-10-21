@@ -1,0 +1,234 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1250" viewBox="0 0 1800 1250" role="img" aria-labelledby="title desc">
+  <title id="title">Co-Wingman detailed system architecture</title>
+  <desc id="desc">Poster diagram showing local Jetson audio capture and NVIDIA NeMo ASR, bounded context, optional portfolio retrieval, the UF NaviGator Nemotron API call, strict response validation, terminal output, optional NVIDIA FastPitch and HiFi-GAN speech, and privacy boundaries.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#081426"/>
+      <stop offset="1" stop-color="#10233f"/>
+    </linearGradient>
+    <linearGradient id="local" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#102a43"/>
+      <stop offset="1" stop-color="#0d2238"/>
+    </linearGradient>
+    <linearGradient id="cloud" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2d2148"/>
+      <stop offset="1" stop-color="#201a36"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#000" flood-opacity="0.28"/>
+    </filter>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L12,6 L0,12 z" fill="#7dd3fc"/>
+    </marker>
+    <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L12,6 L0,12 z" fill="#6ee7b7"/>
+    </marker>
+    <marker id="arrowAmber" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L12,6 L0,12 z" fill="#fbbf24"/>
+    </marker>
+    <style>
+      .title { font: 700 46px system-ui, -apple-system, Segoe UI, sans-serif; fill: #f8fafc; letter-spacing: .2px; }
+      .subtitle { font: 400 21px system-ui, -apple-system, Segoe UI, sans-serif; fill: #b8c8dc; }
+      .zone-title { font: 700 23px system-ui, -apple-system, Segoe UI, sans-serif; fill: #f8fafc; letter-spacing: 1.2px; }
+      .zone-note { font: 400 15px system-ui, -apple-system, Segoe UI, sans-serif; fill: #a9bdd3; }
+      .box-title { font: 700 19px system-ui, -apple-system, Segoe UI, sans-serif; fill: #f8fafc; }
+      .box-subtitle { font: 600 15px system-ui, -apple-system, Segoe UI, sans-serif; fill: #7dd3fc; }
+      .text { font: 400 14px system-ui, -apple-system, Segoe UI, sans-serif; fill: #d8e3ef; }
+      .small { font: 400 12.5px system-ui, -apple-system, Segoe UI, sans-serif; fill: #b6c5d6; }
+      .call { font: 600 13px system-ui, -apple-system, Segoe UI, sans-serif; fill: #dff6ff; }
+      .number { font: 700 16px system-ui, -apple-system, Segoe UI, sans-serif; fill: #07121f; }
+      .local-zone { fill: url(#local); stroke: #315b7d; stroke-width: 2; }
+      .cloud-zone { fill: url(#cloud); stroke: #72599a; stroke-width: 2; }
+      .privacy-zone { fill: #0d2630; stroke: #2d7767; stroke-width: 2; }
+      .box { fill: #162f4a; stroke: #3d6284; stroke-width: 1.5; }
+      .box-cloud { fill: #352653; stroke: #8066a8; stroke-width: 1.5; }
+      .box-green { fill: #123b38; stroke: #3f8f7c; stroke-width: 1.5; }
+      .box-amber { fill: #3d3020; stroke: #a97a30; stroke-width: 1.5; }
+      .box-red { fill: #40252b; stroke: #9d5361; stroke-width: 1.5; }
+      .group { fill: #0c2035; stroke: #2c4e6b; stroke-width: 1.5; stroke-dasharray: 7 6; }
+      .flow { fill: none; stroke: #7dd3fc; stroke-width: 3; marker-end: url(#arrow); }
+      .flow-green { fill: none; stroke: #6ee7b7; stroke-width: 3; marker-end: url(#arrowGreen); }
+      .flow-amber { fill: none; stroke: #fbbf24; stroke-width: 3; marker-end: url(#arrowAmber); }
+      .optional { fill: none; stroke: #a5b4fc; stroke-width: 2.5; stroke-dasharray: 8 6; marker-end: url(#arrow); }
+      .divider { stroke: #35516d; stroke-width: 1; }
+    </style>
+  </defs>
+
+  <rect width="1800" height="1250" fill="url(#bg)"/>
+  <circle cx="1640" cy="80" r="185" fill="#7c3aed" opacity="0.07"/>
+  <circle cx="120" cy="1180" r="250" fill="#0ea5e9" opacity="0.06"/>
+
+  <text class="title" x="60" y="66">Co-Wingman — Edge AI Conversation Recovery</text>
+  <text class="subtitle" x="60" y="101">Local NVIDIA speech + bounded private context + UF NaviGator Nemotron • detailed runtime architecture</text>
+
+  <!-- Trust zones -->
+  <rect class="local-zone" x="45" y="135" width="1240" height="1035" rx="26"/>
+  <text class="zone-title" x="75" y="176">TRUST ZONE A — NVIDIA JETSON ORIN NANO 8 GB</text>
+  <text class="zone-note" x="75" y="201">Raw audio, speech models, short-term context, validation, display, and optional playback stay on the device.</text>
+
+  <rect class="cloud-zone" x="1320" y="135" width="435" height="605" rx="26"/>
+  <text class="zone-title" x="1350" y="176">TRUST ZONE B — UF CLOUD</text>
+  <text class="zone-note" x="1350" y="201">Receives bounded text only over HTTPS.</text>
+
+  <rect class="privacy-zone" x="1320" y="775" width="435" height="395" rx="26"/>
+  <text class="zone-title" x="1350" y="816">PRIVACY &amp; RESOURCE RULES</text>
+
+  <!-- Input layer -->
+  <rect class="box" x="80" y="245" width="235" height="130" rx="16" filter="url(#shadow)"/>
+  <circle cx="110" cy="274" r="17" fill="#7dd3fc"/><text class="number" x="105" y="280">1</text>
+  <text class="box-title" x="137" y="281">Personal microphone</text>
+  <text class="text" x="100" y="315">USB / Bluetooth input</text>
+  <text class="text" x="100" y="339">Consenting close-talk user</text>
+  <text class="small" x="100" y="362">No speaker identification</text>
+
+  <rect class="box" x="80" y="415" width="235" height="135" rx="16" filter="url(#shadow)"/>
+  <circle cx="110" cy="444" r="17" fill="#7dd3fc"/><text class="number" x="105" y="450">1</text>
+  <text class="box-title" x="137" y="451">Terminal input</text>
+  <text class="text" x="100" y="485">Hidden typed fallback</text>
+  <text class="text" x="100" y="509">:partner / :cue / Enter</text>
+  <text class="small" x="100" y="533">Works without audio dependencies</text>
+
+  <!-- Speech child process -->
+  <rect class="group" x="355" y="225" width="405" height="445" rx="20"/>
+  <text class="box-title" x="380" y="260">Spawned local speech worker</text>
+  <text class="small" x="380" y="282">No IP sockets • secrets removed • events sent through an IPC Pipe</text>
+
+  <rect class="box" x="380" y="305" width="355" height="105" rx="14"/>
+  <text class="box-title" x="400" y="334">Audio capture</text>
+  <text class="box-subtitle" x="400" y="357">sounddevice / PortAudio</text>
+  <text class="text" x="400" y="382">16 kHz • mono float32 • 0.25 s blocks • 4 s RAM window</text>
+
+  <rect class="box-amber" x="380" y="435" width="355" height="135" rx="14"/>
+  <text class="box-title" x="400" y="465">NVIDIA Conformer CTC Small</text>
+  <text class="box-subtitle" x="400" y="489">nvidia/stt_en_conformer_ctc_small • ~13M params</text>
+  <text class="text" x="400" y="515">NeMo + PyTorch CUDA inference</text>
+  <text class="text" x="400" y="539">Direct tensor forward pass → greedy CTC decode</text>
+  <text class="small" x="400" y="560">Output clipped to normalized 240-character text fragment</text>
+
+  <rect class="box" x="380" y="595" width="355" height="55" rx="14"/>
+  <text class="box-title" x="400" y="621">Optional PauseDetector</text>
+  <text class="small" x="400" y="643">RMS speech → 3 s silence → event</text>
+
+  <!-- Local application process -->
+  <rect class="group" x="800" y="225" width="445" height="760" rx="20"/>
+  <text class="box-title" x="825" y="260">Main Python application process</text>
+  <text class="small" x="825" y="282">Application orchestrator + privacy lifecycle</text>
+
+  <rect class="box-green" x="825" y="305" width="395" height="120" rx="14"/>
+  <circle cx="854" cy="334" r="17" fill="#6ee7b7"/><text class="number" x="849" y="340">2</text>
+  <text class="box-title" x="881" y="341">RollingContext — RAM only</text>
+  <text class="text" x="845" y="374">Maximum 4 fragments • 240 chars each • 800 total</text>
+  <text class="text" x="845" y="398">60 s default TTL • oldest entries dropped first</text>
+
+  <rect class="box" x="825" y="455" width="190" height="115" rx="14"/>
+  <circle cx="854" cy="484" r="17" fill="#7dd3fc"/><text class="number" x="849" y="490">3</text>
+  <text class="box-title" x="881" y="491">Cue trigger</text>
+  <text class="text" x="845" y="523">Manual: Enter / :cue</text>
+  <text class="small" x="845" y="548">Optional: pause event</text>
+
+  <rect class="box" x="1030" y="455" width="190" height="115" rx="14"/>
+  <text class="box-title" x="1050" y="486">Portfolio retriever</text>
+  <text class="text" x="1050" y="516">Local JSON keyword rank</text>
+  <text class="small" x="1050" y="541">≤2 passages • ≤1,200 chars</text>
+  <text class="small" x="1050" y="559">Opt-in only</text>
+
+  <rect class="box-green" x="825" y="600" width="395" height="145" rx="14"/>
+  <circle cx="854" cy="629" r="17" fill="#6ee7b7"/><text class="number" x="849" y="635">4</text>
+  <text class="box-title" x="881" y="636">Outbound request boundary</text>
+  <text class="text" x="845" y="669">Revalidate BoundedContext + selected portfolio facts</text>
+  <text class="text" x="845" y="693">System prompt + JSON conversation payload</text>
+  <text class="small" x="845" y="719">One request • no redirect • no proxy • no retry • 15 s deadline</text>
+
+  <rect class="box-red" x="825" y="775" width="395" height="180" rx="14"/>
+  <circle cx="854" cy="804" r="17" fill="#fb7185"/><text class="number" x="849" y="810">6</text>
+  <text class="box-title" x="881" y="811">Response validation gate</text>
+  <text class="text" x="845" y="844">Expected JSON: cue + intent + should_offer</text>
+  <text class="text" x="845" y="868">≤12 words • ≤160 chars • allowed intent only</text>
+  <text class="text" x="845" y="892">Reject malformed, unsafe, refusal, tool call, or input echo</text>
+  <text class="small" x="845" y="920">Manual portfolio mode may use a validated local fact fallback</text>
+  <text class="small" x="845" y="941">after an oversized cue or model decline; never another API call</text>
+
+  <!-- Cloud call -->
+  <rect class="box-cloud" x="1350" y="235" width="375" height="155" rx="16" filter="url(#shadow)"/>
+  <circle cx="1380" cy="264" r="17" fill="#c4b5fd"/><text class="number" x="1375" y="270">5</text>
+  <text class="box-title" x="1407" y="271">UF NaviGator AI Toolkit</text>
+  <text class="box-subtitle" x="1370" y="305">POST /v1/chat/completions</text>
+  <text class="text" x="1370" y="333">https://api.ai.it.ufl.edu/v1</text>
+  <text class="small" x="1370" y="359">Authorization: Bearer toolkit key</text>
+  <text class="small" x="1370" y="379">OpenAI-compatible HTTPS API</text>
+
+  <rect class="box-cloud" x="1350" y="425" width="375" height="205" rx="16" filter="url(#shadow)"/>
+  <text class="box-title" x="1370" y="458">NVIDIA Nemotron-3 Nano 30B A3B</text>
+  <text class="box-subtitle" x="1370" y="484">nemotron-3-nano-30b-a3b</text>
+  <text class="text" x="1370" y="516">temperature: 0.0 • max_tokens: 256</text>
+  <text class="text" x="1370" y="542">enable_thinking: false • stream: false</text>
+  <text class="text" x="1370" y="568">Strict JSON Schema response requested</text>
+  <line class="divider" x1="1370" y1="584" x2="1705" y2="584"/>
+  <text class="small" x="1370" y="607">Purpose: generate the exact short phrase the user can say next</text>
+
+  <rect class="box-cloud" x="1350" y="655" width="375" height="58" rx="14"/>
+  <text class="call" x="1370" y="690">Response: choices[0].message.content → JSON string</text>
+
+  <!-- Output lifecycle -->
+  <rect class="box-green" x="80" y="1020" width="330" height="115" rx="16" filter="url(#shadow)"/>
+  <circle cx="110" cy="1049" r="17" fill="#6ee7b7"/><text class="number" x="105" y="1055">7</text>
+  <text class="box-title" x="137" y="1056">Private terminal cue</text>
+  <text class="text" x="100" y="1088">Visible for 20 seconds in a real terminal</text>
+  <text class="small" x="100" y="1112">Cue text suppressed when stdout is redirected</text>
+
+  <rect class="box-amber" x="445" y="1020" width="420" height="115" rx="16" filter="url(#shadow)"/>
+  <text class="box-title" x="465" y="1053">Optional local TTS worker (after ASR exits)</text>
+  <text class="text" x="465" y="1082">FastPitch → spectrogram → unload → HiFi-GAN → waveform</text>
+  <text class="small" x="465" y="1107">NeMo + CUDA + sounddevice • RAM only • playback capped at 20 s</text>
+
+  <rect class="box-red" x="900" y="1020" width="345" height="115" rx="16" filter="url(#shadow)"/>
+  <circle cx="930" cy="1049" r="17" fill="#fb7185"/><text class="number" x="925" y="1055">8</text>
+  <text class="box-title" x="957" y="1056">Discard request state</text>
+  <text class="text" x="920" y="1088">Clear context on success, error, or shutdown</text>
+  <text class="small" x="920" y="1112">Microphone stays paused until :listen</text>
+
+  <!-- Privacy panel -->
+  <text class="text" x="1350" y="858">✓ Raw microphone audio never leaves the Jetson</text>
+  <text class="text" x="1350" y="890">✓ No recordings, transcripts, or session archive</text>
+  <text class="text" x="1350" y="922">✓ Exact API host + model allowlist</text>
+  <text class="text" x="1350" y="954">✓ Request and response sizes are bounded</text>
+  <text class="text" x="1350" y="986">✓ Speech/TTS workers have no internet access</text>
+  <text class="text" x="1350" y="1018">✓ ASR stops before TTS loads to free GPU memory</text>
+  <text class="text" x="1350" y="1050">✓ ≥2 GiB RAM required to load speech models</text>
+  <text class="text" x="1350" y="1082">✓ Stop audio below 1 GiB available memory</text>
+  <text class="small" x="1350" y="1125">The only production cloud model is Nemotron.</text>
+  <text class="small" x="1350" y="1147">Offline demo swaps the network transport for a synthetic response</text>
+  <text class="small" x="1350" y="1165">while exercising the same request and validation contract.</text>
+
+  <!-- Main flows -->
+  <path class="flow" d="M315 310 H380"/>
+  <text class="call" x="322" y="295">PCM samples</text>
+  <path class="flow" d="M557 410 V435"/>
+  <path class="flow" d="M735 575 H780 V365 H825"/>
+  <path class="flow" d="M315 483 H335 V215 H790 V365 H825"/>
+  <path class="optional" d="M735 622 H775 V512 H825"/>
+  <path class="flow-green" d="M920 425 V455"/>
+  <path class="optional" d="M1125 570 V600"/>
+  <path class="flow-green" d="M920 570 V600"/>
+  <path class="flow-green" d="M1220 672 H1300 V312 H1350"/>
+  <text class="call" x="1260" y="642">HTTPS bounded text</text>
+  <path class="flow" d="M1537 390 V425"/>
+  <path class="flow" d="M1350 684 H1288 V865 H1220"/>
+  <text class="call" x="1233" y="847">structured response</text>
+  <path class="flow-green" d="M825 880 H785 V995 H245 V1020"/>
+  <path class="optional" d="M410 1077 H445"/>
+  <path class="flow-green" d="M865 1077 H900"/>
+  <path class="flow-amber" d="M825 520 H775 V690 H735"/>
+  <text class="small" x="520" y="708">Trigger terminates ASR worker and cancels unfinished audio window</text>
+
+  <!-- Footer legend -->
+  <line x1="65" y1="1200" x2="105" y2="1200" stroke="#7dd3fc" stroke-width="4"/>
+  <text class="small" x="115" y="1205">runtime data/event</text>
+  <line x1="270" y1="1200" x2="310" y2="1200" stroke="#6ee7b7" stroke-width="4"/>
+  <text class="small" x="320" y="1205">privacy-checked path</text>
+  <line x1="500" y1="1200" x2="540" y2="1200" stroke="#a5b4fc" stroke-width="3" stroke-dasharray="8 6"/>
+  <text class="small" x="550" y="1205">optional path</text>
+  <line x1="700" y1="1200" x2="740" y2="1200" stroke="#fbbf24" stroke-width="4"/>
+  <text class="small" x="750" y="1205">lifecycle control</text>
+  <text class="small" x="1160" y="1205">Source: Co-Wingman repository • architecture current to October 21, 2026</text>
+</svg>
