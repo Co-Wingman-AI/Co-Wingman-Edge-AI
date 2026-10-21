@@ -20,6 +20,17 @@ and never follows redirects or environment proxies. The main process drops the
 request context before display or TTS; it retains no response history. Only
 content-free timing/count/schema metrics may enter optional benchmark reports.
 
+An offered model response that fails only the word/character length limit can
+receive one shortening request to the same approved endpoint and model. The
+draft comes from a response JSON string capped at 1,024 characters and must pass
+all other cue checks first. Only this bounded generated draft and its intent are
+sent back; conversation fragments and portfolio passages are not resent. Both
+calls share the configured timeout. No shortening occurs for refusals, unsafe or
+malformed responses, or a false offer decision. Shortening output is fully checked
+and never recursively repaired. Drafts are kept in memory for this operation,
+dropped afterward, and excluded from logs and metrics; counts and a shortening
+flag are permitted. These checks cannot guarantee preservation of meaning.
+
 The optional portfolio feature explicitly imports public reference text into an
 ignored local JSON file. This file persists until the operator deletes it; it is
 not conversation history and is not subject to the conversation TTL. Using

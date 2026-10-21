@@ -73,3 +73,23 @@ committing each completed unit. Detailed product instructions remain in README,
   that existing artifact without weakening the scanner.
 - **Remaining:** live Jetson/NaviGator retest of automatic length recovery;
   upstream architecture binary needs review for the repository hygiene policy.
+
+## 2026-10-21 — Condense oversized model answers before display
+
+- **Session/device:** Codex cloud workspace; Linux x86_64, Python 3.12.14.
+- **Source:** organization main `76f758b`.
+- **Changes:** replaced oversized-answer local portfolio fallback with one
+  shortening call to the same approved model. Only an otherwise-validated offered
+  draft is eligible; only that bounded draft and intent are sent back, within the
+  original timeout. The final response must pass normal validation and preserve
+  intent. No recursive repair, no fallback after a failed shortening response,
+  and no override of a shortening decline. Added content-free request counts and
+  a visible shortening status. Direct manual declines retain the separate local
+  portfolio phrase behavior. Updated privacy and operating documentation.
+- **Validation:** 89 unittest tests passed, including automatic pause routing,
+  both length limits, deadline sharing, request boundaries, declined/invalid
+  repairs, and suppression of content in diagnostics. Ruff lint and formatting,
+  offline demo, and `git diff --check` passed. Repository scan still flags the
+  pre-existing architecture PNG as an unreviewed binary; it remains unchanged.
+- **Remaining:** live hosted-model and Jetson test of shortening quality, semantic
+  fidelity, and latency. Mocked responses do not establish live model compliance.

@@ -76,6 +76,8 @@ class Application:
                 self.ui.message(
                     f"Portfolio: {_metrics['portfolio_passages']} reference passages supplied."
                 )
+            if _metrics.get("cue_shortened"):
+                self.ui.message("NaviGator: length check required one shortening request.")
             if _metrics.get("portfolio_fallback"):
                 if _metrics.get("portfolio_fallback_reason") == "declined":
                     self.ui.message(

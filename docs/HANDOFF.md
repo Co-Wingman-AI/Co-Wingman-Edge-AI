@@ -239,6 +239,18 @@ unsafe, refused, or false-offer responses cannot enable automatic fallback.
 Regression tests cover both length limits, offer decisions, one-request behavior,
 and validation precedence. The hardware path still needs the operator's retest.
 
+The next operator request supersedes the oversized-answer fallback above: shorten
+the model's own answer instead of replacing it with a portfolio phrase. There is
+now one bounded shortening call for otherwise-valid offered responses that fail
+only length. It sends only the draft and intent to the same endpoint/model, keeps
+the original overall timeout, and validates the second response completely.
+Invalid repair output is withheld without another repair or portfolio fallback.
+Direct valid declines may still use the existing manual-only local phrase path;
+declines returned during shortening are always respected. The UI labels successful
+shortening and metrics contain only counts/flags, never the draft. Mocked tests
+cover request boundaries, timeout sharing, automatic routing, and rejected repairs.
+Live model shortening quality and semantic fidelity remain unverified.
+
 The user explicitly authorized committing and pushing tested changes during this
 session. Read current instructions in a new session rather than assuming that
 permission extends to unrelated work. Preserve local changes. Keep the one

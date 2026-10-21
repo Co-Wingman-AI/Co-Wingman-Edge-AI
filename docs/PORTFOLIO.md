@@ -54,13 +54,23 @@ zero matches, portfolio mode stops before the API request and displays an explic
 no-match message. Add fresh context naming the project or topic before retrying.
 A multiword verbatim echo of a user/microphone
 fragment is withheld with an explicit error, rather than displayed as a useful cue.
-Context is discarded as with other rejected responses; there is no automatic retry.
+Context is discarded as with other rejected responses; transport failures are not retried.
 The check ignores case and punctuation but is not a general relevance evaluator.
-For an explicit Enter/`:cue` request, portfolio mode can use a local reference
-phrase when the model returns a valid `should_offer: false` response or when its
-only validation failure is word/character length. The UI explicitly identifies
-this as a local fallback. It is a new phrase extracted from selected portfolio
-facts, not the model's declined text. No second API request is made.
+When an offered cue fails only word/character length validation, one additional
+request asks the same model to shorten its own answer. Only the bounded draft and
+its intent are sent back as untrusted data; no conversation or portfolio passages
+are resent. The shortening prompt requires preservation of meaning, negation,
+uncertainty, and qualifications, without adding facts. The result must pass all
+normal checks and preserve the intent. There is no further repair or local fact
+fallback if shortening fails. Both calls share the configured request timeout.
+The UI reports `NaviGator: length check required one shortening request.`
+This is model-generated condensation, not clipping at character 160. Validation
+enforces length and structure; it does not prove factual or semantic fidelity.
+
+Separately, for an explicit Enter/`:cue` request, portfolio mode can use a local
+reference phrase when the original model returns a valid `should_offer: false`.
+The UI identifies this as a local phrase. It is extracted from selected portfolio
+facts, not the model's declined text. This separate path makes no second request.
 
 The fallback prefers complete short statements in retrieval order and can add
 "I" before a source action verb. It can omit an appended achievement clause from
@@ -70,10 +80,9 @@ fragments. Every candidate passes the normal schema, safety, 12-word, 160-charac
 and echo checks. These rules are conservative heuristics, not proof of semantic
 accuracy. If no suitable phrase exists, a valid decline stays a decline and an
 invalid response stays an error. Other validation failures and explicit API
-refusals do not trigger fallback. Automatic pause requests can use the oversized
-response fallback only when the otherwise-validated model response explicitly has
-`should_offer: true`. A false offer decision never triggers automatic fallback,
-including when its text is oversized. No additional API request is made.
+refusals do not trigger fallback. Automatic pause requests never use local fact
+fallback. A false offer decision never triggers shortening, and a decline returned
+by shortening is respected in both manual and automatic modes.
 
 Test another topic using fresh context:
 

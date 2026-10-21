@@ -155,10 +155,16 @@ conversation excerpt. The profile is explicitly imported into ignored local JSON
 it is not fetched during a conversation. This feature does not identify speakers.
 With this option enabled, zero matching passages stops the cue request before
 the API call. Add a question naming the topic and use `:check` before retrying.
-Explicit Enter/`:cue` requests can use a validated local portfolio phrase if the
-model declines or returns an oversized cue; the UI identifies this fallback.
-Automatic pause requests can use the same oversized-cue fallback only when the
-model explicitly returns `should_offer: true`; model declines remain respected.
+Oversized model answers go through one shortening request to the same model.
+Only its bounded draft is sent back; the result must pass the normal 12-word,
+160-character, schema, safety, and echo checks. This works in manual and automatic
+mode, with or without a portfolio. It replaces the oversized-answer portfolio
+fallback: an invalid shortening result is withheld, never silently replaced.
+The UI reports when shortening was used. It can add one API call and latency
+within the original request timeout. Meaning preservation still needs live review.
+Separately, an explicit Enter/`:cue` request can use a validated local portfolio
+phrase if the original model response validly declines; the UI labels that fallback.
+Automatic declines and declines during shortening are always respected.
 
 ## Privacy contract
 
@@ -168,7 +174,9 @@ model explicitly returns `should_offer: true`; model declines remain respected.
   total. Fragments expire after 60 seconds by default; idle cleanup runs every loop.
 - Each request selects only that bounded excerpt. The store is cleared on request,
   and temporary request references are dropped on success, failure, cancellation,
-  and shutdown. Retry needs fresh context. No request is retried automatically.
+  and shutdown. Transport failures are not retried. A length-only failure can
+  trigger one shortening call containing only the bounded model-generated draft,
+  without resending the conversation or retrieving more portfolio passages.
 - With `--portfolio`, selected facts add at most 1,200 characters per request.
   The imported profile persists locally until deleted; conversation TTL does not
   apply to this reference file. Without the flag, no profile is loaded or sent.
@@ -192,7 +200,7 @@ explicit setup script, never as a conversation-time fallback.
 | Missing/denied API key | Set `NAVIGATOR_TOOLKIT_API_KEY`; grant that key the approved model in UF Toolkit; run `--health-check`. |
 | Timeout, rate limit, or service failure | Context is discarded. Wait, add fresh context, and request again; use `--typed --offline` for a network-free demonstration. |
 | Output token limit or no cue text | Update with `git pull --ff-only`, then rerun `--health-check`. The service may still be using reasoning mode. Error messages distinguish truncation, empty output, refusal, and invalid cue format without exposing response text. |
-| Cue validation failure | The error identifies invalid JSON, fields, intent, boolean type, length, control characters, or safety rejection without printing output. Update the app, then use fresh context; there is no automatic retry. |
+| Cue validation failure | Length-only failures on offered cues get one bounded shortening request. If it fails, or another validation check fails, the cue is withheld. Add fresh context to try again. |
 | Transcription runs but no context is ready | Wait for “Speech fragment accepted privately” before pressing Enter. “No words recognized” means ASR produced no usable text for that window. After a request, use `:listen` before speaking again. |
 | Request options rejected | Confirm UF supports strict JSON Schema with string-length/pattern constraints and `chat_template_kwargs.enable_thinking=false` for the approved model. No automatic fallback or retry is made. |
 | Microphone missing or disconnected | Connect a USB input; run `--list-audio`; export `COWINGMAN_AUDIO_DEVICE` to its numeric index. Try `:listen`; typed input remains usable after audio errors. |

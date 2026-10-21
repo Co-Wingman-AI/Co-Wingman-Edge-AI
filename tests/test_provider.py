@@ -357,7 +357,8 @@ class DeadlineAndReportTests(unittest.TestCase):
                 with self.assertRaisesRegex(CloudRequestError, expected) as caught:
                     NavigatorClient("private-key", transport=transport).request_cue(context)
                 self.assertNotIn("private", str(caught.exception))
-                self.assertEqual(transport.call_count, 1)  # Never resend failed context.
+                expected_calls = 2 if expected in {"160-character limit", "12-word limit"} else 1
+                self.assertEqual(transport.call_count, expected_calls)
 
     def test_separate_reasoning_is_not_used_as_cue(self):
         context = BoundedContext.from_turns([ContextTurn("user", "hello")])
