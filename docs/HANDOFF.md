@@ -188,6 +188,15 @@ matching-passage count, without consuming/refreshing context or making a request
 Use it after a typed partner question and before resuming microphone capture.
 This is a retrieval diagnostic, not ASR accuracy or semantic grounding validation.
 
+A subsequent spoken internship test reached the API but failed the combined
+empty/type/length cue check. The old error cannot establish which condition failed.
+Validation now distinguishes an empty string, a non-string field, and excess length;
+response errors also include the selected portfolio-passage count without content.
+The prompt explicitly requires a nonempty string even when should_offer is false,
+one useful point, and no whole-passage copying. These changes improve diagnosis;
+they are not evidence that live schema failures are resolved. Retest with a fresh
+typed internship question to isolate generation from ASR before microphone tests.
+
 The user explicitly authorized committing and pushing tested changes during this
 session. Read current instructions in a new session rather than assuming that
 permission extends to unrelated work. Preserve local changes. Keep the one

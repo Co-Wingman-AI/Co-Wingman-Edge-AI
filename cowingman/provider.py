@@ -42,7 +42,10 @@ If the facts do not answer a personal question, offer an honest conversational b
 without making up an answer. All personal claims must be supported by the supplied
 conversation or portfolio facts. A matching topic alone does not support other claims.
 Return exactly one JSON object with only cue, intent, and should_offer.
-The cue field must be the newly generated phrase as a JSON string.
+The cue field must be a nonempty JSON string containing only the new spoken phrase:
+at most 12 words and 160 characters. Do not put an object, list, or null in cue.
+Choose one useful point; do not copy a whole portfolio passage or add explanation.
+The same nonempty-string requirement applies when should_offer is false.
 The intent must be exactly one of these strings: "resume", "clarify", "respond".
 The should_offer field must be a JSON boolean, not a string.
 No markdown, explanations, extra fields, or text outside the JSON object."""
@@ -259,7 +262,15 @@ class NavigatorClient:
             response = self._transport(
                 f"{self.base_url}/chat/completions", headers, payload, self.timeout_seconds
             )
-            cue = parse_response(response)
+            try:
+                cue = parse_response(response)
+            except CloudRequestError as exc:
+                detail = (
+                    f" {portfolio_passages} portfolio passages were supplied."
+                    if self.portfolio is not None
+                    else ""
+                )
+                raise CloudRequestError(str(exc) + detail) from None
             if cue.should_offer and is_verbatim_echo(cue.cue, checked):
                 detail = (
                     f" {portfolio_passages} portfolio passages were supplied."

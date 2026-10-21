@@ -173,6 +173,42 @@ class PortfolioTests(unittest.TestCase):
         self.assertNotIn("I built it using", " ".join(ui.messages))
         app.close()
 
+    def test_bad_cue_reports_exact_failure_and_fact_count_without_text(self):
+        for value, expected in [
+            ("", "empty"),
+            (None, "JSON string"),
+            ("private sentinel " * 10, "160-character"),
+        ]:
+            transport = Mock(
+                return_value={
+                    "choices": [
+                        {
+                            "message": {
+                                "content": json.dumps(
+                                    {"cue": value, "intent": "resume", "should_offer": True}
+                                )
+                            }
+                        }
+                    ]
+                }
+            )
+            client = NavigatorClient(
+                "synthetic", portfolio=Portfolio(PASSAGES), transport=transport
+            )
+            ui = FakeUI()
+            app = Application(Config.load(offline=True, environ={}), client, ui)
+            app.add("Tell me about ParcelFlow", "partner")
+            app.request_cue()
+            messages = " ".join(ui.messages)
+            self.assertIn(expected, messages)
+            self.assertIn("2 portfolio passages were supplied", messages)
+            self.assertNotIn("private sentinel", messages)
+            self.assertNotIn("ParcelFlow", messages)
+            self.assertFalse(ui.cues)
+            self.assertEqual(len(app.context), 0)
+            self.assertEqual(transport.call_count, 1)
+            app.close()
+
     def test_local_check_counts_without_consuming_refreshing_or_sending(self):
         now = [0.0]
         transport = Mock()

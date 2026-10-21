@@ -17,7 +17,9 @@ class CueValidationError(ValueError):
         "duplicate": "JSON contains duplicate fields.",
         "json": "response is not a single valid JSON object.",
         "schema": "JSON fields do not match cue, intent, and should_offer.",
-        "length": "cue is empty, not text, or exceeds 160 characters.",
+        "type": "cue must be a JSON string, not null, a list, or an object.",
+        "empty": "cue is empty or whitespace-only.",
+        "length": "cue exceeds the 160-character limit.",
         "words": "cue exceeds the 12-word limit.",
         "characters": "cue contains unsupported control characters.",
         "intent": "intent must be exactly resume, clarify, or respond.",
@@ -55,7 +57,11 @@ def parse_cue(content: str) -> Cue:
     if type(value) is not dict or set(value) != {"cue", "intent", "should_offer"}:
         raise CueValidationError("schema")
     cue = value["cue"]
-    if type(cue) is not str or not 1 <= len(cue.strip()) <= MAX_CUE_CHARACTERS:
+    if type(cue) is not str:
+        raise CueValidationError("type")
+    if not cue.strip():
+        raise CueValidationError("empty")
+    if len(cue.strip()) > MAX_CUE_CHARACTERS:
         raise CueValidationError("length")
     if len(cue.split()) > MAX_CUE_WORDS:
         raise CueValidationError("words")
