@@ -75,6 +75,7 @@ Keep your existing Jetson CUDA PyTorch. Install only the optional adapter depend
 
 ```bash
 python3 -m pip install -e '.[shadow]'
+python3 -m cowingman.speech_dependencies
 python3 scripts/prepare_disfluency_model.py
 python3 -m cowingman --rolling --show-input --portfolio private/portfolio.json \
   --timings private/shadow-01.jsonl --disfluency-shadow models/disfluency.keras
@@ -82,6 +83,9 @@ python3 -m cowingman --rolling --show-input --portfolio private/portfolio.json \
 
 This run omits `--pause-assist` so only Enter/`:cue` requests cues. You can add it
 later to compare existing pause assistance; shadow scores never cause cue requests.
+The extra includes a setuptools compatibility bound for Librosa 0.10.1's
+`pkg_resources` import. For an existing broken environment, follow the
+[repair and staged retest](../RUN_ON_JETSON.md#repair-missing-pkg_resources-during-model-restoration).
 The adapter uses Keras 3.10's PyTorch backend on CPU in the local speech process.
 It reuses the Jetson's PyTorch rather than installing TensorFlow. Initialization
 warms feature extraction and inference before opening the microphone. A dependency,

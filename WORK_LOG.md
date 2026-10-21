@@ -144,3 +144,26 @@ committing each completed unit. Detailed product instructions remain in README,
   live token comparison before lowering limits. No ASR overlap or persistent
   NaviGator transport was enabled. The existing architecture PNG still fails the
   repository scanner's unreviewed-binary check and was preserved.
+
+## 2026-10-21 — Speech preprocessing dependency repair
+
+- **Session/device:** Codex workspace; macOS arm64, Python 3.14.7.
+- **Source:** organization main `c568b67`; fetched before editing, no upstream
+  divergence or pre-existing working-tree edits.
+- **Changes:** audio and shadow extras now require runtime `setuptools>=68,<82`
+  for older Librosa's `pkg_resources` import. ASR, TTS, and model setup exercise
+  lazy mel-filter imports before NeMo can mask a dependency failure. Missing
+  `pkg_resources` produces a bounded repair instruction; other dependency failures
+  remain sanitized. Added a standalone preprocessing check and staged Jetson
+  CPU restore, CUDA inference, microphone, live cue, and rolling-mode retests.
+- **Validation:** `python3 -m unittest discover -s tests -v` passed all 127 tests;
+  Ruff 0.14.1 lint and format checks passed; offline demo and `git diff --check`
+  passed. A fresh temporary Python 3.14 environment resolved the compatibility
+  bound to setuptools 81.0.0, imported `pkg_resources.resource_filename`, and
+  passed `pip check`. The standalone check correctly exited 2 with a sanitized
+  missing-dependency message in the development environment without Librosa.
+  Repository hygiene still fails only on the pre-existing architecture PNG.
+- **Remaining:** apply the environment repair on the Jetson and run the staged
+  checks in `RUN_ON_JETSON.md`. No physical Jetson, CUDA, NeMo model, live service,
+  or full Librosa-stack validation was performed in this workspace. Retire the
+  compatibility bound after separately validating a newer speech/shadow stack.

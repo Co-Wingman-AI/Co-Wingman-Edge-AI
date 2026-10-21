@@ -1,11 +1,13 @@
 """One small NVIDIA CTC model; direct tensor inference avoids audio manifests."""
 
 from .errors import SpeechError
+from .speech_dependencies import check_speech_dependencies
 
 
 class NemoASR:
     def __init__(self, path):
         try:
+            check_speech_dependencies()
             import torch
             from nemo.collections.asr.models import ASRModel
 

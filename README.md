@@ -236,6 +236,7 @@ explicit setup script, never as a conversation-time fallback.
 | Request options rejected | Confirm UF supports strict JSON Schema with string-length/pattern constraints and `chat_template_kwargs.enable_thinking=false` for the approved model. No automatic fallback or retry is made. |
 | Microphone missing or disconnected | Connect a USB input; run `--list-audio`; export `COWINGMAN_AUDIO_DEVICE` to its numeric index. Try `:listen`; typed input remains usable after audio errors. |
 | ASR dependency/model/CUDA failure | Follow [RUN_ON_JETSON.md](RUN_ON_JETSON.md); use `--typed` until the NVIDIA stack is verified. |
+| Missing `pkg_resources` while restoring ASR; followed by an abstract `ASRModel` error | In the speech venv, run `python3 -m pip install 'setuptools>=68,<82'`, then `python3 -m cowingman.speech_dependencies`. Follow the [staged Jetson retest](RUN_ON_JETSON.md#repair-missing-pkg_resources-during-model-restoration). |
 | Low memory | Close other GPU workloads. Check `free -h` and `tegrastats`; keep visual output. Startup needs 2 GiB available, with a 1 GiB runtime guard. These checks cannot guarantee no OOM. |
 | No context yet | Wait through a capture/transcription window, or enter a fragment; then `:cue`. A request cancels any unfinished audio window. |
 | Cue disappears in a pipe/file | Intentional privacy behavior; launch in a terminal. |

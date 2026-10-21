@@ -1,10 +1,12 @@
 """Optional NVIDIA FastPitch + HiFi-GAN, in a process after ASR exits."""
 
 from .errors import SpeechError
+from .speech_dependencies import check_speech_dependencies
 
 
 def speak_local(cue, fastpitch_path, hifigan_path):
     try:
+        check_speech_dependencies()
         import sounddevice as sd
         import torch
         from nemo.collections.tts.models import FastPitchModel, HifiGanModel
@@ -33,6 +35,8 @@ def speak_local(cue, fastpitch_path, hifigan_path):
             finally:
                 sd.stop()
                 samples.fill(0)
+    except SpeechError:
+        raise
     except Exception:
         raise SpeechError(
             "Local TTS unavailable. The visual cue remains available; check models and audio output."
