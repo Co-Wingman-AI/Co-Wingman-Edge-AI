@@ -221,6 +221,7 @@ def parse_response(response):
     except CueValidationError as exc:
         error = CloudRequestError(f"NaviGator {exc}")
         error.validation_code = exc.code
+        error.should_offer = exc.should_offer
         raise error from None
     except ValueError:
         raise CloudRequestError(
@@ -316,9 +317,9 @@ class NavigatorClient:
             except CloudRequestError as exc:
                 response_schema_valid = False
                 if (
-                    not automatic
-                    and facts
+                    facts
                     and getattr(exc, "validation_code", None) in {"length", "words"}
+                    and (not automatic or getattr(exc, "should_offer", None) is True)
                     and (fallback := portfolio_fact_fallback(facts)) is not None
                 ):
                     cue = fallback

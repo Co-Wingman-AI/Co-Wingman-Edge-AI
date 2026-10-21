@@ -157,7 +157,8 @@ With this option enabled, zero matching passages stops the cue request before
 the API call. Add a question naming the topic and use `:check` before retrying.
 Explicit Enter/`:cue` requests can use a validated local portfolio phrase if the
 model declines or returns an oversized cue; the UI identifies this fallback.
-Automatic pause requests respect model declines and do not use local fallback.
+Automatic pause requests can use the same oversized-cue fallback only when the
+model explicitly returns `should_offer: true`; model declines remain respected.
 
 ## Privacy contract
 

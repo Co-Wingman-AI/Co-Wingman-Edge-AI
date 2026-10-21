@@ -55,3 +55,21 @@ committing each completed unit. Detailed product instructions remain in README,
 - **Next:** check the GitHub Actions run for the shared-log commit, then continue
   real-device checks from `docs/HANDOFF.md`. Do not repeat the operator-reported
   Jetson/NaviGator test as if it were independently verified here.
+
+## 2026-10-21 — Automatic cue length recovery
+
+- **Session/device:** Codex cloud workspace; Linux x86_64, Python 3.12.14.
+- **Source:** continued `fc928cd`, reconciled with organization main `00f82e6`,
+  preserving the context-expiry changes and architecture documentation.
+- **Changes:** automatic portfolio requests can recover word/character-limit-only
+  failures using the existing validated local phrase extraction, but only when
+  the otherwise-validated response explicitly offers a cue. Automatic declines,
+  malformed fields, and unsafe responses cannot enable this fallback. No retry
+  or additional cloud request; the UI still identifies the local phrase.
+- **Validation:** 82 unittest tests passed, including simulated microphone pause
+  routing and oversized automatic responses. Ruff lint/format checks, offline
+  demo, and `git diff --check` passed. Repository hygiene scan failed on the
+  upstream `docs/co-wingman-architecture.png` as an unreviewed binary; preserved
+  that existing artifact without weakening the scanner.
+- **Remaining:** live Jetson/NaviGator retest of automatic length recovery;
+  upstream architecture binary needs review for the repository hygiene policy.

@@ -54,8 +54,10 @@ class CueValidationError(ValueError):
         "safety": "cue failed the safety check.",
     }
 
-    def __init__(self, code):
+    def __init__(self, code, *, should_offer=None):
         self.code = code
+        # Only length failures carry the already-validated offer decision.
+        self.should_offer = should_offer
         super().__init__(self.MESSAGES[code])
 
 
@@ -107,7 +109,7 @@ def parse_cue(content: str) -> Cue:
     # A length error may allow a separate portfolio fallback. Check all other
     # constraints first, so length cannot hide a safety/schema/boolean failure.
     if len(cue.strip()) > MAX_CUE_CHARACTERS:
-        raise CueValidationError("length")
+        raise CueValidationError("length", should_offer=value["should_offer"])
     if len(cue.split()) > MAX_CUE_WORDS:
-        raise CueValidationError("words")
+        raise CueValidationError("words", should_offer=value["should_offer"])
     return Cue(cue.strip(), value["intent"], value["should_offer"])

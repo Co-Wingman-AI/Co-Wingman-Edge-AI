@@ -70,8 +70,10 @@ fragments. Every candidate passes the normal schema, safety, 12-word, 160-charac
 and echo checks. These rules are conservative heuristics, not proof of semantic
 accuracy. If no suitable phrase exists, a valid decline stays a decline and an
 invalid response stays an error. Other validation failures and explicit API
-refusals do not trigger fallback. Automatic pause requests never use this fallback
-and preserve the model's decision not to offer a cue.
+refusals do not trigger fallback. Automatic pause requests can use the oversized
+response fallback only when the otherwise-validated model response explicitly has
+`should_offer: true`. A false offer decision never triggers automatic fallback,
+including when its text is oversized. No additional API request is made.
 
 Test another topic using fresh context:
 
