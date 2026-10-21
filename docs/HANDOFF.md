@@ -76,14 +76,22 @@ The operator supplied terminal output from the physical device confirming:
   installed. Importing `ASRModel` and repeating the CUDA calculation passed.
 - `python3 scripts/prepare_speech_models.py --asr` downloaded the NVIDIA Conformer
   CTC Small archive (49.1 MB) and reported the archive and integrity manifest ready.
+- After the speaker battery ran out, CMF Buds were paired, trusted, and connected
+  in handsfree mode. The PulseAudio input was index 25. A quiet/speaking capture
+  test measured RMS 0.0/0.0446 with no overflow; no audio files were created.
+- After launching the microphone application and following the spoken test and
+  explicit Enter-trigger instructions, the operator reported that a cue appeared.
+  This is the first operator-reported live microphone-to-cue success. No actual
+  transcript or returned cue text was supplied or saved in this handoff.
 
-These results come from operator-provided console output, not agent access to
-the Jetson. Next, launch `python3 -m cowingman` in that `.venv`, with the key still
+These results come from operator-provided console output and confirmation, not
+agent access to the Jetson. Launch `python3 -m cowingman` in that `.venv`, with the key
 exported and `COWINGMAN_ASR_MODEL_PATH` set to the absolute `models/asr.nemo` path.
 Recheck audio indices after device reconnection; the tested PulseAudio input was
 index 25 and the Bluetooth microphone was selected as the default PulseAudio source.
-Actual ASR model restore/inference, the microphone-to-cue application flow,
-repeated requests/resource cleanup, and optional TTS still need device validation.
+Next, test another cue after `:listen`, then clean shutdown with `:quit`.
+Repeated requests/resource cleanup, measured ASR accuracy/performance, microphone
+disconnect recovery, and optional TTS still need device validation.
 
 Follow RUN_ON_JETSON.md. Confirm the actual JetPack version and compatible NVIDIA
 torch/torchaudio before installing NeMo. Test `--health-check` with the operator's
@@ -92,8 +100,9 @@ accuracy/latency, repeated cue requests, fresh-context retry, disconnect recover
 memory headroom, and Ctrl-C cleanup. Verify optional TTS separately. Record only
 content-free measurements locally; generated reports remain ignored.
 
-The small NVIDIA ASR and NeMo 2.4.0 setup has passed the operator's installation
-and import checks, but not yet live transcription or performance checks. If a dependency
+The small NVIDIA ASR and NeMo 2.4.0 setup has passed the operator's installation,
+import checks, and reported first live cue run; no ASR accuracy or performance
+measurements were collected. If a dependency
 cannot be resolved safely on ARM, use `--typed` with NaviGator for the presentation.
 The offline fallback needs neither key, network, microphone, nor model files.
 
