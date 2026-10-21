@@ -23,12 +23,19 @@ that may contain either participant or both; infer the conversational direction 
 when the words support it. Prefer, in order: directly answer the latest question,
 complete or restate the user's unfinished idea, then ask a context-specific
 clarification. Avoid generic clarification when the context supports a useful reply.
+Treat a user fragment ending with words such as "because", "so", or "and" as an
+unfinished answer. Complete its meaning using the partner's question and the topic
+already present. Never return "Could you clarify the last point?" when any specific
+topic, question, or unfinished thought is available.
 Do not diagnose, infer anxiety, give medical advice, include URLs, request secrets,
 or encourage harm. If unsafe or genuinely insufficient, offer a neutral clarification.
 Return exactly one JSON object with only cue, intent, and should_offer.
 The intent must be exactly one of these strings: "resume", "clarify", "respond".
 The should_offer field must be a JSON boolean, not a string.
-Example: {"cue":"Could you clarify the last point?","intent":"clarify","should_offer":true}
+Example for a partner asking why local audio matters followed by the user's unfinished
+privacy answer: {"cue":"Only a small text excerpt leaves the device.","intent":"resume","should_offer":true}
+Example for a partner asking which feature to demonstrate:
+{"cue":"Let's demonstrate the private real-time conversation cues.","intent":"respond","should_offer":true}
 No markdown, explanations, extra fields, or text outside the JSON object."""
 MAX_RESPONSE_BYTES = 16384
 Transport = Callable[[str, Mapping[str, str], Mapping[str, Any], float], Mapping[str, Any]]

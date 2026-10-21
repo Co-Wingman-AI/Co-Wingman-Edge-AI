@@ -119,6 +119,14 @@ a supported answer or continuation over generic clarification while explaining
 that unknown speech may contain either participant. These changes passed all 58
 cloud tests; their effect on live cue usefulness still requires operator review.
 
+The operator's controlled typed test still returned "Could you clarify the last
+point?" The NaviGator dashboard independently confirmed successful requests. Code
+inspection found that exact generic cue in the system prompt's sole JSON example,
+which strongly anchored Nemotron's output. The prompt now forbids that fallback
+when a topic or unfinished thought is available and uses two context-specific
+continuation examples instead. All 58 tests and the offline demo pass; the revised
+prompt still requires a live controlled-test result from the Jetson.
+
 Follow RUN_ON_JETSON.md. Confirm the actual JetPack version and compatible NVIDIA
 torch/torchaudio before installing NeMo. Test `--health-check` with the operator's
 own UF key; never send it to a chat. Then exercise real microphone capture, ASR
