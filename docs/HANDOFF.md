@@ -163,6 +163,19 @@ still needs a Jetson check. Speaker enrollment, uninterrupted audio processing,
 and improved disfluency detection remain unimplemented. Do not describe portfolio
 retrieval as completing those capabilities.
 
+The first live portfolio test returned the user's unfinished input verbatim
+("i built orderflow using"). Reproducing the request locally with the pinned
+profile confirmed two OrderFlow passages, including Spring Boot and Kafka, reach
+the transport. This does not inspect the operator's actual network payload.
+The prompt now requires new continuation content, recognizes "using"/"with" as
+unfinished endings, and illustrates completion using an unrelated synthetic
+project. The response boundary rejects multiword verbatim user/unknown echoes
+after case/punctuation normalization. A content-free passage count now appears
+in the UI; echo rejection also reports it when a profile is enabled. Failed
+context is cleared with no automatic retry. Live generation quality remains
+unverified after this change; mocked tests prove retrieval and echo rejection,
+not the behavior of the hosted model.
+
 The user explicitly authorized committing and pushing tested changes during this
 session. Read current instructions in a new session rather than assuming that
 permission extends to unrelated work. Preserve local changes. Keep the one

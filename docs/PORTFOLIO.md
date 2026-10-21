@@ -46,7 +46,16 @@ I built OrderFlow using
 
 A supported cue might be: "I built six Spring Boot microservices coordinated through Kafka."
 The exact wording varies. It should refer to the portfolio facts rather than ask
-for generic clarification. Test another topic using fresh context:
+for generic clarification.
+
+The status `Portfolio: 2 reference passages supplied.` reports how many local
+passages were included in the request, without printing them. A zero count means
+retrieval found no keyword match. A multiword verbatim echo of a user/microphone
+fragment is withheld with an explicit error, rather than displayed as a useful cue.
+Context is discarded as with other rejected responses; there is no automatic retry.
+The check ignores case and punctuation but is not a general relevance evaluator.
+
+Test another topic using fresh context:
 
 ```text
 :partner What did you do during your robotics internship?

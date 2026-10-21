@@ -69,6 +69,10 @@ class Application:
             self.ui.status("requesting a cue")
             cue, _metrics = self.client.request_cue(context)
             context = None  # Drop request text before presenting or synthesizing.
+            if "portfolio_passages" in _metrics:
+                self.ui.message(
+                    f"Portfolio: {_metrics['portfolio_passages']} reference passages supplied."
+                )
             self.ui.status("ready")
             self.ui.show_cue(cue)
             presented = True

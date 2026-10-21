@@ -8,8 +8,10 @@ import unittest
 from unittest.mock import MagicMock, Mock, patch
 
 from cowingman.__main__ import main
+from cowingman.app import Application
+from cowingman.config import Config
 from cowingman.context import BoundedContext, ContextTurn
-from cowingman.errors import ConfigurationError, PrivacyBoundaryError
+from cowingman.errors import CloudRequestError, ConfigurationError, PrivacyBoundaryError
 from cowingman.portfolio import (
     MAX_FILE_BYTES,
     Portfolio,
@@ -196,7 +198,100 @@ class PortfolioTests(unittest.TestCase):
                 self.assertEqual(main(["--typed", "--portfolio", str(path)]), 0)
             self.assertEqual(len(ui.cues), 1)
             self.assertIn("portfolio_facts", captured[0])
+            self.assertIn("Portfolio: 2 reference passages supplied.", ui.messages)
             self.assertNotIn("ParcelFlow", repr(ui.messages))
+
+    def test_echo_is_withheld_and_context_cleared_without_retry(self):
+        for speaker in ("user", "unknown"):
+            for echo in ("i built parcelflow using", "I BUILT PARCELFLOW USING..."):
+                with self.subTest(speaker=speaker, echo=echo):
+                    transport = Mock(
+                        return_value={
+                            "choices": [
+                                {
+                                    "message": {
+                                        "content": json.dumps(
+                                            {"cue": echo, "intent": "resume", "should_offer": True}
+                                        )
+                                    }
+                                }
+                            ]
+                        }
+                    )
+                    client = NavigatorClient(
+                        "synthetic", portfolio=Portfolio(PASSAGES), transport=transport
+                    )
+                    ui = FakeUI()
+                    app = Application(Config.load(offline=True, environ={}), client, ui)
+                    app.add("Tell me about ParcelFlow. What did you build?", "partner")
+                    app.add("I built ParcelFlow using", speaker)
+                    app.request_cue()
+                    self.assertFalse(ui.cues)
+                    self.assertEqual(len(app.context), 0)
+                    self.assertEqual(transport.call_count, 1)
+                    self.assertIn("cue withheld", " ".join(ui.messages))
+                    self.assertIn("2 portfolio passages were supplied", " ".join(ui.messages))
+                    self.assertNotIn("ParcelFlow", " ".join(ui.messages))
+                    app.close()
+
+    def test_completion_may_reuse_input_when_it_adds_information(self):
+        window = BoundedContext.from_turns(
+            [
+                ContextTurn("partner", "Tell me about ParcelFlow"),
+                ContextTurn("user", "I built ParcelFlow using"),
+            ]
+        )
+        for phrase in ("Kafka to coordinate orders.", "I built ParcelFlow using Java and Kafka."):
+
+            def transport(url, headers, payload, timeout):
+                body = json.loads(payload["messages"][1]["content"])
+                self.assertEqual(body["portfolio_facts"], list(PASSAGES[:2]))
+                self.assertEqual(body["recent_fragments"][-1]["text"], "I built ParcelFlow using")
+                return {
+                    "choices": [
+                        {
+                            "message": {
+                                "content": json.dumps(
+                                    {"cue": phrase, "intent": "resume", "should_offer": True}
+                                )
+                            }
+                        }
+                    ]
+                }
+
+            client = NavigatorClient(
+                "synthetic", portfolio=Portfolio(PASSAGES), transport=transport
+            )
+            cue, metrics = client.request_cue(window)
+            self.assertEqual(cue.cue, phrase)
+            self.assertEqual(metrics["portfolio_passages"], 2)
+            client.close()
+
+    def test_echo_check_applies_without_portfolio_too(self):
+        transport = Mock(
+            return_value={
+                "choices": [
+                    {
+                        "message": {
+                            "content": json.dumps(
+                                {
+                                    "cue": "I chose this because...",
+                                    "intent": "resume",
+                                    "should_offer": True,
+                                }
+                            )
+                        }
+                    }
+                ]
+            }
+        )
+        client = NavigatorClient("synthetic", transport=transport)
+        with self.assertRaisesRegex(CloudRequestError, "repeated the input"):
+            client.request_cue(
+                BoundedContext.from_turns([ContextTurn("user", "I chose this because")])
+            )
+        self.assertEqual(transport.call_count, 1)
+        client.close()
 
     def test_synthetic_modes_cannot_include_portfolio(self):
         for option in ["--health-check", "--offline", "--demo", "--list-audio"]:
