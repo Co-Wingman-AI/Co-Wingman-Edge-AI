@@ -11,7 +11,9 @@ import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from cowingman.config import ASR_MODEL
+from cowingman.errors import SpeechError
 from cowingman.speech import FASTPITCH_MODEL, HIFIGAN_MODEL
+from cowingman.speech_dependencies import check_speech_dependencies
 
 
 def save(model_class, model_id, destination):
@@ -48,6 +50,7 @@ def main():
     args.output.mkdir(parents=True, exist_ok=True)
     logging.disable(logging.CRITICAL)
     try:
+        check_speech_dependencies()
         if args.asr:
             from nemo.collections.asr.models import ASRModel
 
@@ -59,6 +62,9 @@ def main():
             save(FastPitchModel, FASTPITCH_MODEL, args.output / "fastpitch.nemo")
             save(HifiGanModel, HIFIGAN_MODEL, args.output / "hifigan.nemo")
             print("NVIDIA TTS archives and integrity manifests ready.")
+    except SpeechError as exc:
+        print(str(exc), file=sys.stderr)
+        return 2
     except Exception:
         print(
             "Model setup failed. Install compatible NeMo/PyTorch and check NVIDIA model-download access.",

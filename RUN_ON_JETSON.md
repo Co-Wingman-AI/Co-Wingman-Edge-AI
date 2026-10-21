@@ -63,6 +63,7 @@ python3 -c 'import torch, torchaudio; assert torch.cuda.is_available(); print("C
 python3 -m pip install --upgrade pip
 python3 -m pip freeze | sed -n '/^torch==/p; /^torchaudio==/p; /^torchvision==/p' > /tmp/cowingman-torch-constraints.txt
 python3 -m pip install -c /tmp/cowingman-torch-constraints.txt -e '.[audio]' 'nemo_toolkit[asr,tts]==2.4.0'
+python3 -m cowingman.speech_dependencies
 python3 -c 'import torch; import nemo.collections.asr; assert torch.cuda.is_available(); print("NeMo ASR imports ready")'
 python3 scripts/prepare_speech_models.py --asr
 export COWINGMAN_ASR_MODEL_PATH="$PWD/models/asr.nemo"
@@ -83,6 +84,104 @@ export COWINGMAN_AUDIO_DEVICE=1
 ```
 
 Use the actual index; `1` is only an example. The input must support 16 kHz mono.
+
+## Repair missing `pkg_resources` during model restoration
+
+If the first error is `ModuleNotFoundError: No module named 'pkg_resources'`
+inside Librosa's `core/intervals.py`, repair the active speech virtual environment:
+
+```sh
+git pull --ff-only
+. .venv/bin/activate
+python3 -m pip install 'setuptools>=68,<82'
+python3 -m pip check
+python3 -m cowingman.speech_dependencies
+```
+
+This only installs the compatibility package; it does not replace NVIDIA torch,
+torchaudio, NeMo, or your verified model. Do not install a package named
+`pkg_resources`. It is supplied by setuptools, and was
+[removed in setuptools 82](https://setuptools.pypa.io/en/stable/history.html#v82-0-0).
+The pinned shadow Librosa 0.10.1 still imports it. Both `audio` and `shadow` extras
+now declare `setuptools>=68,<82` as a runtime dependency. A build-system dependency
+alone is insufficient because pip can install it in an isolated build environment.
+Keep this temporary compatibility bound until the speech/shadow stack is retested
+with a newer Librosa. Do not broadly upgrade the Jetson's working speech stack.
+
+NeMo may subsequently report `Can't instantiate abstract class ASRModel` after
+the concrete model failed to instantiate. In this traceback it is a secondary
+error: fix the earlier missing import first. Training/validation manifest warnings
+from the saved model configuration do not require downloading training datasets.
+The failure happens on CPU, before `.to("cuda")`; it does not establish a CUDA or
+out-of-memory problem. If `pip check` finds other conflicts, resolve those against
+the documented JetPack stack before continuing; do not remove torch constraints.
+
+The preprocessing check exercises a synthetic mel filter, which catches lazy
+imports that `import librosa` or `import nemo.collections.asr` alone can miss.
+Next test the verified local archive and GPU inference, without microphone input
+or a hosted-model request:
+
+```sh
+KERAS_BACKEND=torch HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 python3 - <<'PY'
+import os
+import numpy as np
+import torch
+from cowingman.config import ASR_MODEL
+from cowingman.speech import verify_model
+from cowingman.speech_dependencies import check_speech_dependencies
+
+check_speech_dependencies()
+from nemo.collections.asr.models import ASRModel
+
+path = os.environ.get("COWINGMAN_ASR_MODEL_PATH") or "models/asr.nemo"
+print("STEP 1: Verify archive", flush=True)
+verify_model(path, ASR_MODEL)
+print("STEP 2: Restore on CPU", flush=True)
+model = ASRModel.restore_from(path, map_location="cpu").eval()
+print("STEP 3: Move to CUDA", flush=True)
+assert torch.cuda.is_available(), "CUDA unavailable"
+model = model.to("cuda")
+torch.cuda.synchronize()
+print("STEP 4: Synthetic four-second inference", flush=True)
+from cowingman.asr import NemoASR
+
+adapter = NemoASR.__new__(NemoASR)
+adapter.torch, adapter.model = torch, model
+samples = np.zeros(64000, dtype=np.float32)
+try:
+    adapter.transcribe(samples)  # Exercise decoding; do not print recognized text.
+    torch.cuda.synchronize()
+finally:
+    samples.fill(0)
+print("ASR CPU RESTORE / CUDA / SYNTHETIC INFERENCE PASSED", flush=True)
+PY
+```
+
+Silence checks execution, not recognition accuracy. After it passes:
+
+1. Run `python3 -m unittest discover -s tests -v` and
+   `python3 -m cowingman --offline --demo`.
+2. Run `python3 -m cowingman --list-audio`, then
+   `python3 -m cowingman --show-input` with the existing UF key. Speak a synthetic
+   phrase, wait for “Speech fragment accepted privately,” then use `:check` and
+   `:pause`/`:listen` to check capture without requesting a cue. `--offline`
+   disables the microphone, so it cannot test this stage.
+3. Run `python3 -m cowingman --health-check`, then repeat the microphone test
+   and request `:cue`, followed by `:listen`. Repeat three times; verify `:quit`
+   releases the microphone and GPU memory.
+4. Run `python3 -m cowingman --rolling --show-input --timings private/asr-retest-01.jsonl`
+   for at least two minutes. Check multiple cues, `:pause`/`:listen`, and summary
+   updates. Review `python3 scripts/timing_report.py private/asr-retest-01.jsonl`
+   for inference duration, capture age, and audio drops. Use `free -h` and
+   `tegrastats` in another terminal to observe memory across repeated cycles.
+5. Only after the baseline passes, add pause assistance, shadow scoring, S3, or
+   TTS one at a time using their respective guides. For shadow scoring compare
+   dropped windows and inference time against the baseline. TTS is tested outside
+   rolling mode. Also verify microphone unplug handling and Ctrl-C cleanup.
+
+Use a fresh timing filename for each run. Keep only content-free measurements;
+do not save terminal transcripts or microphone recordings. Local mocked tests
+cannot establish Jetson throughput, recognition quality, or live service success.
 
 ## Launch the live microphone demonstration
 
