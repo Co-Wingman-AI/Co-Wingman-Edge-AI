@@ -73,6 +73,8 @@ class Application:
                 self.ui.message(
                     f"Portfolio: {_metrics['portfolio_passages']} reference passages supplied."
                 )
+            if _metrics.get("portfolio_fallback"):
+                self.ui.message("Portfolio: local grounded fallback used for an oversized cue.")
             self.ui.status("ready")
             self.ui.show_cue(cue)
             presented = True

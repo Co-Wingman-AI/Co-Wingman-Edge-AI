@@ -207,6 +207,15 @@ operator step is `python3 -m cowingman --health-check` without the portfolio.
 HTTP 400/422 reports unsupported request options with no fallback or retry.
 Offline tests verify request shape and boundaries, not live constrained decoding.
 
+The live endpoint accepted the strict schema yet again produced an overlong cue,
+showing that request acceptance does not establish enforcement. Portfolio mode now
+has a narrow local fallback for only word-count or character-count failures: it
+selects one 4–12-word clause from the highest-ranked already-selected fact, runs
+the normal parser and safety checks, makes no retry, and reports fallback use. It
+does not repair empty, wrong-type, malformed, unsafe, echo, or unrelated output.
+The response-schema-valid metric is false when fallback is used. This behavior is
+covered by mocked tests but still needs a live typed portfolio retest.
+
 The user explicitly authorized committing and pushing tested changes during this
 session. Read current instructions in a new session rather than assuming that
 permission extends to unrelated work. Preserve local changes. Keep the one

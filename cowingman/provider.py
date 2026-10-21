@@ -64,6 +64,26 @@ def is_verbatim_echo(cue, context):
     )
 
 
+def portfolio_fact_fallback(facts):
+    """Build one short, grounded phrase when hosted output is only too long."""
+    candidates = []
+    for order, fact in enumerate(facts):
+        body = fact.split(":", 1)[-1].strip()
+        for part in re.split(r"(?<=[.!?])\s+|[,;]\s+", body):
+            phrase = part.strip(" -.,;:")
+            words = phrase.split()
+            if 4 <= len(words) <= 12 and len(phrase) <= 159:
+                candidates.append((order, len(words), phrase))
+    for _, _, phrase in sorted(candidates):
+        try:
+            return parse_cue(
+                json.dumps({"cue": phrase + ".", "intent": "resume", "should_offer": True})
+            )
+        except CueValidationError:
+            continue
+    return None
+
+
 class NoRedirect(urllib.request.HTTPRedirectHandler):
     def redirect_request(self, req, fp, code, msg, headers, newurl):
         raise CloudRequestError(
@@ -185,7 +205,9 @@ def parse_response(response):
     try:
         return parse_cue(content)
     except CueValidationError as exc:
-        raise CloudRequestError(f"NaviGator {exc}") from None
+        error = CloudRequestError(f"NaviGator {exc}")
+        error.validation_code = exc.code
+        raise error from None
     except ValueError:
         raise CloudRequestError(
             "NaviGator cue failed JSON, schema, length, or safety validation."
@@ -257,8 +279,8 @@ class NavigatorClient:
         headers = {"Authorization": f"Bearer {self._api_key}", "Content-Type": "application/json"}
         response = None
         request_data.clear()
-        facts = None
         started = time.monotonic()
+        fallback_used = False
         try:
             response = self._transport(
                 f"{self.base_url}/chat/completions", headers, payload, self.timeout_seconds
@@ -266,12 +288,20 @@ class NavigatorClient:
             try:
                 cue = parse_response(response)
             except CloudRequestError as exc:
-                detail = (
-                    f" {portfolio_passages} portfolio passages were supplied."
-                    if self.portfolio is not None
-                    else ""
-                )
-                raise CloudRequestError(str(exc) + detail) from None
+                if (
+                    facts
+                    and getattr(exc, "validation_code", None) in {"length", "words"}
+                    and (fallback := portfolio_fact_fallback(facts)) is not None
+                ):
+                    cue = fallback
+                    fallback_used = True
+                else:
+                    detail = (
+                        f" {portfolio_passages} portfolio passages were supplied."
+                        if self.portfolio is not None
+                        else ""
+                    )
+                    raise CloudRequestError(str(exc) + detail) from None
             if cue.should_offer and is_verbatim_echo(cue.cue, checked):
                 detail = (
                     f" {portfolio_passages} portfolio passages were supplied."
@@ -287,10 +317,12 @@ class NavigatorClient:
                 "request_turns": len(checked.turns),
                 "request_characters": checked.character_count,
                 "portfolio_characters": portfolio_characters,
-                "response_schema_valid": True,
+                "response_schema_valid": not fallback_used,
             }
             if self.portfolio is not None:
                 metrics["portfolio_passages"] = portfolio_passages
+            if fallback_used:
+                metrics["portfolio_fallback"] = True
             return cue, metrics
         except CloudRequestError:
             raise
@@ -307,6 +339,7 @@ class NavigatorClient:
             headers.clear()
             response = None
             checked = None
+            facts = None
 
 
 class OfflineClient:

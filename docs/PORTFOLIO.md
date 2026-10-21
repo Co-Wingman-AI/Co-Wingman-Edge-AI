@@ -56,6 +56,12 @@ A multiword verbatim echo of a user/microphone
 fragment is withheld with an explicit error, rather than displayed as a useful cue.
 Context is discarded as with other rejected responses; there is no automatic retry.
 The check ignores case and punctuation but is not a general relevance evaluator.
+If the hosted response is valid JSON but exceeds only the word or character limit,
+portfolio mode can use one short clause from the highest-ranked selected fact.
+That local fallback is separately checked for schema, safety, 12 words, and 160
+characters, makes no second API request, and prints an explicit fallback status.
+Other response failures remain errors. This keeps the cue grounded when the hosted
+service accepts but does not enforce the requested JSON Schema constraints.
 
 Test another topic using fresh context:
 

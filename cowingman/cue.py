@@ -55,6 +55,7 @@ class CueValidationError(ValueError):
     }
 
     def __init__(self, code):
+        self.code = code
         super().__init__(self.MESSAGES[code])
 
 
