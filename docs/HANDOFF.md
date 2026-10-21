@@ -93,6 +93,19 @@ Next, test another cue after `:listen`, then clean shutdown with `:quit`.
 Repeated requests/resource cleanup, measured ASR accuracy/performance, microphone
 disconnect recovery, and optional TTS still need device validation.
 
+The next operator log showed multiple transcription windows, an empty-context
+request, typed fragment acceptance, clean-stop status, and a later generic cue
+validation failure. It does not establish repeatable speech-only cue generation
+or measured resource cleanup. To diagnose it, the client prompt's ambiguous
+`resume|clarify|respond` example was replaced with a valid single-intent example.
+Validation now reports fixed, specific categories without any response content;
+all original rejection rules and limits remain. The speech UI now distinguishes
+accepted fragments from empty ASR output and explains `:listen` after an empty or
+failed request. All 57 cloud tests, lint/format checks, offline demo, repository
+scan, and diff whitespace checks passed. The operator must pull and repeat a
+fresh spoken request, waiting for “Speech fragment accepted privately” first.
+The precise cause of the previous rejected response remains unknown.
+
 Follow RUN_ON_JETSON.md. Confirm the actual JetPack version and compatible NVIDIA
 torch/torchaudio before installing NeMo. Test `--health-check` with the operator's
 own UF key; never send it to a chat. Then exercise real microphone capture, ASR

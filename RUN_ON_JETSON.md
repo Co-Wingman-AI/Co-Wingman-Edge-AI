@@ -93,9 +93,13 @@ python3 -m cowingman
 ```
 
 Wait for `[listening]`. Speak a short synthetic phrase, allow a four-second capture
-window plus local transcription, then press Enter or enter `:cue`. The cue appears
+window plus local transcription, and wait for “Speech fragment accepted privately.”
+Then press Enter or enter `:cue`. A “No words recognized” notice means that window
+produced no usable text; try again or use a typed fragment. The cue appears
 for up to 20 seconds. The microphone/model stops for the request and stays paused
 afterward; enter `:listen` to resume. Use `:quit` or Ctrl-C to release resources.
+Requests also pause the microphone when context is empty or the provider fails;
+use `:listen` before trying a fresh spoken example after those errors.
 Typed fragments remain available in this same terminal if the microphone fails.
 
 Optional pause assistance: `python3 -m cowingman --pause-assist`. It detects an

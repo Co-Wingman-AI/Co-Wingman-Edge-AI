@@ -107,6 +107,42 @@ class ApplicationTests(unittest.TestCase):
         self.assertEqual(len(app.ui.cues), 1)
         audio.close.assert_called()
 
+    def test_audio_feedback_distinguishes_empty_and_accepted_text_privately(self):
+        audio = Mock(process=object())
+        audio.poll.side_effect = [
+            [("empty_fragment", None), ("status", "listening")],
+            [("fragment", "private speech sentinel"), ("status", "listening")],
+        ]
+        app = self.make_app(audio=audio)
+        app.tick()
+        self.assertEqual(len(app.context), 0)
+        self.assertIn("No words recognized", " ".join(app.ui.messages))
+        self.assertNotIn("Speech fragment accepted", " ".join(app.ui.messages))
+        app.tick()
+        self.assertEqual(len(app.context), 1)
+        self.assertIn("Speech fragment accepted privately", " ".join(app.ui.messages))
+        self.assertNotIn("private speech sentinel", " ".join(app.ui.messages))
+        app.request_cue()
+        self.assertEqual(len(app.ui.cues), 1)
+        self.assertEqual(len(app.context), 0)
+        # No resume message may clear a successful visual cue.
+        self.assertNotIn("Microphone paused", " ".join(app.ui.messages))
+
+    def test_failed_or_empty_audio_request_explains_how_to_resume(self):
+        for has_context in (False, True):
+            with self.subTest(has_context=has_context):
+                audio = Mock(process=object())
+                client = Mock()
+                client.request_cue.side_effect = CloudRequestError("Cue rejected.")
+                app = self.make_app(audio=audio, client=client)
+                if has_context:
+                    app.add("private fragment")
+                app.request_cue()
+                self.assertTrue(app.pending_resume)
+                self.assertIn("Use :listen before speaking again", " ".join(app.ui.messages))
+                self.assertEqual(len(app.context), 0)
+                self.assertEqual(client.request_cue.call_count, int(has_context))
+
     def test_pause_opt_in_and_cooldown(self):
         audio = Mock(process=object())
         audio.poll.return_value = [("fragment", "hello"), ("pause", None)]

@@ -62,6 +62,7 @@ class Application:
         if self.audio is not None:
             self.audio.close()
         context = cue = None
+        presented = False
         try:
             context = self.context.take()
             self.last_request = self.clock()
@@ -70,6 +71,7 @@ class Application:
             context = None  # Drop request text before presenting or synthesizing.
             self.ui.status("ready")
             self.ui.show_cue(cue)
+            presented = True
             if self.tts and cue.should_offer:
                 try:
                     self.speaker(cue.cue, self.config)
@@ -89,6 +91,8 @@ class Application:
             # Wait for explicit resume so the display remains visible and a speaker
             # cannot feed the generated cue back into the microphone.
             self.pending_resume = True
+            if not presented:
+                self.ui.message("Microphone paused. Use :listen before speaking again.")
             # Do not print over the visual cue; commands are in the startup help.
 
     def tick(self):
@@ -100,6 +104,10 @@ class Application:
             if kind == "fragment":
                 try:
                     self.context.add(value)
+                    if len(self.context):
+                        self.ui.message(
+                            "Speech fragment accepted privately. Press Enter or :cue for a cue."
+                        )
                 except PrivacyBoundaryError:
                     self.context.clear()
                     self.audio.close()
@@ -109,6 +117,11 @@ class Application:
                         "type a fresh fragment or use :listen to retry."
                     )
                     break
+            elif kind == "empty_fragment":
+                self.ui.message(
+                    "No words recognized in this window. "
+                    "Try a short clear phrase or type a fragment."
+                )
             elif kind == "status":
                 self.ui.status(value)
             elif kind == "error":

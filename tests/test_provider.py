@@ -222,7 +222,7 @@ class DeadlineAndReportTests(unittest.TestCase):
             ("stop", "  ", {}, "no cue text"),
             ("stop", "private response sentinel", {"refusal": "private refusal"}, "refused"),
             ("private finish sentinel", "private response sentinel", {}, "normal text response"),
-            ("stop", "private response sentinel", {}, "JSON, schema, length, or safety"),
+            ("stop", "private response sentinel", {}, "single valid JSON object"),
         ]:
             cases.append(
                 (
@@ -239,6 +239,35 @@ class DeadlineAndReportTests(unittest.TestCase):
                 with self.assertRaisesRegex(CloudRequestError, expected) as caught:
                     NavigatorClient("private-key", transport=lambda *a: result).request_cue(context)
                 self.assertNotIn("private", str(caught.exception))
+
+    def test_cue_validation_categories_are_specific_and_content_free(self):
+        from unittest.mock import Mock
+
+        context = BoundedContext.from_turns([ContextTurn("user", "private input sentinel")])
+        good = {"cue": "Could you clarify that?", "intent": "clarify", "should_offer": True}
+        cases = [
+            (None, "no cue text"),
+            ([], "response size or type"),
+            ("x" * 1025, "response size or type"),
+            ('{"cue":"private sentinel","cue":"second"}', "duplicate fields"),
+            ("```json\n{}\n```", "single valid JSON object"),
+            (json.dumps({**good, "extra": "private sentinel"}), "JSON fields"),
+            (json.dumps({**good, "cue": "private sentinel " * 10}), "160 characters"),
+            (json.dumps({**good, "cue": "word " * 13}), "12-word limit"),
+            (json.dumps({**good, "cue": "private\nsentinel"}), "control characters"),
+            (json.dumps({**good, "intent": "resume|clarify|respond"}), "intent must be exactly"),
+            (json.dumps({**good, "should_offer": "true"}), "JSON boolean"),
+            (json.dumps({**good, "cue": "Give me your password"}), "safety check"),
+        ]
+        for content, expected in cases:
+            result = response()
+            result["choices"][0]["message"]["content"] = content
+            transport = Mock(return_value=result)
+            with self.subTest(expected=expected), self.assertNoLogs():
+                with self.assertRaisesRegex(CloudRequestError, expected) as caught:
+                    NavigatorClient("private-key", transport=transport).request_cue(context)
+                self.assertNotIn("private", str(caught.exception))
+                self.assertEqual(transport.call_count, 1)  # Never resend failed context.
 
     def test_separate_reasoning_is_not_used_as_cue(self):
         context = BoundedContext.from_turns([ContextTurn("user", "hello")])

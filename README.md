@@ -152,6 +152,8 @@ explicit setup script, never as a conversation-time fallback.
 | Missing/denied API key | Set `NAVIGATOR_TOOLKIT_API_KEY`; grant that key the approved model in UF Toolkit; run `--health-check`. |
 | Timeout, rate limit, or service failure | Context is discarded. Wait, add fresh context, and request again; use `--typed --offline` for a network-free demonstration. |
 | Output token limit or no cue text | Update with `git pull --ff-only`, then rerun `--health-check`. The service may still be using reasoning mode. Error messages distinguish truncation, empty output, refusal, and invalid cue format without exposing response text. |
+| Cue validation failure | The error identifies invalid JSON, fields, intent, boolean type, length, control characters, or safety rejection without printing output. Update the app, then use fresh context; there is no automatic retry. |
+| Transcription runs but no context is ready | Wait for “Speech fragment accepted privately” before pressing Enter. “No words recognized” means ASR produced no usable text for that window. After a request, use `:listen` before speaking again. |
 | Request options rejected | Confirm UF supports JSON output and `chat_template_kwargs.enable_thinking=false` for the approved model. Do not disable validation or switch models to bypass the error. |
 | Microphone missing or disconnected | Connect a USB input; run `--list-audio`; export `COWINGMAN_AUDIO_DEVICE` to its numeric index. Try `:listen`; typed input remains usable after audio errors. |
 | ASR dependency/model/CUDA failure | Follow [RUN_ON_JETSON.md](RUN_ON_JETSON.md); use `--typed` until the NVIDIA stack is verified. |

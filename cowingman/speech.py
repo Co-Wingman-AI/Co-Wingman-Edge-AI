@@ -115,6 +115,8 @@ def _speech_worker(connection, asr_path, device, threshold):
                 text = model.transcribe(samples)
                 if text:
                     connection.send(("fragment", text))
+                else:
+                    connection.send(("empty_fragment", None))
                 text = None
             samples.fill(0)
             samples = None
