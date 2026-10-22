@@ -230,3 +230,34 @@ committing each completed unit. Detailed product instructions remain in README,
   it is not applied automatically. Pages may also need its source set to GitHub
   Actions in repository settings. The website's simulated examples are not live
   Jetson/ASR or model-quality validation.
+
+## 2026-10-22 — Expanded research showcase and conversation simulator
+
+- **Session/device:** managed Linux cloud workspace; Chromium browser.
+- **Source:** clean organization main `46d2b36`; fetched before editing and
+  rechecked before commit, with no upstream divergence.
+- **Changes:** expanded the website with the full project title, UF-inspired
+  colors, an animated recovery flow, editable terminal simulation, edge/cloud
+  specifications, research provenance, setup/command guide, roadmap, resources,
+  and acknowledgments. Adapted React Bits spotlight treatment for the static
+  site and preserved its license and source attribution. The simulator displays
+  visitor-supplied continuations with explicit local-only labeling and bounds;
+  no live model credential, network call, microphone, or persistence was added.
+  Published descriptions distinguish expiring recent context from optional S3
+  persistence and shadow disfluency scoring from anxiety/speaker inference.
+- **Validation:** browser regression passed for all three existing examples,
+  replay/cancellation, keyboard architecture tabs, FAQs, five widths, reduced
+  motion, and no-JavaScript fallback. New lab checks passed for simulated pause,
+  reset/edit cancellation, literal text rendering, word/character limits,
+  whitespace rejection, roadmap controls, navigation anchors, and mobile output.
+  No storage, external requests, or JavaScript errors were observed. Axe WCAG
+  A/AA checks found zero violations at 1440px and 390px with the lab result and
+  roadmap open. JavaScript syntax, whitespace, and repository hygiene passed
+  (74 source files). Application code was unchanged; the previously recorded
+  upstream prompt-wording test failure remains outside this website change.
+- **Remaining:** project owner must provide the demo-video and Google Drive
+  poster URLs; resource cards explicitly show their pending status. Live model
+  testing in a browser would need a separately hosted backend. GitHub API/Pages
+  access remains blocked by the workspace network policy, so deployment status
+  and the served website cannot be confirmed here. The existing workflow will
+  request deployment on this website push if repository Pages is configured.

@@ -146,3 +146,155 @@ stageButtons.forEach((button, index) => {
     stageButtons[next].focus();
   });
 });
+
+// This editable lab is a deterministic simulation, never a model endpoint.
+const labForm = document.getElementById("lab-form");
+const labRun = document.getElementById("lab-run");
+const labStatus = document.getElementById("lab-status");
+const labFields = ["lab-question", "lab-fragment", "lab-fact"].map((id) =>
+  document.getElementById(id),
+);
+const terminal = document.querySelector(".terminal");
+const terminalState = document.getElementById("terminal-state");
+const terminalCue = document.getElementById("terminal-cue");
+const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+let labInterval;
+
+function cancelLab() {
+  clearInterval(labInterval);
+  labRun.disabled = false;
+  terminal.classList.remove("running");
+  terminalCue.hidden = true;
+  document.getElementById("terminal-output").textContent = "";
+  document.getElementById("terminal-count").textContent = "";
+  terminalState.textContent = "[ready] Play the conversation to begin.";
+}
+
+labRun.disabled = false;
+labForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  cancelLab();
+  const [question, fragment, fact] = labFields.map((field) =>
+    field.value.trim(),
+  );
+  const words = fact ? fact.split(/\s+/u).length : 0;
+  const characters = Array.from(fact).length;
+  if (!question || !fragment || !fact) {
+    labStatus.textContent = "Fill in all three fields to build the example.";
+    labFields.find((field) => !field.value.trim()).focus();
+    return;
+  }
+  if (words > 12 || characters > 160) {
+    labStatus.textContent = `Your continuation has ${words} words and ${characters} characters. Keep it within 12 words and 160 characters; this simulator will not cut off your thought.`;
+    labFields[2].focus();
+    return;
+  }
+  document.getElementById("terminal-question").textContent = question;
+  document.getElementById("terminal-fragment").textContent = fragment;
+  labRun.disabled = true;
+  terminal.classList.add("running");
+  labStatus.textContent =
+    "Playing a simulated three-second pause. No audio is being measured.";
+  const finish = () => {
+    clearInterval(labInterval);
+    terminal.classList.remove("running");
+    terminalState.textContent = "[pause detected: 3.0s simulated silence]";
+    document.getElementById("terminal-output").textContent = fact;
+    document.getElementById("terminal-count").textContent =
+      `${words} words · ${characters} characters · supplied by you`;
+    terminalCue.hidden = false;
+    labRun.disabled = false;
+    labStatus.textContent =
+      "Your supplied continuation is displayed. The real prototype requests a generated cue from Nemotron; this browser example does not.";
+  };
+  if (reducedMotion.matches) {
+    finish();
+    return;
+  }
+  const start = performance.now();
+  terminalState.textContent = "[simulating pause: 0.0 / 3.0s]";
+  labInterval = setInterval(() => {
+    const elapsed = Math.min(3, (performance.now() - start) / 1000);
+    terminalState.textContent = `[simulating pause: ${elapsed.toFixed(1)} / 3.0s]`;
+    if (elapsed >= 3) finish();
+  }, 100);
+});
+labFields.forEach((field) =>
+  field.addEventListener("input", () => {
+    cancelLab();
+    labStatus.textContent =
+      "Example edited. Play it again to see your new continuation.";
+  }),
+);
+document.getElementById("lab-reset").addEventListener("click", () => {
+  labForm.reset();
+  cancelLab();
+  document.getElementById("terminal-question").textContent = labFields[0].value;
+  document.getElementById("terminal-fragment").textContent = labFields[1].value;
+  labStatus.textContent =
+    "Example reset. Everything you type stays in this page.";
+});
+
+const flowSteps = Array.from(document.querySelectorAll(".flow-ribbon>span"));
+const flowPlay = document.getElementById("flow-play");
+let flowTimer;
+flowPlay.addEventListener("click", () => {
+  clearInterval(flowTimer);
+  flowSteps.forEach((step) => step.classList.remove("flow-active"));
+  if (reducedMotion.matches) {
+    flowSteps.forEach((step) => step.classList.add("flow-active"));
+    return;
+  }
+  flowPlay.disabled = true;
+  let index = 0;
+  flowSteps[0].classList.add("flow-active");
+  flowTimer = setInterval(() => {
+    index += 1;
+    if (index < flowSteps.length) flowSteps[index].classList.add("flow-active");
+    else {
+      clearInterval(flowTimer);
+      flowPlay.disabled = false;
+    }
+  }, 750);
+});
+
+// Lightweight adaptation of React Bits SpotlightCard's pointer-relative light.
+// Source and complete upstream license: design-credits.txt.
+document.querySelectorAll(".spotlight").forEach((card) => {
+  let frame = 0;
+  card.addEventListener("pointermove", (event) => {
+    if (reducedMotion.matches || event.pointerType !== "mouse") return;
+    cancelAnimationFrame(frame);
+    frame = requestAnimationFrame(() => {
+      const bounds = card.getBoundingClientRect();
+      card.style.setProperty("--spot-x", `${event.clientX - bounds.left}px`);
+      card.style.setProperty("--spot-y", `${event.clientY - bounds.top}px`);
+    });
+  });
+  card.addEventListener("pointerleave", () => cancelAnimationFrame(frame));
+});
+
+// Motion is an enhancement: content stays visible if JavaScript is unavailable.
+if ("IntersectionObserver" in window) {
+  const arrivals = new IntersectionObserver(
+    (entries, observer) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        if (!reducedMotion.matches)
+          entry.target.classList.add("reveal-arrival");
+        observer.unobserve(entry.target);
+      });
+    },
+    { threshold: 0.15 },
+  );
+  document
+    .querySelectorAll(".research-card, .spec-panel, .resource-card")
+    .forEach((card) => arrivals.observe(card));
+}
+window.addEventListener("pagehide", () => {
+  cancelLab();
+  clearInterval(flowTimer);
+  flowPlay.disabled = false;
+  clearTimeout(pendingTimer);
+  if (!cueVisible) resetDemo(currentScenario);
+});

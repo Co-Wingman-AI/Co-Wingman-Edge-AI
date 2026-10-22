@@ -5,6 +5,22 @@ with no build step or production dependencies. The interactive examples are
 fictional, scripted demonstrations. They do not capture audio, call an AI service,
 connect to AWS, or save visitor data.
 
+The expanded showcase includes the full project title, a simulated pause flow,
+an editable terminal lab, verified technical specifications, speech research,
+setup commands, and an expandable roadmap. The lab displays a continuation
+supplied by the visitor, enforcing the 12-word/160-character contract. It does
+not generate, shorten, or ground a response with Nemotron. A live model demo
+would require a separately hosted backend; never embed a Toolkit key in Pages.
+
+The demo-video and Google Drive poster URLs have not been supplied. The resources
+section labels these links as coming soon and provides working alternatives.
+Replace those labels with real links when the project owner supplies the URLs.
+
+The spotlight treatment adapts React Bits' SpotlightCard; scroll arrivals draw
+inspiration from AnimatedContent. See `website/design-credits.txt` for the reviewed
+source revision and full upstream license. Effects use native JavaScript/CSS with
+reduced-motion support, so the existing Pages workflow needs no React build.
+
 ## Preview and edit
 
 From the repository root:
@@ -14,8 +30,8 @@ python3 -m http.server 8765 --directory website
 ```
 
 Open `http://localhost:8765` on that computer. Edit `website/index.html` for copy
-and illustrations, `website/style.css` for layout, and `website/site.js` for the
-three conversation examples and architecture tabs. All assets use relative paths
+and illustrations, `website/style.css` and `website/showcase.css` for layout, and
+`website/site.js` for interactions. All assets use relative paths
 so they work under the repository's GitHub Pages subdirectory.
 
 ```sh
@@ -25,6 +41,8 @@ git diff --check
 
 Check mobile and desktop layouts, keyboard navigation, all three example cues,
 replay, switching examples during the animation, architecture tabs, and FAQs.
+Test the lab's custom text, word/character bounds, reset while playing, and editing
+while playing; neither may leave an old cue visible. Check all roadmap accordions.
 The page supports reduced-motion preferences and provides a no-JavaScript note.
 Its content security policy blocks outbound connections and external scripts.
 

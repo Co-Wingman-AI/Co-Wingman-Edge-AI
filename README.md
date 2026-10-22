@@ -3,8 +3,9 @@
 ## Project website
 
 An illustrated, interactive project showcase is in [website/](website/).
-It includes scripted conversation examples, the edge–cloud architecture, team,
-and prototype boundaries. See [website preview and GitHub Pages setup](docs/WEBSITE.md)
+It includes scripted examples, an editable terminal simulator, technical specs,
+speech research, setup commands, a roadmap, and the team. See
+[website preview and GitHub Pages setup](docs/WEBSITE.md)
 for publishing instructions; the Pages workflow uploads only the public site.
 
 ## Continuing work across devices
