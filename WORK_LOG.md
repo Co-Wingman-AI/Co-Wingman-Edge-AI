@@ -421,3 +421,23 @@ committing each completed unit. Detailed product instructions remain in README,
   asset; portrait placeholders remain until original image files are supplied.
   Additional public profile details are pending. Pages publication uses the
   existing workflow; live deployment verification remains network-restricted.
+
+## 2026-10-22 — Restore reliable profile selection after updates
+
+- **Session/device:** managed Linux cloud workspace; Chromium desktop and mobile
+  touch emulation.
+- **Source:** organization main `8c9592e`.
+- **Finding:** reproduced disabled profile buttons when new markup loads with the
+  prior cached main script. The reported live failure could not be inspected
+  directly because the Pages host is blocked by workspace network policy.
+- **Changes:** versioned profile assets and main script references to bypass old
+  cached files; isolated profile initialization from animation/demo scripts;
+  enabled selecting initials as well as names. Updated Pages syntax checks and
+  maintenance documentation.
+- **Validation:** 20 desktop-click/mobile-tap cases passed across all five cards
+  and both targets. Link, focus return/containment, motion pause, and automated
+  WCAG A/AA checks passed. Verified bypass of old unversioned script requests and
+  usable profiles with a simulated main-script failure. JavaScript syntax, diff
+  whitespace and repository hygiene checks passed (80 source files).
+- **Remaining:** live deployment verification remains unavailable. Original
+  portrait files and remaining public contact details are still pending.

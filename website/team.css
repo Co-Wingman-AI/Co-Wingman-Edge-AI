@@ -1,4 +1,8 @@
 /* Equal-sized member cards follow a clockwise path; the advisor stays separate. */
+.team-grid article:has(.profile-trigger:enabled) .team-avatar,
+.team-advisor:has(.profile-trigger:enabled) .team-avatar {
+  cursor: pointer;
+}
 .profile-trigger {
   background: none;
   border: 0;

@@ -29,6 +29,7 @@ jobs:
       - name: Check website JavaScript
         run: |
           node --check website/team-profiles.js
+          node --check website/team-profile-ui.js
           node --check website/site.js
       - name: Configure Pages
         uses: actions/configure-pages@v5

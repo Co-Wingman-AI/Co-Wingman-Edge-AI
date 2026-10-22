@@ -25,11 +25,16 @@ members appear in a static grid above the advisor.
 
 ## Team profiles
 
-Selecting any member or advisor name opens a native modal profile card. Keyboard
+Selecting any member or advisor name or initials opens a native modal profile card. Keyboard
 focus is contained in the dialog, Escape/Close dismiss it, and focus returns to
 the selected name. Rotation stops while a dialog is open, while a name has focus,
 or while a mouse/pen is over the team circle. Without JavaScript, Honey's public
 links remain available below the static roster.
+
+Profile interactions initialize independently in `website/team-profile-ui.js`,
+so demo or animation errors do not disable the cards. The profile scripts, team
+styles and main script use a version query in `index.html`; bump this version
+when changing them so returning visitors fetch matching files after deployment.
 
 Maintain names, roles, local portrait paths, and public contact links in
 `website/team-profiles.js`. Honey's portfolio URL was supplied by the project
