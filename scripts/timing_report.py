@@ -47,7 +47,9 @@ def summarize(path, *, windows=False):
                 if type(score) not in (int, float) or not 0 <= score <= 1:
                     raise ValueError
                 scores.append(score)
-            if windows and (stage == "disfluency_score" or stage.startswith("review_")):
+            if windows and (
+                stage in {"disfluency_score", "model_assist_trigger"} or stage.startswith("review_")
+            ):
                 at = row.get("window_start", row["start_monotonic"])
                 if type(at) not in (int, float) or not math.isfinite(at):
                     raise ValueError
@@ -72,7 +74,8 @@ def summarize(path, *, windows=False):
             "mean_score": round(statistics.mean(scores), 4),
             "at_or_above_0_5": sum(s >= 0.5 for s in scores),
             "anxiety_inference": False,
-            "automatic_cue_trigger": False,
+            "automatic_cue_trigger": bool(groups.get("model_assist_trigger")),
+            "model_assisted_requests": len(groups.get("model_assist_trigger", [])),
         }
     if windows:
         report["review_timeline"] = sorted(timeline, key=lambda item: item["elapsed_seconds"])

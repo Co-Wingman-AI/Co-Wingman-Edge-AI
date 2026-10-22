@@ -1,4 +1,4 @@
-"""Experimental local stuttering score. Never a cue trigger or anxiety inference."""
+"""Experimental local disfluency scoring and opt-in pause gating; no anxiety inference."""
 
 import hashlib
 import math
@@ -10,7 +10,7 @@ from .errors import SpeechError
 SOURCE_REVISION = "03288414382def0356e44ae1c4aca4d0fd6ad35d"
 MODEL_SHA256 = "c3f4e2d568a68dee9c1a280b25e15ad8dd10f71f97604da038d80be48b6ec822"
 MODEL_URL = (
-    "https://raw.githubusercontent.com/Mrun9/Co-Wingman-AIS-Project/"
+    "https://raw.githubusercontent.com/Co-Wingman-AI/Co-Wingman-AIS-Project-Original/"
     + SOURCE_REVISION
     + "/App/best_cnn_lstm_stutter_model.keras"
 )
@@ -95,6 +95,7 @@ class ShadowDetector:
                 if not math.isfinite(score) or not 0 <= score <= 1:
                     raise SpeechError("Invalid shadow score.")
             self.timing.event("disfluency_score", window_start=captured_at - 1, score=score)
+            return score
         finally:
             for value in (previous, window, data):
                 if value is not None:
@@ -104,3 +105,50 @@ class ShadowDetector:
         if self.tail is not None:
             self.tail.fill(0)
         self.tail = self.model = None
+
+
+class ModelPauseGate:
+    """Two consecutive scores >= 0.5, then a pause within eight seconds.
+
+    The threshold is experimental, not a calibrated emotional-state probability.
+    Only capture timestamps and numeric evidence are retained here.
+    """
+
+    def __init__(self):
+        self.reset()
+
+    def reset(self):
+        self.last_start = None
+        self.consecutive = 0
+        self.evidence_end = None
+
+    def observe(self, score, captured_at, pause, now):
+        if any(type(v) not in (int, float) or not math.isfinite(v) for v in (captured_at, now)):
+            self.reset()
+            return False
+        ended = captured_at + 4
+        if not 0 <= now - ended <= 8:
+            self.reset()
+            return False
+        if self.last_start is None or not 3.5 <= captured_at - self.last_start <= 4.5:
+            self.reset()
+        self.last_start = captured_at
+        if score is not None:
+            if type(score) not in (int, float) or not math.isfinite(score) or not 0 <= score <= 1:
+                self.reset()
+                return False
+            if score >= 0.5:
+                self.consecutive += 1
+                if self.consecutive >= 2:
+                    self.evidence_end = ended
+            else:
+                self.consecutive = 0
+                self.evidence_end = None
+        else:
+            self.consecutive = 0
+        if self.evidence_end is not None and ended - self.evidence_end > 8:
+            self.evidence_end = None
+        if pause and self.evidence_end is not None:
+            self.reset()
+            return True
+        return False

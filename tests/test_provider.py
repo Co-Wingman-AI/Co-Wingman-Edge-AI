@@ -203,7 +203,7 @@ class ProviderTests(unittest.TestCase):
         self.assertEqual(captured["payload"]["chat_template_kwargs"], {"enable_thinking": False})
         self.assertEqual(captured["payload"]["max_tokens"], 256)
         self.assertIn(
-            'An "unknown" label is local microphone ASR',
+            'An "unknown" role comes from microphone transcription',
             captured["payload"]["messages"][0]["content"],
         )
         self.assertNotIn(

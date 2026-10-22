@@ -126,6 +126,7 @@ for predictable memory release. See [speech setup and limitations](docs/SPEECH.m
 | Personalized typed cues | `python3 -m cowingman --typed --portfolio private/portfolio.json` |
 | Optional local spoken cues | `python3 -m cowingman --tts` |
 | Opt-in pause-triggered cues | `python3 -m cowingman --pause-assist` |
+| Experimental model-plus-pause cues | `python3 -m cowingman --disfluency-assist` |
 | Rolling minute, continuous listening and pause cues | `python3 -m cowingman --rolling --pause-assist --show-input` |
 
 | Input while running | Effect |
@@ -152,7 +153,11 @@ This does not provide speaker identification or a complete transcript archive.
 Optional [profiling and shadow testing](docs/PROFILING_AND_SHADOW.md) adds
 `--timings private/run-01.jsonl` for numeric stage measurements and
 `--disfluency-shadow models/disfluency.keras` for experimental local scores.
-Shadow scores never trigger cues or infer anxiety. The model requires explicit
+Shadow scores never trigger cues or infer anxiety. For optional model-assisted requests,
+see [model integration setup](docs/MODEL_ASSIST.md): `--disfluency-assist` requires
+two elevated scores followed by a pause. This custom research model is not an
+NVIDIA model or a validated anxiety detector. The flag alone retains default
+text bounds and does not enable rolling summaries or AWS. The model requires explicit
 setup and is evaluated independently of pause assistance. Production cue tokens
 remain 256; an explicit synthetic benchmark compares smaller budgets.
 

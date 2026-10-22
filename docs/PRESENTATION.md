@@ -90,3 +90,9 @@ speaker verification, uninterrupted streaming ASR, or measured Jetson performanc
 unless separately demonstrated. Optional pause assistance is only an energy and
 silence heuristic. A short conversation can fit inside a selected excerpt; the
 bound is a maximum disclosure limit, not a guarantee that every input omits words.
+
+Optional research model demo: complete [MODEL_ASSIST.md](MODEL_ASSIST.md), then
+launch `python3 -m cowingman --disfluency-assist`. Explain that repeated local
+disfluency scores followed by a pause may request assistance; do not describe this
+as anxiety recognition. Enter/`:cue` is the reliable fallback. Use `:assist off`
+for false triggers, `:listen` to resume after a cue, and `:quit` to shut down.

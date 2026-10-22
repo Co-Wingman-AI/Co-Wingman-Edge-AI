@@ -84,6 +84,7 @@ def _speech_worker(
     continuous=False,
     timing=NO_TIMING,
     disfluency_path=None,
+    model_assist=False,
 ):
     prepare_worker()
     if disfluency_path:
@@ -92,6 +93,9 @@ def _speech_worker(
     samples = None
     capture = None
     shadow = None
+    from .disfluency import ModelPauseGate
+
+    model_gate = ModelPauseGate()
     try:
         import numpy as np
         from .asr import NemoASR
@@ -108,7 +112,11 @@ def _speech_worker(
             try:
                 with timing.measure("disfluency_load"):
                     shadow = ShadowDetector(disfluency_path, timing)
+                if model_assist:
+                    connection.send(("model_status", True))
             except Exception:
+                if model_assist:
+                    connection.send(("model_status", False))
                 timing.event("disfluency_disabled", ok=False)
                 connection.send(
                     ("notice", "Experimental disfluency model unavailable; ASR continues.")
@@ -116,7 +124,7 @@ def _speech_worker(
         detector = PauseDetector(threshold=threshold)
         if continuous:
             capture = ContinuousMicrophone(device, threshold, timing).open()
-            connection.send(("status", "rolling listening"))
+            connection.send(("status", "listening" if model_assist else "rolling listening"))
         while True:
             if available_memory() < 1024**3:
                 raise SpeechError(
@@ -125,6 +133,7 @@ def _speech_worker(
             if capture:
                 captured_at, samples, voiced, pause = capture.read()
                 if capture.dropped:
+                    model_gate.reset()
                     connection.send(("audio_gap", capture.dropped))
                     capture.dropped = 0
             else:
@@ -148,12 +157,16 @@ def _speech_worker(
                     microphone = None
                 timing.event("capture", captured_at, window_start=captured_at)
             timing.event("capture_age", captured_at, window_start=captured_at)
+            score = None
             if shadow is not None:
                 try:
-                    shadow.observe(samples, captured_at, voiced)
+                    score = shadow.observe(samples, captured_at, voiced)
                 except Exception:
                     shadow.close()
                     shadow = None
+                    model_gate.reset()
+                    if model_assist:
+                        connection.send(("model_status", False))
                     timing.event("disfluency_disabled", ok=False)
                     connection.send(
                         ("notice", "Experimental disfluency scoring stopped; ASR continues.")
@@ -169,7 +182,10 @@ def _speech_worker(
                 text = None
             samples.fill(0)
             samples = None
-            if pause:
+            if model_assist and shadow is not None:
+                if model_gate.observe(score, captured_at, pause, time.monotonic()):
+                    connection.send(("model_pause", captured_at + 4))
+            elif pause and not model_assist:
                 connection.send(("pause", None))
     except SpeechError as exc:
         connection.send(("error", str(exc)))
@@ -211,13 +227,21 @@ def _tts_worker(connection, cue, fastpitch_path, hifigan_path):
 
 class SpeechSession:
     def __init__(
-        self, config, threshold=0.015, *, continuous=False, timing=NO_TIMING, disfluency_path=None
+        self,
+        config,
+        threshold=0.015,
+        *,
+        continuous=False,
+        timing=NO_TIMING,
+        disfluency_path=None,
+        model_assist=False,
     ):
         self.config = config
         self.threshold = threshold
         self.continuous = continuous
         self.timing = timing
         self.disfluency_path = disfluency_path
+        self.model_assist = model_assist
         self.process = None
         self.connection = None
         self.last_event = 0.0
@@ -238,6 +262,7 @@ class SpeechSession:
                 self.continuous,
                 self.timing,
                 self.disfluency_path,
+                self.model_assist,
             ),
             daemon=True,
         )

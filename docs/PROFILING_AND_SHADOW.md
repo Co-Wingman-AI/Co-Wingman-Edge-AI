@@ -60,7 +60,7 @@ suggests remote/network wait. Faster hardware timings do not establish better cu
 
 ## Experimental shadow detector
 
-Source: [Mrun9/Co-Wingman-AIS-Project](https://github.com/Mrun9/Co-Wingman-AIS-Project),
+Source: [Co-Wingman-AI/Co-Wingman-AIS-Project-Original](https://github.com/Co-Wingman-AI/Co-Wingman-AIS-Project-Original),
 revision `03288414382def0356e44ae1c4aca4d0fd6ad35d`. The explicit setup script downloads
 the included model and checks its pinned SHA-256 before loading it. Weights are
 not redistributed in this repository. Downloads never occur inside a conversation.
@@ -122,8 +122,10 @@ report and the marker times. A score crossing 0.5 is only a review count; it doe
 not mean a cue was needed. Windows spanning two conditions need manual judgment.
 Repeated words can occur without anxiety, and a friend's speech can influence the
 score. Real validation requires consenting, labeled examples and held-out speakers,
-including false alarms, missed events and useful-cue timing. No automatic trigger
-should be enabled based only on this smoke test.
+including false alarms, missed events and useful-cue timing. This smoke test does
+not validate an automatic trigger. The separately opted-in
+[model-assisted mode](MODEL_ASSIST.md) remains experimental and requires supervised
+evaluation; shadow mode itself never triggers cues.
 
 ## Compare cue token budgets explicitly
 

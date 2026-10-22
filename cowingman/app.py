@@ -20,6 +20,7 @@ class Application:
         audio=None,
         tts=False,
         pause_assist=False,
+        model_assist=False,
         rolling=False,
         memory=None,
         speaker=speak,
@@ -32,6 +33,8 @@ class Application:
         self.audio = audio
         self.tts = tts
         self.pause_assist = pause_assist
+        self.model_assist = model_assist
+        self.model_ready = False
         self.rolling = rolling
         self.memory = memory
         self.speaker = speaker
@@ -49,6 +52,7 @@ class Application:
             self.ui.message("Audio is disabled in typed mode.")
             return
         try:
+            self.model_ready = False
             self.ui.status("loading local ASR")
             self.audio.start()
         except SpeechError as exc:
@@ -76,6 +80,8 @@ class Application:
         started = time.monotonic()
         try:
             context = self.context.snapshot() if self.rolling else self.context.take()
+            if automatic and self.model_assist:
+                self.timing.event("model_assist_trigger")
             self.last_request = self.clock()
             self.ui.status("requesting a cue")
             if self.memory:
@@ -137,6 +143,7 @@ class Application:
         self.context.expire()
         self.ui.tick()
         pause_requested = False
+        model_pause_at = None
         for kind, value in self.audio.poll() if self.audio else []:
             if kind == "fragment":
                 try:
@@ -185,26 +192,54 @@ class Application:
                 )
             elif kind == "notice":
                 self.ui.message(value)
+            elif kind == "model_status" and self.model_assist:
+                self.model_ready = value is True
+                self.ui.message(
+                    "Experimental speech model ready; automatic assistance requires a pause."
+                    if self.model_ready
+                    else "Model assistance unavailable; manual Enter/:cue still works. "
+                    "Install the shadow extra and run scripts/prepare_disfluency_model.py, "
+                    "then :listen to retry."
+                )
             elif kind == "error":
+                self.model_ready = False
                 self.context.clear()
                 self.ui.status("error")
                 self.ui.message(value)
-            elif kind == "pause" and self.pause_assist and len(self.context):
+            elif kind in {"pause", "model_pause"} and self.pause_assist and len(self.context):
+                if (kind == "model_pause") != self.model_assist:
+                    continue
+                if self.model_assist and (
+                    not self.model_ready
+                    or type(value) not in (int, float)
+                    or not 0 <= self.clock() - value <= 8
+                ):
+                    continue
+                model_pause_at = value
                 if self.clock() - self.last_request >= 30:
                     if self.rolling:
                         pause_requested = True
                     else:
-                        self.ui.message(
-                            "Possible conversational pause. Requesting an optional cue."
-                        )
+                        self.ui.message(self.assistance_message())
                         self.request_cue(automatic=True)
                         break
         if self.memory and self.memory.due():
             self.save_memory(quiet=True)
         if pause_requested and len(self.context):
-            self.ui.message("Possible conversational pause. Requesting an optional cue.")
+            if self.model_assist and (
+                not self.model_ready or not 0 <= self.clock() - model_pause_at <= 8
+            ):
+                return
+            self.ui.message(self.assistance_message())
             self.request_cue(automatic=True)
         value = None
+
+    def assistance_message(self):
+        return (
+            "Experimental speech signal followed by a pause. Requesting an optional cue."
+            if self.model_assist
+            else "Possible conversational pause. Requesting an optional cue."
+        )
 
     def command(self, line):
         if line == ":quit":
@@ -234,7 +269,7 @@ class Application:
         elif line in {":assist on", ":assist off"}:
             self.pause_assist = line.endswith(" on")
             self.ui.message(
-                "Pause assistance "
+                ("Model-plus-pause assistance " if self.model_assist else "Pause assistance ")
                 + ("on (personal microphone only)." if self.pause_assist else "off.")
             )
         elif line.startswith(":partner "):

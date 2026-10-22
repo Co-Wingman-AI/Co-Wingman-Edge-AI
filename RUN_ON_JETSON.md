@@ -234,3 +234,23 @@ unset NAVIGATOR_TOOLKIT_API_KEY
 Never commit `.env`, keys, models, recordings, transcripts, logs, or generated
 reports. No report is necessary to operate the product. The complete presentation
 sequence and recovery actions are in [docs/PRESENTATION.md](docs/PRESENTATION.md).
+
+## Optional research model integration
+
+After the ordinary microphone/NeMo path works, install and verify the original
+CNN+LSTM model in the same Jetson environment:
+
+```bash
+python3 -m pip install -e '.[shadow]'
+python3 scripts/prepare_disfluency_model.py
+python3 -m cowingman --disfluency-assist
+```
+
+This opts into experimental disfluency-plus-pause requests with default bounded
+text, local-only audio, and no timing files by default. Wait for “Experimental
+speech model ready”; after a cue, use `:listen` to resume. `:assist off` disables
+automatic assistance while Enter/`:cue` remains available. Model failures leave
+manual assistance available. See [MODEL_ASSIST.md](docs/MODEL_ASSIST.md) for the
+exact trigger, dependency recovery, optional rolling mode and evaluation limits.
+The original model's “anxiety” labeling is not supported by its training labels;
+no anxiety or speaker-identity conclusion is displayed.

@@ -76,10 +76,18 @@ def parser():
         metavar="NEW_JSONL_PATH",
         help="write local numeric timing measurements; no speech or cue text",
     )
-    result.add_argument(
+    detector = result.add_mutually_exclusive_group()
+    detector.add_argument(
         "--disfluency-shadow",
         metavar="MODEL_PATH",
         help="experimental local scoring only; requires --rolling and --timings",
+    )
+    detector.add_argument(
+        "--disfluency-assist",
+        nargs="?",
+        const="models/disfluency.keras",
+        metavar="MODEL_PATH",
+        help="experimental model-plus-pause cues; default model: models/disfluency.keras",
     )
     result.add_argument(
         "--resume-summary",
@@ -94,6 +102,15 @@ def parser():
 def main(argv=None):
     args = parser().parse_args(argv)
     args.rolling = args.rolling or bool(args.summary_s3)
+    if args.disfluency_assist and (
+        args.typed
+        or args.offline
+        or args.demo
+        or args.health_check
+        or args.list_audio
+        or args.pause_assist
+    ):
+        parser().error("--disfluency-assist requires live microphone mode; omit --pause-assist")
     if args.portfolio and args.portfolio_s3:
         parser().error("Choose --portfolio or --portfolio-s3")
     if args.portfolio_s3 and (
@@ -179,9 +196,10 @@ def main(argv=None):
             else SpeechSession(
                 config,
                 threshold,
-                continuous=args.rolling,
+                continuous=args.rolling or bool(args.disfluency_assist),
                 timing=timing,
-                disfluency_path=args.disfluency_shadow,
+                disfluency_path=args.disfluency_assist or args.disfluency_shadow,
+                model_assist=bool(args.disfluency_assist),
             )
         )
         store = (
@@ -209,6 +227,11 @@ def main(argv=None):
                 ui.message(
                     "Experimental disfluency shadow: local scores only, no cue triggers or anxiety inference."
                 )
+            if args.disfluency_assist:
+                ui.message(
+                    "Experimental model assistance: two elevated disfluency scores plus a pause "
+                    "may request a cue. No anxiety or speaker identification. :assist off disables it."
+                )
             ui.message(
                 "Audio: "
                 + ("disabled" if audio is None else "local NVIDIA ASR; four-second capture windows")
@@ -227,7 +250,8 @@ def main(argv=None):
                 ui,
                 audio=audio,
                 tts=args.tts,
-                pause_assist=args.pause_assist,
+                pause_assist=args.pause_assist or bool(args.disfluency_assist),
+                model_assist=bool(args.disfluency_assist),
                 rolling=args.rolling,
                 memory=memory,
                 timing=timing,

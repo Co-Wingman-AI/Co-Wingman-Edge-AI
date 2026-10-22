@@ -261,3 +261,31 @@ committing each completed unit. Detailed product instructions remain in README,
   access remains blocked by the workspace network policy, so deployment status
   and the served website cannot be confirmed here. The existing workflow will
   request deployment on this website push if repository Pages is configured.
+
+## 2026-10-22 — Opt-in local model-assisted recovery
+
+- **Session/device:** Codex workspace; macOS arm64, Python 3.14.7.
+- **Source:** pulled organization main `dc3c434` before integration; fetched again
+  before committing, with no upstream divergence. Preserved unrelated local work.
+- **Changes:** connected the pinned original CNN+LSTM classifier to explicit
+  `--disfluency-assist` mode: two elevated local scores followed by a fresh pause,
+  shared cooldown, readiness checks and manual fallback. Model failures stop
+  automatic assistance while ASR continues. Default text bounds remain four
+  fragments, 240 characters each and 800 total; no audio or scores go to NaviGator.
+  The custom non-NVIDIA classifier stays an opt-in research path, separate from
+  the default NVIDIA path. It is not validated anxiety or speaker detection.
+  Updated the download to the organization repository, added operating docs and
+  numeric trigger diagnostics, and aligned the obsolete provider-test wording
+  with the existing upstream prompt without changing that prompt.
+- **Validation:** all 141 unit tests passed; Ruff 0.14.1 lint and format checks
+  passed (39 Python files); offline end-to-end and typed-input cue demos passed,
+  with output suppressed. Whitespace checks passed.
+  Reviewed-source snapshot passed syntax/credential/artifact checks for 76 source
+  files; unrelated local poster artifacts were excluded from the snapshot/commit.
+  Explicit model download verified the pinned SHA-256. Mocked integration covers
+  worker-to-cue flow, failures, stale events, opt-in, cooldown, privacy and cleanup.
+- **Remaining:** physical Jetson ASR-plus-classifier memory/latency and real
+  microphone triggers need testing, as do real NaviGator calls. No model accuracy,
+  clinical validity or live hardware result is inferred from these checks.
+  Next device: pull, follow `docs/MODEL_ASSIST.md`, and use the manual cue control
+  for dependable presentation recovery while evaluating automatic assistance.

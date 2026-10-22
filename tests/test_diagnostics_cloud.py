@@ -284,7 +284,7 @@ class ShadowTests(unittest.TestCase):
         ):
             detector.observe(samples, 0, True)
             detector.model.assert_not_called()
-            detector.observe(samples, 4, True)
+            self.assertEqual(detector.observe(samples, 4, True), 0.8)
             self.assertEqual(detector.model.call_count, 1)
             detector.timing.event.assert_called_once_with(
                 "disfluency_score", window_start=3, score=0.8

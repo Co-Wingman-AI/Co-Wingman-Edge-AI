@@ -121,3 +121,16 @@ snapshot once at startup into RAM, validates the existing profile limits, and ke
 per-cue retrieval local with the same two-passage/1,200-character outbound limit.
 S3 portfolio storage is independent of minute summaries; neither contains raw audio.
 Saved objects remain until deleted or expired by your bucket's lifecycle policy.
+
+## Optional model-assisted requests
+
+`--disfluency-assist` explicitly enables the custom local research classifier to
+participate in automatic requests: two elevated scores followed by a pause,
+subject to freshness and cooldown checks. Raw audio and model scores stay local;
+only bounded text goes to NaviGator. The flag alone keeps default four-fragment /
+800-character request limits and creates no stored score report. It does not
+enable rolling summaries, AWS storage, or speaker recognition. The model uses a
+one-second RAM tail plus temporary five-second features, as in shadow mode.
+`:assist off` disables automatic requests. Model failure leaves manual assistance
+available without silently switching to silence-only triggers. See
+[MODEL_ASSIST.md](MODEL_ASSIST.md) for setup and the distinction from anxiety inference.

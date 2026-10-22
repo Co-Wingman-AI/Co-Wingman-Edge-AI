@@ -15,7 +15,7 @@ STAGES = frozenset(
     "capture microphone_open capture_age audio_drop asr_verify asr_load asr_inference "
     "network_worker_start network_setup server_response response_read transport "
     "validation cue_total tts summary_total s3_upload s3_load "
-    "disfluency_load disfluency_inference disfluency_score disfluency_disabled "
+    "model_assist_trigger disfluency_load disfluency_inference disfluency_score disfluency_disabled "
     "review_fluent review_stuck review_partner review_quiet".split()
 )
 FIELDS = frozenset("window_start score count offered max_tokens".split())
