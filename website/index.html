@@ -25,6 +25,7 @@
     <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
     <link rel="stylesheet" href="./style.css" />
     <link rel="stylesheet" href="./showcase.css" />
+    <link rel="stylesheet" href="./team.css" />
     <script src="./site.js" defer></script>
   </head>
   <body>
@@ -1185,33 +1186,50 @@ python3 -m cowingman --rolling --pause-assist --show-input</code></pre>
           </h2>
           <p>University of Florida · Master’s in AI Systems · AI Days 2026</p>
         </div>
-        <div class="team-grid">
-          <article>
-            <span class="team-avatar peach">MV</span>
-            <h3>Mrunal Vibhute</h3>
-            <p>Project team</p>
-          </article>
-          <article>
-            <span class="team-avatar mint">SD</span>
-            <h3>Shrimayee Deshpande</h3>
-            <p>Project team</p>
-          </article>
-          <article>
-            <span class="team-avatar lavender">HD</span>
-            <h3>Honey Reddy Daram</h3>
-            <p>Project team</p>
-          </article>
-          <article>
-            <span class="team-avatar peach">YK</span>
-            <h3>Yasasvi Kaipa</h3>
-            <p>Project team</p>
-          </article>
-          <article>
-            <span class="team-avatar pale-blue">AR</span>
-            <h3>Dr. Andrea Ramirez-Salgado</h3>
-            <p>Project advisor</p>
-          </article>
+        <div
+          class="team-orbit"
+          id="team-orbit"
+          role="group"
+          aria-label="Project team, with rotating positions"
+        >
+          <div class="team-orbit-center" aria-hidden="true">
+            <span>ONE TEAM</span>Shared<br />spotlight.
+          </div>
+          <div class="team-grid">
+            <article>
+              <span class="team-avatar peach">MV</span>
+              <h3>Mrunal Vibhute</h3>
+              <p>Project team</p>
+            </article>
+            <article>
+              <span class="team-avatar mint">SD</span>
+              <h3>Shrimayee Deshpande</h3>
+              <p>Project team</p>
+            </article>
+            <article>
+              <span class="team-avatar lavender">HD</span>
+              <h3>Honey Reddy Daram</h3>
+              <p>Project team</p>
+            </article>
+            <article>
+              <span class="team-avatar peach">YK</span>
+              <h3>Yasasvi Kaipa</h3>
+              <p>Project team</p>
+            </article>
+          </div>
         </div>
+        <div class="team-controls" hidden>
+          <button type="button" id="team-pause">Pause rotation</button>
+          <button type="button" id="team-next">
+            Next position <span aria-hidden="true">↻</span>
+          </button>
+          <p id="team-motion-note">Four equal places. Everyone takes a turn.</p>
+        </div>
+        <article class="team-advisor">
+          <span class="team-avatar pale-blue">AR</span>
+          <h3>Dr. Andrea Ramirez-Salgado</h3>
+          <p>Project advisor</p>
+        </article>
         <p class="acknowledgments">
           Built with the University of Florida NaviGator AI Toolkit and NVIDIA’s
           Jetson, NeMo, and Nemotron technologies. Thank you to the research

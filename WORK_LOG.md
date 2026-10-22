@@ -320,3 +320,21 @@ committing each completed unit. Detailed product instructions remain in README,
   syntax, whitespace, and repository hygiene checks passed (76 source files).
 - **Remaining:** GitHub Pages deployment is handled by the existing workflow;
   live deployment status cannot be inspected under this workspace's network policy.
+
+## 2026-10-22 — Equal-position team rotation
+
+- **Session/device:** managed Linux cloud workspace; Chromium browser.
+- **Source:** clean organization main `766ad48`, fetched before editing.
+- **Changes:** placed the four team cards on a clockwise orbit with equal dwell
+  times, an initially randomized position, and upright labels. The advisor has a
+  separate fixed, centered card below. Added pause/resume and manual advancement;
+  reduced motion disables autoplay. Hidden/offscreen playback stops, accessible
+  reading order is stable, and no-JavaScript visitors receive a static grid.
+- **Validation:** browser checks confirmed every member visits all four positions,
+  no card overlaps across 400 sampled layouts at five viewport widths, a fixed
+  advisor position, automatic movement, pause/resume, reduced motion, and the
+  no-JavaScript layout. Desktop/mobile Axe WCAG A/AA scans found zero violations;
+  no browser errors occurred. JavaScript syntax, whitespace, and repository
+  hygiene passed for 77 source files. Application code was unchanged.
+- **Remaining:** the existing Pages workflow handles deployment; live deployment
+  status remains unavailable under the workspace network policy.

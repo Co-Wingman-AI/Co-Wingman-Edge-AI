@@ -13,6 +13,15 @@ within the selected topic. A short thinking delay and word-by-word reveal simula
 a response; reduced-motion mode skips both. Changing examples cancels pending
 output. Labels explicitly identify this as a simulation with no AI requests.
 
+The four project team members rotate clockwise through equal positions, with
+upright names and a short reading pause at each position. The starting position
+is randomized; one full round takes 24 seconds of visible, active playback.
+The advisor remains stationary in a separate centered card below. Visitors can
+pause/resume or advance one position. Reduced-motion mode disables automatic
+rotation but retains the manual control. Playback stops offscreen or in a hidden
+tab. Screen-reader reading order stays stable, and without JavaScript the four
+members appear in a static grid above the advisor.
+
 The expanded showcase includes the full project title, a simulated pause flow,
 an editable terminal lab, verified technical specifications, speech research,
 setup commands, and an expandable roadmap. The lab displays a continuation

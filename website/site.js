@@ -423,3 +423,108 @@ window.addEventListener("pagehide", () => {
   clearTimeout(pendingTimer);
   if (!cueVisible) resetDemo(currentScenario);
 });
+
+// Equal turns around the team circle. Reading order remains stable for assistive
+// technology; only visual positions change. The advisor is outside this orbit.
+const teamOrbit = document.getElementById("team-orbit");
+const teamMembers = Array.from(
+  teamOrbit.querySelectorAll(".team-grid article"),
+);
+const teamPause = document.getElementById("team-pause");
+const teamNext = document.getElementById("team-next");
+let teamPhase = Math.floor(Math.random() * teamMembers.length);
+let teamPaused = false;
+let teamVisible = false;
+let teamFrame = 0;
+let teamLastTime = null;
+let teamGeometry;
+teamOrbit.classList.add("is-rotating");
+document.querySelector(".team-controls").hidden = false;
+
+function drawTeam() {
+  if (!teamGeometry) return;
+  const part = teamPhase % 1;
+  // Hold each position for 4.3s, then travel clockwise for about 1.7s.
+  const travel = Math.max(0, (part - 0.72) / 0.28);
+  const eased = travel * travel * (3 - 2 * travel);
+  const turn = Math.floor(teamPhase) + eased;
+  teamMembers.forEach((card, index) => {
+    const { width, height } = teamGeometry.cards[index];
+    const angle = (Math.PI * 5) / 4 + ((turn + index) * Math.PI) / 2;
+    const x =
+      teamGeometry.width / 2 +
+      teamGeometry.radiusX * Math.cos(angle) -
+      width / 2;
+    const y = teamGeometry.height / 2 + 175 * Math.sin(angle) - height / 2;
+    card.style.transform = `translate(${x.toFixed(2)}px, ${y.toFixed(2)}px)`;
+  });
+}
+
+function measureTeam() {
+  const cards = teamMembers.map((card) => ({
+    width: card.offsetWidth,
+    height: card.offsetHeight,
+  }));
+  teamGeometry = {
+    width: teamOrbit.clientWidth,
+    height: teamOrbit.clientHeight,
+    radiusX: Math.max(
+      0,
+      (teamOrbit.clientWidth - Math.max(...cards.map((card) => card.width))) /
+        2,
+    ),
+    cards,
+  };
+  drawTeam();
+}
+
+function syncTeamMotion() {
+  cancelAnimationFrame(teamFrame);
+  teamLastTime = null;
+  teamPause.disabled = reducedMotion.matches;
+  teamPause.textContent = reducedMotion.matches
+    ? "Auto-rotation off"
+    : teamPaused
+      ? "Resume rotation"
+      : "Pause rotation";
+  document.getElementById("team-motion-note").textContent =
+    reducedMotion.matches
+      ? "Reduced motion is on. Use Next position to take turns."
+      : "Four equal places. Everyone takes a turn.";
+  if (teamPaused || reducedMotion.matches || !teamVisible || document.hidden)
+    return;
+  const tick = (time) => {
+    if (teamLastTime !== null)
+      teamPhase =
+        (teamPhase + Math.min(time - teamLastTime, 100) / 6000) %
+        teamMembers.length;
+    teamLastTime = time;
+    drawTeam();
+    teamFrame = requestAnimationFrame(tick);
+  };
+  teamFrame = requestAnimationFrame(tick);
+}
+teamPause.addEventListener("click", () => {
+  teamPaused = !teamPaused;
+  syncTeamMotion();
+});
+teamNext.addEventListener("click", () => {
+  teamPhase = (Math.floor(teamPhase) + 1) % teamMembers.length;
+  drawTeam();
+  syncTeamMotion();
+});
+if ("ResizeObserver" in window)
+  new ResizeObserver(measureTeam).observe(teamOrbit);
+else window.addEventListener("resize", measureTeam);
+if ("IntersectionObserver" in window) {
+  new IntersectionObserver((entries) => {
+    teamVisible = entries.some((entry) => entry.isIntersecting);
+    syncTeamMotion();
+  }).observe(teamOrbit);
+} else teamVisible = true;
+reducedMotion.addEventListener("change", syncTeamMotion);
+document.addEventListener("visibilitychange", syncTeamMotion);
+window.addEventListener("pagehide", () => cancelAnimationFrame(teamFrame));
+window.addEventListener("pageshow", syncTeamMotion);
+measureTeam();
+syncTeamMotion();
