@@ -1244,7 +1244,7 @@ h3 {
 }
 .team-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   gap: 24px;
   margin-top: 52px;
   text-align: center;
@@ -1711,6 +1711,7 @@ h3 {
   }
   .team-grid {
     gap: 18px;
+    grid-template-columns: repeat(3, 1fr);
   }
   .team-grid h3 {
     font-size: 13px;

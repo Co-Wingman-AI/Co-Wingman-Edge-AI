@@ -289,3 +289,16 @@ committing each completed unit. Detailed product instructions remain in README,
   clinical validity or live hardware result is inferred from these checks.
   Next device: pull, follow `docs/MODEL_ASSIST.md`, and use the manual cue control
   for dependable presentation recovery while evaluating automatic assistance.
+
+## 2026-10-22 — Website team roster update
+
+- **Session/device:** managed Linux cloud workspace.
+- **Source:** fast-forwarded to organization main `8c2c8d7`, preserving the
+  upstream model-assistance implementation and documentation.
+- **Changes:** added the requested contributor to the website team section and
+  adjusted the grid for five members, with three tablet and two mobile columns.
+- **Validation:** Chromium confirmed five team entries and no horizontal overflow
+  at 1440, 768, 390, and 320 pixels. Repository hygiene passed for 76 source files;
+  whitespace checks passed. No application behavior changed.
+- **Remaining:** live Pages deployment verification remains unavailable under the
+  workspace network policy; the existing workflow deploys website pushes.
