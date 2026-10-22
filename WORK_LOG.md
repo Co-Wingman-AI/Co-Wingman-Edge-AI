@@ -357,3 +357,18 @@ committing each completed unit. Detailed product instructions remain in README,
 - **Remaining:** cue selection is scripted matching, not live model inference.
   The existing Pages workflow handles publication; live deployment status remains
   unavailable under this workspace's network policy.
+
+## 2026-10-22 — Simplified team orbit labels
+
+- **Session/device:** managed Linux cloud workspace; Chromium browser.
+- **Source:** clean organization main `3394a19`, fetched before editing.
+- **Changes:** replaced the center message with the requested team label, removed
+  repeated member-role captions, rotation buttons, and the explanatory caption.
+  Removed the associated control handlers/styles and updated website notes.
+  Automatic rotation, reduced-motion handling, and the fixed advisor remain.
+- **Validation:** browser checks passed for the center label, removed elements,
+  four member cards, fixed advisor, desktop and two mobile widths, automatic
+  movement, reduced motion, and absence of browser errors. JavaScript syntax,
+  whitespace, and repository hygiene passed (77 source files).
+- **Remaining:** publication uses the existing Pages workflow; live deployment
+  verification remains unavailable under this workspace's network policy.

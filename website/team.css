@@ -61,45 +61,6 @@
   color: #436b65;
   pointer-events: none;
 }
-.team-orbit-center > span {
-  display: block;
-  font:
-    8px/1.5 Arial,
-    sans-serif;
-  letter-spacing: 0.15em;
-  margin-bottom: 10px;
-}
-.team-controls {
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin: 8px auto 28px;
-}
-.team-controls button {
-  border: 1px solid #9bb1b5;
-  border-radius: 24px;
-  background: #f0f4ed;
-  color: var(--ink);
-  padding: 12px 18px;
-  min-height: 44px;
-  font-size: 12px;
-}
-.team-controls button:hover {
-  background: #e0e9df;
-}
-.team-controls button:disabled {
-  cursor: default;
-  background: #edf0ed;
-  color: #526568;
-}
-.team-controls p {
-  flex-basis: 100%;
-  text-align: center;
-  font-size: 11px;
-  color: var(--muted);
-  margin: 3px 0 0;
-}
 .team-advisor {
   max-width: 340px;
   padding-top: 32px;
@@ -139,25 +100,9 @@
     line-height: 1.45;
     margin-bottom: 6px;
   }
-  .team-orbit.is-rotating .team-grid p {
-    font-size: 10px;
-  }
   .team-orbit.is-rotating .team-orbit-center {
     font-size: 15px;
     max-width: 70px;
-  }
-  .team-orbit-center > span {
-    font-size: 6px;
-    letter-spacing: 0.08em;
-    margin-bottom: 7px;
-  }
-  .team-controls {
-    margin-top: 0;
-    gap: 10px;
-  }
-  .team-controls button {
-    font-size: 11px;
-    padding: 12px 16px;
   }
   .team-advisor {
     max-width: 270px;

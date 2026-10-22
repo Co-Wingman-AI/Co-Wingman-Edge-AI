@@ -16,9 +16,10 @@ output. Labels explicitly identify this as a simulation with no AI requests.
 The four project team members rotate clockwise through equal positions, with
 upright names and a short reading pause at each position. The starting position
 is randomized; one full round takes 24 seconds of visible, active playback.
-The advisor remains stationary in a separate centered card below. Visitors can
-pause/resume or advance one position. Reduced-motion mode disables automatic
-rotation but retains the manual control. Playback stops offscreen or in a hidden
+The center reads “Project team,” without repeated role captions beneath the
+members. The advisor remains stationary in a separate centered card below.
+There are no visible rotation controls. Reduced-motion mode disables automatic
+rotation. Playback stops offscreen or in a hidden
 tab. Screen-reader reading order stays stable, and without JavaScript the four
 members appear in a static grid above the advisor.
 

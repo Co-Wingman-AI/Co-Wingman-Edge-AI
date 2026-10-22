@@ -482,16 +482,12 @@ const teamOrbit = document.getElementById("team-orbit");
 const teamMembers = Array.from(
   teamOrbit.querySelectorAll(".team-grid article"),
 );
-const teamPause = document.getElementById("team-pause");
-const teamNext = document.getElementById("team-next");
 let teamPhase = Math.floor(Math.random() * teamMembers.length);
-let teamPaused = false;
 let teamVisible = false;
 let teamFrame = 0;
 let teamLastTime = null;
 let teamGeometry;
 teamOrbit.classList.add("is-rotating");
-document.querySelector(".team-controls").hidden = false;
 
 function drawTeam() {
   if (!teamGeometry) return;
@@ -533,17 +529,7 @@ function measureTeam() {
 function syncTeamMotion() {
   cancelAnimationFrame(teamFrame);
   teamLastTime = null;
-  teamPause.disabled = reducedMotion.matches;
-  teamPause.textContent = reducedMotion.matches
-    ? "Auto-rotation off"
-    : teamPaused
-      ? "Resume rotation"
-      : "Pause rotation";
-  document.getElementById("team-motion-note").textContent =
-    reducedMotion.matches
-      ? "Reduced motion is on. Use Next position to take turns."
-      : "Four equal places. Everyone takes a turn.";
-  if (teamPaused || reducedMotion.matches || !teamVisible || document.hidden)
+  if (reducedMotion.matches || !teamVisible || document.hidden)
     return;
   const tick = (time) => {
     if (teamLastTime !== null)
@@ -556,15 +542,6 @@ function syncTeamMotion() {
   };
   teamFrame = requestAnimationFrame(tick);
 }
-teamPause.addEventListener("click", () => {
-  teamPaused = !teamPaused;
-  syncTeamMotion();
-});
-teamNext.addEventListener("click", () => {
-  teamPhase = (Math.floor(teamPhase) + 1) % teamMembers.length;
-  drawTeam();
-  syncTeamMotion();
-});
 if ("ResizeObserver" in window)
   new ResizeObserver(measureTeam).observe(teamOrbit);
 else window.addEventListener("resize", measureTeam);
