@@ -2,24 +2,102 @@
 
 // This is a scripted public illustration. No recording, API calls, or storage.
 const scenarios = {
-  project: {
-    question: "What did you build for your project?",
-    fragment: "I built a notes app using…",
-    cue: "Python and SQLite to keep notes organized.",
-    source: "Example reference: a fictional notes-app portfolio passage.",
-  },
-  interview: {
-    question: "What did you learn from working with your team?",
-    fragment: "I learned that good teamwork means…",
-    cue: "Listening carefully and making space for different ideas.",
-    source: "Example reference: a fictional reflection on a team project.",
-  },
-  idea: {
-    question: "How would you make the app easier to use?",
-    fragment: "I think we could start by…",
-    cue: "Simplifying the first screen and testing it with users.",
-    source: "Example reference: a fictional conversation about app design.",
-  },
+  project: [
+    {
+      question: "What did you build for your project?",
+      fragment: "I built a notes app using…",
+      cue: "Python and SQLite to keep notes organized.",
+      source: "Example reference: a fictional notes-app portfolio passage.",
+    },
+    {
+      question: "How did you make your app easier to use?",
+      fragment: "After testing it with classmates, I decided to…",
+      cue: "simplify the navigation and make the buttons easier to find.",
+      source: "Fictional example: a student app usability project.",
+    },
+    {
+      question: "Why did you choose to process audio locally?",
+      fragment: "Keeping the audio on the device helps us…",
+      cue: "avoid sending recordings to a remote service.",
+      source: "Fictional example: an explanation of an edge AI project.",
+    },
+    {
+      question: "What was the hardest part of building the robot?",
+      fragment: "The camera worked in the lab, but we needed to…",
+      cue: "test it under different lighting conditions.",
+      source: "Fictional example: a robotics camera experiment.",
+    },
+    {
+      question: "What would you improve in your next version?",
+      fragment: "For the next version, I want to focus on…",
+      cue: "faster responses and clearer feedback when something goes wrong.",
+      source: "Fictional example: a software project roadmap.",
+    },
+  ],
+  interview: [
+    {
+      question: "What did you learn from working with your team?",
+      fragment: "I learned that good teamwork means…",
+      cue: "Listening carefully and making space for different ideas.",
+      source: "Example reference: a fictional reflection on a team project.",
+    },
+    {
+      question: "How do you approach a problem you haven't seen before?",
+      fragment: "When a problem is unfamiliar, I usually start by…",
+      cue: "breaking it into smaller questions and testing one assumption.",
+      source: "Fictional example: an interview about problem solving.",
+    },
+    {
+      question: "Tell me about a time you received feedback.",
+      fragment: "My teammate suggested a simpler design, so I…",
+      cue: "built a quick prototype and compared both approaches.",
+      source: "Fictional example: a discussion about design feedback.",
+    },
+    {
+      question: "How did you handle a disagreement on your team?",
+      fragment: "We had different ideas, and what helped was…",
+      cue: "agreeing on the goal before comparing our solutions.",
+      source: "Fictional example: a team collaboration interview.",
+    },
+    {
+      question: "What do you enjoy about working on AI projects?",
+      fragment: "What I enjoy most is the chance to…",
+      cue: "turn a technical idea into something useful for people.",
+      source: "Fictional example: an interview about project interests.",
+    },
+  ],
+  idea: [
+    {
+      question: "How would you make the app easier to use?",
+      fragment: "I think we could start by…",
+      cue: "Simplifying the first screen and testing it with users.",
+      source: "Example reference: a fictional conversation about app design.",
+    },
+    {
+      question: "How could we find out whether people need this feature?",
+      fragment: "Before we build the whole thing, we could…",
+      cue: "show a simple prototype and ask people to try it.",
+      source: "Fictional example: a product discovery conversation.",
+    },
+    {
+      question: "What if the system offers help at the wrong moment?",
+      fragment: "We could give people more control by…",
+      cue: "letting them pause assistance or request a cue themselves.",
+      source: "Fictional example: a discussion about user control.",
+    },
+    {
+      question: "How would you explain the idea to someone new?",
+      fragment: "I would describe it as a small assistant that…",
+      cue: "suggests a next phrase when you lose your train of thought.",
+      source: "Fictional example: a project introduction.",
+    },
+    {
+      question: "What should we test before our demonstration?",
+      fragment: "Before the demo, let's make sure we can…",
+      cue: "capture clear speech and recover when the network is unavailable.",
+      source: "Fictional example: planning a prototype demonstration.",
+    },
+  ],
 };
 
 const stages = {
@@ -47,6 +125,8 @@ const stages = {
 };
 
 let currentScenario = "project";
+let currentExample = null;
+const exampleBags = new Map();
 let cueVisible = false;
 let pendingTimer;
 const cueBox = document.getElementById("demo-cue");
@@ -59,17 +139,36 @@ function triggerLabel(label) {
   trigger.firstChild.textContent = label + " ";
 }
 
-function resetDemo(key) {
+// Shuffle each topic's bank, exhausting it before refilling. Never immediately
+// repeat the visible example when a bag is refilled.
+function drawExample(key) {
+  let bag = exampleBags.get(key);
+  if (!bag || bag.length === 0) {
+    bag = [...scenarios[key]];
+    for (let i = bag.length - 1; i > 0; i -= 1) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [bag[i], bag[j]] = [bag[j], bag[i]];
+    }
+    if (bag[0] === currentExample && bag.length > 1) {
+      [bag[0], bag[1]] = [bag[1], bag[0]];
+    }
+    exampleBags.set(key, bag);
+  }
+  return bag.shift();
+}
+
+function resetDemo(key, example = currentExample) {
   clearTimeout(pendingTimer);
   currentScenario = key;
+  currentExample = example;
   cueVisible = false;
   trigger.disabled = false;
-  const example = scenarios[key];
   document.getElementById("demo-question").textContent = example.question;
   document.getElementById("demo-fragment").textContent = example.fragment;
   cueText.textContent = "A small phrase. Room for your own voice.";
   sourceText.textContent = "Ready when you are.";
   cueBox.classList.remove("revealed", "pending");
+  cueBox.setAttribute("aria-busy", "false");
   triggerLabel("Help me find the next words");
   demoStatus.textContent =
     "You’re in control. Request a cue to continue the example.";
@@ -81,32 +180,58 @@ function resetDemo(key) {
 }
 
 document.querySelectorAll(".scenario").forEach((button) => {
-  button.addEventListener("click", () => resetDemo(button.dataset.scenario));
+  button.addEventListener("click", () => {
+    const key = button.dataset.scenario;
+    resetDemo(key, drawExample(key));
+  });
 });
+
+document.getElementById("demo-shuffle").addEventListener("click", () => {
+  const keys = Object.keys(scenarios);
+  const key = keys[Math.floor(Math.random() * keys.length)];
+  resetDemo(key, drawExample(key));
+  demoStatus.textContent =
+    "A new fictional conversation is ready. Request its matching cue.";
+});
+resetDemo("project", drawExample("project"));
 
 trigger.addEventListener("click", () => {
   if (cueVisible) {
-    resetDemo(currentScenario);
+    resetDemo(currentScenario, drawExample(currentScenario));
     return;
   }
   trigger.disabled = true;
   cueBox.classList.add("pending");
-  triggerLabel("Finding a way back in…");
+  cueBox.setAttribute("aria-busy", "true");
+  cueText.textContent = "Finding the next words…";
+  sourceText.textContent = "Playing a scripted response.";
+  triggerLabel("Thinking through this moment…");
   demoStatus.textContent =
     "Illustrating how relevant context becomes a short cue…";
-  const delay = window.matchMedia("(prefers-reduced-motion: reduce)").matches
-    ? 0
-    : 650;
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const delay = reduce ? 0 : 800 + Math.floor(Math.random() * 500);
+  const example = currentExample;
   pendingTimer = setTimeout(() => {
-    cueText.textContent = scenarios[currentScenario].cue;
-    sourceText.textContent = scenarios[currentScenario].source;
     cueBox.classList.remove("pending");
     cueBox.classList.add("revealed");
-    trigger.disabled = false;
-    triggerLabel("Replay this moment");
-    demoStatus.textContent =
-      "An optional starting point. Take it from here, in your own words.";
-    cueVisible = true;
+    const words = example.cue.split(/\s+/u);
+    let count = reduce ? words.length : 1;
+    const reveal = () => {
+      cueText.textContent = words.slice(0, count).join(" ");
+      if (count < words.length) {
+        count += 1;
+        pendingTimer = setTimeout(reveal, 65);
+        return;
+      }
+      sourceText.textContent = example.source;
+      cueBox.setAttribute("aria-busy", "false");
+      trigger.disabled = false;
+      triggerLabel("Try another moment");
+      demoStatus.textContent =
+        "A scripted cue, shown as a simulated response. Try another moment to explore more.";
+      cueVisible = true;
+    };
+    reveal();
   }, delay);
 });
 

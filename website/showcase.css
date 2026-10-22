@@ -29,6 +29,45 @@
 .mobile-sections {
   display: none;
 }
+.demo-shuffle {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid #9eafcd;
+  border-radius: 12px;
+  padding: 12px 17px;
+  background: #f7f8ff;
+  color: var(--blue);
+  font-size: 12px;
+  margin: 0 0 22px;
+}
+.demo-shuffle .icon {
+  width: 17px;
+  height: 17px;
+}
+.demo-shuffle:hover {
+  background: #dce5fa;
+}
+.demo-cue.pending .cue-label::after {
+  content: "";
+  width: 6px;
+  height: 6px;
+  margin-left: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: cue-thinking 0.55s ease-in-out infinite alternate;
+}
+@keyframes cue-thinking {
+  to {
+    opacity: 0.25;
+    transform: scale(0.7);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .demo-cue.pending .cue-label::after {
+    animation: none;
+  }
+}
 @media (max-width: 850px) {
   .mobile-sections {
     display: flex;

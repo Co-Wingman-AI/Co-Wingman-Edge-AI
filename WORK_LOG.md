@@ -302,3 +302,21 @@ committing each completed unit. Detailed product instructions remain in README,
   whitespace checks passed. No application behavior changed.
 - **Remaining:** live Pages deployment verification remains unavailable under the
   workspace network policy; the existing workflow deploys website pushes.
+
+## 2026-10-22 — Randomized scripted conversation examples
+
+- **Session/device:** managed Linux cloud workspace; Chromium browser.
+- **Source:** clean organization main `ac35f89`, fetched before editing.
+- **Changes:** expanded the website's conversation card to 15 fictional examples
+  across three topics. Added shuffled topic cycles, a random-example control,
+  and simulated thinking/word reveal with cancellation and reduced-motion support.
+  The public interface identifies the simulation; no model calls, recording,
+  credentials, or storage were introduced. Updated website maintenance notes.
+- **Validation:** browser checks passed for all 15 prompt/cue pairings and length
+  limits, topic cycles, no immediate repeats, random selection, cancellation
+  during thinking and reveal, reduced motion, and four widths from 320 to 1440px.
+  Axe WCAG A/AA checks reported zero violations at desktop and mobile widths.
+  No external requests, browser errors, or storage were observed. JavaScript
+  syntax, whitespace, and repository hygiene checks passed (76 source files).
+- **Remaining:** GitHub Pages deployment is handled by the existing workflow;
+  live deployment status cannot be inspected under this workspace's network policy.

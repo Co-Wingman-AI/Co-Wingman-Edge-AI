@@ -5,6 +5,14 @@ with no build step or production dependencies. The interactive examples are
 fictional, scripted demonstrations. They do not capture audio, call an AI service,
 connect to AWS, or save visitor data.
 
+The conversation card draws from 15 hardcoded question/fragment/cue triples in
+`website/site.js`, grouped into three topics. Each topic uses a shuffled bag to
+avoid repeats until its examples are exhausted; refills avoid immediate repeats.
+“Surprise me” chooses a random topic and example. “Try another moment” advances
+within the selected topic. A short thinking delay and word-by-word reveal simulate
+a response; reduced-motion mode skips both. Changing examples cancels pending
+output. Labels explicitly identify this as a simulation with no AI requests.
+
 The expanded showcase includes the full project title, a simulated pause flow,
 an editable terminal lab, verified technical specifications, speech research,
 setup commands, and an expandable roadmap. The lab displays a continuation
@@ -39,8 +47,8 @@ node --check website/site.js
 git diff --check
 ```
 
-Check mobile and desktop layouts, keyboard navigation, all three example cues,
-replay, switching examples during the animation, architecture tabs, and FAQs.
+Check mobile and desktop layouts, keyboard navigation, all 15 example cues,
+topic cycles, shuffle, switching during thinking/reveal, architecture tabs, and FAQs.
 Test the lab's custom text, word/character bounds, reset while playing, and editing
 while playing; neither may leave an old cue visible. Check all roadmap accordions.
 The page supports reduced-motion preferences and provides a no-JavaScript note.
