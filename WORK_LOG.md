@@ -400,3 +400,24 @@ committing each completed unit. Detailed product instructions remain in README,
   controls/privacy profiles and a repeatable Jetson baseline, then event-level
   evaluation before retraining. No physical Jetson, live API, microphone or new
   accuracy result was obtained. Keep manual presentation fallback available.
+
+## 2026-10-22 — Clickable website team profiles
+
+- **Session/device:** managed Linux cloud workspace; Chromium browser.
+- **Source:** continued website work from `b592753`, reconciled organization main
+  through `e4de6bc` before publication.
+- **Changes:** added accessible profile dialogs for the team and advisor, a
+  separate public profile data file, and supplied/verified public contact links.
+  Rotation pauses during selection and while a dialog is open. Added keyboard
+  focus handling, mobile layouts, no-JavaScript contact links, maintenance notes,
+  and syntax validation for the new data file in the Pages workflow.
+- **Validation:** all five dialogs, link destinations, motion pause, Escape and
+  close controls, focus return and Tab/Shift-Tab containment passed in Chromium.
+  Responsive checks passed at 1440, 390 and 320 pixels; automated WCAG A/AA checks
+  reported no violations. Synthetic local-image success/error handling and
+  no-JavaScript links passed; no browser errors. JavaScript syntax, diff whitespace
+  and repository hygiene checks passed (79 source files).
+- **Remaining:** the inline portrait is not available as a downloadable workspace
+  asset; portrait placeholders remain until original image files are supplied.
+  Additional public profile details are pending. Pages publication uses the
+  existing workflow; live deployment verification remains network-restricted.

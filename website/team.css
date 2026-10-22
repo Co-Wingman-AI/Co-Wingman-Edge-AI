@@ -1,4 +1,191 @@
 /* Equal-sized member cards follow a clockwise path; the advisor stays separate. */
+.profile-trigger {
+  background: none;
+  border: 0;
+  border-radius: 6px;
+  padding: 8px 3px;
+  margin: -8px -3px;
+  font: inherit;
+  line-height: inherit;
+  letter-spacing: inherit;
+  text-align: center;
+  min-height: 44px;
+  text-decoration: underline;
+  text-decoration-color: #9bb4b4;
+  text-underline-offset: 4px;
+  text-decoration-thickness: 1px;
+}
+.profile-trigger:hover {
+  color: var(--blue);
+  text-decoration-color: currentColor;
+}
+.profile-trigger:disabled {
+  cursor: default;
+  text-decoration: none;
+}
+.profile-dialog {
+  width: min(700px, calc(100% - 32px));
+  padding: 0;
+  border: 1px solid #b4c5c7;
+  border-radius: 24px;
+  color: var(--ink);
+  background: var(--paper);
+  max-height: calc(100dvh - 36px);
+  overflow: auto;
+  box-shadow: 0 30px 100px #071e4155;
+}
+.profile-dialog[open] {
+  display: grid;
+  grid-template-columns: 0.9fr 1fr;
+}
+.profile-dialog::backdrop {
+  background: #0b2637bb;
+  backdrop-filter: blur(5px);
+}
+body.profile-open {
+  overflow: hidden;
+}
+.profile-close {
+  position: absolute;
+  right: 12px;
+  top: 12px;
+  width: 44px;
+  height: 44px;
+  border: 1px solid #b5c5c9;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--paper);
+  z-index: 1;
+}
+.profile-close svg {
+  width: 20px;
+  height: 20px;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  fill: none;
+}
+.profile-visual {
+  background: #e0e8f2;
+  min-height: 350px;
+  position: relative;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+.profile-visual::before {
+  content: "";
+  position: absolute;
+  width: 230px;
+  height: 230px;
+  border: 1px dashed #7b9ca8;
+  border-radius: 50%;
+}
+.profile-initials {
+  display: grid;
+  place-items: center;
+  width: 130px;
+  height: 145px;
+  border-radius: 40px;
+  background: #f5dbc5;
+  font:
+    50px Georgia,
+    serif;
+  transform: rotate(-6deg);
+}
+#profile-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  position: absolute;
+  inset: 0;
+}
+.profile-visual-label {
+  position: absolute;
+  bottom: 15px;
+  left: 15px;
+  background: #f7f6efed;
+  border-radius: 5px;
+  padding: 8px;
+  font-size: 7px;
+  letter-spacing: 0.1em;
+}
+.profile-content {
+  align-self: center;
+  padding: 68px 32px 40px;
+}
+.profile-content .eyebrow {
+  font-size: 10px;
+  margin-bottom: 15px;
+}
+.profile-content h2 {
+  font-size: 36px;
+  line-height: 1.1;
+  margin-bottom: 22px;
+  overflow-wrap: anywhere;
+}
+.profile-note {
+  font-size: 12px;
+  line-height: 1.8;
+  color: var(--muted);
+}
+.profile-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 24px;
+}
+.profile-links a {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 16px;
+  border: 1px solid #9db2b6;
+  border-radius: 24px;
+  font-size: 12px;
+  background: #e9efed;
+}
+.profile-links a:first-child {
+  background: var(--blue);
+  color: white;
+  border-color: var(--blue);
+}
+.profile-noscript {
+  text-align: center;
+  font-size: 12px;
+}
+.profile-noscript a {
+  text-decoration: underline;
+}
+@media (max-width: 600px) {
+  .profile-dialog[open] {
+    grid-template-columns: 1fr;
+  }
+  .profile-visual {
+    min-height: 0;
+    height: min(280px, 38dvh);
+  }
+  .profile-visual::before {
+    width: 190px;
+    height: 190px;
+  }
+  .profile-initials {
+    width: 105px;
+    height: 115px;
+    font-size: 40px;
+    border-radius: 32px;
+  }
+  .profile-content {
+    padding: 25px;
+  }
+  .profile-content h2 {
+    font-size: 30px;
+    margin-bottom: 15px;
+  }
+  .profile-links {
+    margin-top: 18px;
+  }
+}
 .team-orbit {
   --member-width: 172px;
   position: relative;

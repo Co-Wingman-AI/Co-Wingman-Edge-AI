@@ -26,6 +26,7 @@
     <link rel="stylesheet" href="./style.css" />
     <link rel="stylesheet" href="./showcase.css" />
     <link rel="stylesheet" href="./team.css" />
+    <script src="./team-profiles.js" defer></script>
     <script src="./site.js" defer></script>
   </head>
   <body>
@@ -1196,27 +1197,91 @@ python3 -m cowingman --rolling --pause-assist --show-input</code></pre>
           <div class="team-grid">
             <article>
               <span class="team-avatar peach">MV</span>
-              <h3>Mrunal Vibhute</h3>
+              <h3>
+                <button
+                  type="button"
+                  class="profile-trigger"
+                  data-profile="mrunal"
+                  aria-haspopup="dialog"
+                  aria-controls="team-profile"
+                  disabled
+                >
+                  Mrunal Vibhute
+                </button>
+              </h3>
             </article>
             <article>
               <span class="team-avatar mint">SD</span>
-              <h3>Shrimayee Deshpande</h3>
+              <h3>
+                <button
+                  type="button"
+                  class="profile-trigger"
+                  data-profile="shrimayee"
+                  aria-haspopup="dialog"
+                  aria-controls="team-profile"
+                  disabled
+                >
+                  Shrimayee Deshpande
+                </button>
+              </h3>
             </article>
             <article>
               <span class="team-avatar lavender">HD</span>
-              <h3>Honey Reddy Daram</h3>
+              <h3>
+                <button
+                  type="button"
+                  class="profile-trigger"
+                  data-profile="honey"
+                  aria-haspopup="dialog"
+                  aria-controls="team-profile"
+                  disabled
+                >
+                  Honey Reddy Daram
+                </button>
+              </h3>
             </article>
             <article>
               <span class="team-avatar peach">YK</span>
-              <h3>Yasasvi Kaipa</h3>
+              <h3>
+                <button
+                  type="button"
+                  class="profile-trigger"
+                  data-profile="yasasvi"
+                  aria-haspopup="dialog"
+                  aria-controls="team-profile"
+                  disabled
+                >
+                  Yasasvi Kaipa
+                </button>
+              </h3>
             </article>
           </div>
         </div>
         <article class="team-advisor">
           <span class="team-avatar pale-blue">AR</span>
-          <h3>Dr. Andrea Ramirez-Salgado</h3>
+          <h3>
+            <button
+              type="button"
+              class="profile-trigger"
+              data-profile="andrea"
+              aria-haspopup="dialog"
+              aria-controls="team-profile"
+              disabled
+            >
+              Dr. Andrea Ramirez-Salgado
+            </button>
+          </h3>
           <p>Project advisor</p>
         </article>
+        <noscript
+          ><p class="profile-noscript">
+            Honey Reddy Daram:
+            <a href="https://honeyreddydaram.github.io/Portfolio/">Portfolio</a>
+            ·
+            <a href="https://www.linkedin.com/in/honeyreddydaram/">LinkedIn</a>.
+            Enable JavaScript to open the team profile cards.
+          </p></noscript
+        >
         <p class="acknowledgments">
           Built with the University of Florida NaviGator AI Toolkit and NVIDIA’s
           Jetson, NeMo, and Nemotron technologies. Thank you to the research
@@ -1288,6 +1353,43 @@ python3 -m cowingman --rolling --pause-assist --show-input</code></pre>
         </div>
       </section>
     </main>
+    <dialog
+      id="team-profile"
+      class="profile-dialog"
+      aria-labelledby="profile-name"
+      aria-describedby="profile-role"
+    >
+      <button
+        class="profile-close"
+        id="profile-close"
+        type="button"
+        aria-label="Close profile"
+        autofocus
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="m6 6 12 12M6 18 18 6" />
+        </svg>
+      </button>
+      <div class="profile-visual">
+        <img id="profile-photo" width="480" height="480" alt="" hidden />
+        <span
+          class="profile-initials"
+          id="profile-initials"
+          aria-hidden="true"
+        ></span>
+        <span class="profile-visual-label">CO-WINGMAN / THE PEOPLE</span>
+      </div>
+      <div class="profile-content">
+        <p class="eyebrow" id="profile-role"></p>
+        <h2 id="profile-name"></h2>
+        <p class="profile-note" id="profile-note"></p>
+        <nav
+          class="profile-links"
+          id="profile-links"
+          aria-label="Public profile links"
+        ></nav>
+      </div>
+    </dialog>
     <footer class="footer wrap">
       <a class="brand" href="#"
         ><span class="brand-mark"

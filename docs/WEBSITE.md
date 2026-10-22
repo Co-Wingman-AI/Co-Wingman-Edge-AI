@@ -23,6 +23,27 @@ rotation. Playback stops offscreen or in a hidden
 tab. Screen-reader reading order stays stable, and without JavaScript the four
 members appear in a static grid above the advisor.
 
+## Team profiles
+
+Selecting any member or advisor name opens a native modal profile card. Keyboard
+focus is contained in the dialog, Escape/Close dismiss it, and focus returns to
+the selected name. Rotation stops while a dialog is open, while a name has focus,
+or while a mouse/pen is over the team circle. Without JavaScript, Honey's public
+links remain available below the static roster.
+
+Maintain names, roles, local portrait paths, and public contact links in
+`website/team-profiles.js`. Honey's portfolio URL was supplied by the project
+owner; her LinkedIn URL was confirmed in that portfolio's contact section.
+The other contact links and downloadable portraits have not yet been supplied.
+Profiles display initials and explicit pending notices until those assets exist;
+no identity or contact address is guessed.
+
+To add an approved portrait, place it under `website/assets/` and set the matching
+`photo` value to `./assets/filename.jpg`. Review the image and record its exact
+SHA-256 in `REVIEWED_BINARY_FILES` in `scripts/check_repository.py`, following the
+existing repository artifact policy. A failed image load keeps the initials
+placeholder. Keep contact URLs HTTPS and publish only approved public details.
+
 The expanded showcase includes the full project title, a simulated pause flow,
 an editable terminal lab, verified technical specifications, speech research,
 setup commands, and an expandable roadmap. The lab accepts only a partner question
