@@ -272,11 +272,63 @@ stageButtons.forEach((button, index) => {
   });
 });
 
-// This editable lab is a deterministic simulation, never a model endpoint.
+// Local scripted matching, never a model endpoint or a claim about a visitor.
+const labExamples = [
+  {
+    question: "Can you tell me about your experience working with AI?",
+    fragment: "I've worked on machine learning projects, and one of them was…",
+    cue: "an AI assistant that helps people navigate conversations.",
+  },
+  ...Object.values(scenarios).flat(),
+];
+const labBridge = "Let me take a moment to explain that clearly.";
+const labStopWords = new Set(
+  "a an and are as at be been before but by can could did do does for from had has have how i if in into is it its me my of on one or our so some tell that the their them then there these they this to us was we were what when which with would you your ive im ve".split(
+    " ",
+  ),
+);
+function labTokens(text) {
+  return new Set(
+    (
+      text
+        .toLowerCase()
+        .replace(/[’']/g, "")
+        .match(/[a-z0-9]+/g) || []
+    ).filter((word) => !labStopWords.has(word)),
+  );
+}
+function selectLabCue(question, fragment) {
+  const q = labTokens(question);
+  const f = labTokens(fragment);
+  let best = null;
+  let bestScore = 0;
+  for (const example of labExamples) {
+    const eq = labTokens(example.question);
+    const ef = labTokens(example.fragment);
+    const sharedQuestion = [...q].filter((word) => eq.has(word)).length;
+    const sharedFragment = [...f].filter((word) => ef.has(word)).length;
+    // Question overlap alone must not invent a continuation for unrelated speech.
+    if (
+      sharedFragment < 2 ||
+      sharedFragment / Math.max(f.size, ef.size, 1) < 0.4
+    )
+      continue;
+    const score =
+      (2 * sharedFragment) / Math.max(f.size, ef.size, 1) +
+      sharedQuestion / Math.max(q.size, eq.size, 1);
+    if (score > bestScore) {
+      best = example;
+      bestScore = score;
+    }
+  }
+  return best
+    ? { cue: best.cue, matched: true }
+    : { cue: labBridge, matched: false };
+}
 const labForm = document.getElementById("lab-form");
 const labRun = document.getElementById("lab-run");
 const labStatus = document.getElementById("lab-status");
-const labFields = ["lab-question", "lab-fragment", "lab-fact"].map((id) =>
+const labFields = ["lab-question", "lab-fragment"].map((id) =>
   document.getElementById(id),
 );
 const terminal = document.querySelector(".terminal");
@@ -299,21 +351,20 @@ labRun.disabled = false;
 labForm.addEventListener("submit", (event) => {
   event.preventDefault();
   cancelLab();
-  const [question, fragment, fact] = labFields.map((field) =>
-    field.value.trim(),
-  );
-  const words = fact ? fact.split(/\s+/u).length : 0;
-  const characters = Array.from(fact).length;
-  if (!question || !fragment || !fact) {
-    labStatus.textContent = "Fill in all three fields to build the example.";
+  const [question, fragment] = labFields.map((field) => field.value.trim());
+  if (!question || !fragment) {
+    labStatus.textContent =
+      "Enter your partner’s question and your unfinished thought.";
     labFields.find((field) => !field.value.trim()).focus();
     return;
   }
-  if (words > 12 || characters > 160) {
-    labStatus.textContent = `Your continuation has ${words} words and ${characters} characters. Keep it within 12 words and 160 characters; this simulator will not cut off your thought.`;
-    labFields[2].focus();
-    return;
-  }
+  const selected = selectLabCue(question, fragment);
+  const withinBounds = (text) =>
+    text.split(/\s+/u).length <= 12 && Array.from(text).length <= 160;
+  const matched = selected.matched && withinBounds(selected.cue);
+  const cue = matched ? selected.cue : labBridge;
+  const words = cue.split(/\s+/u).length;
+  const characters = Array.from(cue).length;
   document.getElementById("terminal-question").textContent = question;
   document.getElementById("terminal-fragment").textContent = fragment;
   labRun.disabled = true;
@@ -324,13 +375,14 @@ labForm.addEventListener("submit", (event) => {
     clearInterval(labInterval);
     terminal.classList.remove("running");
     terminalState.textContent = "[pause detected: 3.0s simulated silence]";
-    document.getElementById("terminal-output").textContent = fact;
+    document.getElementById("terminal-output").textContent = cue;
     document.getElementById("terminal-count").textContent =
-      `${words} words · ${characters} characters · supplied by you`;
+      `${words} words · ${characters} characters · ${matched ? "scripted example" : "general recovery phrase"}`;
     terminalCue.hidden = false;
     labRun.disabled = false;
-    labStatus.textContent =
-      "Your supplied continuation is displayed. The real prototype requests a generated cue from Nemotron; this browser example does not.";
+    labStatus.textContent = matched
+      ? `Suggested cue: ${cue} Selected automatically from fictional examples; no AI call was made.`
+      : `Suggested cue: ${cue} No close scripted match was found, so a general recovery phrase is shown.`;
   };
   if (reducedMotion.matches) {
     finish();
@@ -348,7 +400,7 @@ labFields.forEach((field) =>
   field.addEventListener("input", () => {
     cancelLab();
     labStatus.textContent =
-      "Example edited. Play it again to see your new continuation.";
+      "Example edited. Play it again to get an automatically selected cue.";
   }),
 );
 document.getElementById("lab-reset").addEventListener("click", () => {

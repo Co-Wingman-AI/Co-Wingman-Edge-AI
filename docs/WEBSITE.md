@@ -24,9 +24,14 @@ members appear in a static grid above the advisor.
 
 The expanded showcase includes the full project title, a simulated pause flow,
 an editable terminal lab, verified technical specifications, speech research,
-setup commands, and an expandable roadmap. The lab displays a continuation
-supplied by the visitor, enforcing the 12-word/160-character contract. It does
-not generate, shorten, or ground a response with Nemotron. A live model demo
+setup commands, and an expandable roadmap. The lab accepts only a partner question
+and unfinished thought. After a simulated pause it automatically selects a cue
+using local keyword overlap with 16 fictional examples (the opening AI example
+plus the 15 conversation-card examples). Matching weights the unfinished thought
+more heavily than the question; unfamiliar text receives a general recovery
+phrase. No visitor-supplied cue is required. Output stays within 12 words and 160
+characters. This is a simple scripted matcher, not factual or semantic verification.
+It does not generate, shorten, or ground a response with Nemotron. A live model demo
 would require a separately hosted backend; never embed a Toolkit key in Pages.
 
 The demo-video and Google Drive poster URLs have not been supplied. The resources
@@ -58,8 +63,8 @@ git diff --check
 
 Check mobile and desktop layouts, keyboard navigation, all 15 example cues,
 topic cycles, shuffle, switching during thinking/reveal, architecture tabs, and FAQs.
-Test the lab's custom text, word/character bounds, reset while playing, and editing
-while playing; neither may leave an old cue visible. Check all roadmap accordions.
+Test all scripted lab pairings, unfamiliar text, output bounds, reset while playing,
+and editing while playing; neither may leave an old cue visible. Check all roadmap accordions.
 The page supports reduced-motion preferences and provides a no-JavaScript note.
 Its content security policy blocks outbound connections and external scripts.
 

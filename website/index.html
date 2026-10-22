@@ -461,9 +461,9 @@
               </h2>
             </div>
             <p>
-              A Jetson-style terminal, right in your browser. Play a sample
-              pause, or build a moment of your own. This simulator makes no AI
-              requests.
+              Enter the question and your unfinished thought. After a simulated
+              pause, a short cue appears automatically from our scripted
+              examples. No AI requests are made.
             </p>
           </div>
           <div class="lab-grid">
@@ -476,20 +476,18 @@
                 value="Can you tell me about your experience working with AI?"
               />
               <label for="lab-fragment">Your unfinished thought</label>
-              <textarea id="lab-fragment" maxlength="240" rows="3" required>
-I've worked on machine learning projects, and one of them was…</textarea>
-              <label for="lab-fact">A short continuation you want to try</label>
               <textarea
-                id="lab-fact"
-                maxlength="160"
-                rows="2"
+                id="lab-fragment"
+                maxlength="240"
+                rows="3"
                 required
                 aria-describedby="lab-help"
               >
-An AI assistant that helps people navigate conversations.</textarea>
+I've worked on machine learning projects, and one of them was…</textarea>
               <p id="lab-help">
-                Up to 12 words / 160 characters. The simulator displays your
-                supplied phrase; it does not generate or verify facts.
+                No need to write the cue. The simulator selects a fictional
+                example, or a general recovery phrase if there is no close
+                match. Every cue stays within 12 words / 160 characters.
               </p>
               <div class="lab-actions">
                 <button
@@ -498,7 +496,7 @@ An AI assistant that helps people navigate conversations.</textarea>
                   type="submit"
                   disabled
                 >
-                  Play this conversation
+                  Play &amp; suggest a cue
                   <span aria-hidden="true"
                     ><svg class="play-icon" aria-hidden="true">
                       <use href="#i-play" /></svg
@@ -560,10 +558,10 @@ An AI assistant that helps people navigate conversations.</textarea>
             </div>
           </div>
           <p class="lab-boundary">
-            In the real prototype, Nemotron generates the cue from bounded
-            context. A live browser demo would require a separate server to
-            protect the NaviGator credential. This public site never asks for an
-            API key.
+            This browser demo matches your text against a local bank of
+            fictional examples; it does not know or verify your experience. The
+            real prototype uses Nemotron and supplied context. No API key is
+            needed here.
           </p>
         </div>
       </section>

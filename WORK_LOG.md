@@ -338,3 +338,22 @@ committing each completed unit. Detailed product instructions remain in README,
   hygiene passed for 77 source files. Application code was unchanged.
 - **Remaining:** the existing Pages workflow handles deployment; live deployment
   status remains unavailable under the workspace network policy.
+
+## 2026-10-22 — Automatic cue selection in the browser lab
+
+- **Session/device:** managed Linux cloud workspace; Chromium browser.
+- **Source:** clean organization main `a2d2814`, fetched before editing.
+- **Changes:** removed the visitor-entered cue field. The lab now accepts only
+  a partner question and unfinished thought, then selects a bounded scripted cue
+  after its simulated pause. Local keyword matching uses 16 fictional examples;
+  unfamiliar or unrelated fragments receive a general recovery phrase. Updated
+  interface labels and maintenance notes to explain the simulation accurately.
+- **Validation:** browser checks passed for two-field input, all 16 cue pairings,
+  output bounds, minor edits, unfamiliar/unrelated text, literal text rendering,
+  whitespace rejection, timed output, edit/reset cancellation, and four widths.
+  Desktop/mobile Axe WCAG A/AA checks found zero violations. No external calls,
+  storage, or browser errors occurred. JavaScript syntax, whitespace, and
+  repository hygiene checks passed (77 source files).
+- **Remaining:** cue selection is scripted matching, not live model inference.
+  The existing Pages workflow handles publication; live deployment status remains
+  unavailable under this workspace's network policy.
