@@ -1,4 +1,13 @@
 /* Equal-sized member cards follow a clockwise path; the advisor stays separate. */
+.team-portrait {
+  overflow: hidden;
+}
+.team-portrait img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
 .team-grid article:has(.profile-trigger:enabled) .team-avatar,
 .team-advisor:has(.profile-trigger:enabled) .team-avatar {
   cursor: pointer;

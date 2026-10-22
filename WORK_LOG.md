@@ -455,3 +455,15 @@ committing each completed unit. Detailed product instructions remain in README,
   JavaScript syntax, whitespace and repository hygiene passed (80 source files).
 - **Remaining:** other portraits/contact details remain pending. Live Pages
   deployment cannot be verified under this workspace's network restrictions.
+
+## 2026-10-22 — Show portrait in the rotating roster
+
+- **Session/device:** managed Linux cloud workspace; Chromium browser.
+- **Source:** organization main `5942694`.
+- **Changes:** replaced the corresponding roster initials with the already
+  approved portrait, retaining the rounded avatar shape and profile interaction.
+  Updated the team stylesheet version for returning visitors.
+- **Validation:** image loading, avatar sizing, removal of initials and profile
+  opening passed at 1440, 390 and 320 pixels; mobile screenshot reviewed.
+  Diff whitespace and repository hygiene passed (80 source files).
+- **Remaining:** GitHub Pages deployment remains unverified from this workspace.
