@@ -268,3 +268,6 @@ Optional lint/format checks use `python3 -m pip install -e '.[dev]'`, then
 The [presentation runbook](docs/PRESENTATION.md), [Jetson launch guide](RUN_ON_JETSON.md),
 and [handoff notes](docs/HANDOFF.md) contain the operating procedure and remaining
 real-device checks. Earlier research is explicitly archived under `archive/`.
+
+The [verified loose ends and implementation plan](docs/REMAINING_WORK.md) separates
+remaining code changes, live verification, and model-quality research.

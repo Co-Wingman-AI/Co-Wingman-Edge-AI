@@ -372,3 +372,31 @@ committing each completed unit. Detailed product instructions remain in README,
   whitespace, and repository hygiene passed (77 source files).
 - **Remaining:** publication uses the existing Pages workflow; live deployment
   verification remains unavailable under this workspace's network policy.
+
+## 2026-10-22 — Verified loose ends and implementation plan
+
+- **Session/device:** Codex workspace; macOS arm64, Python 3.14.7.
+- **Source:** pulled organization main from `8c2c8d7` to `766ad48`, preserving
+  unrelated local poster work; reconciled concurrent website-only updates through
+  `b592753` before publication. Reviewed original classifier revision
+  `03288414382def0356e44ae1c4aca4d0fd6ad35d` and its pinned model configuration.
+- **Changes:** added `docs/REMAINING_WORK.md` and a README link, with six requested
+  implementation milestones, code-backed gaps, completion criteria and dependencies.
+  Distinguished later opt-in privacy extensions from the original strict budget,
+  implemented features from live verification, and disfluency from anxiety claims.
+  Model recommendations cover target labels, speaker-separated evaluation,
+  preprocessing consistency, temporal-axis correction, calibration and efficient
+  NVIDIA-based candidates. No runtime/model behavior changed.
+- **Validation:** all 141 tests passed in 0.507 seconds; offline end-to-end and
+  typed-input cue demos passed with output suppressed. Ruff 0.14.1 lint/format
+  passed for 39 Python files. Reviewed-source snapshot passed syntax, whitespace
+  and credential/artifact checks for 78 source files; unrelated output excluded.
+  Documentation links and diff whitespace checked. A synthetic index-layout
+  check confirmed that the original flatten/reshape does not preserve time-first
+  grouping. Saved notebook metrics were inspected, not independently reproduced.
+  GitHub CI and website deployment for `766ad48` report success; served-site
+  retrieval was unavailable through the audit web tool.
+- **Remaining:** execute the documented milestones, starting with responsive
+  controls/privacy profiles and a repeatable Jetson baseline, then event-level
+  evaluation before retraining. No physical Jetson, live API, microphone or new
+  accuracy result was obtained. Keep manual presentation fallback available.
