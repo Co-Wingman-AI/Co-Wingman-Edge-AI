@@ -441,3 +441,17 @@ committing each completed unit. Detailed product instructions remain in README,
   whitespace and repository hygiene checks passed (80 source files).
 - **Remaining:** live deployment verification remains unavailable. Original
   portrait files and remaining public contact details are still pending.
+
+## 2026-10-22 — Publish supplied profile portrait
+
+- **Session/device:** managed Linux cloud workspace; Chromium browser.
+- **Source:** organization main `92969a8`.
+- **Changes:** replaced one profile placeholder with the supplied original image,
+  now accessible as an attachment file. Added its reviewed binary hash, refreshed
+  the profile-data asset version, and updated maintenance documentation.
+- **Validation:** original file copied unchanged; reviewed hash matched. Portrait
+  loading, placeholder removal, contact links and absence of horizontal overflow
+  passed at 1440, 390 and 320 pixels. Mobile screenshot visually reviewed.
+  JavaScript syntax, whitespace and repository hygiene passed (80 source files).
+- **Remaining:** other portraits/contact details remain pending. Live Pages
+  deployment cannot be verified under this workspace's network restrictions.

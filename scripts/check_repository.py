@@ -26,6 +26,9 @@ FORBIDDEN_SUFFIXES = {
     ".pem",
 }
 REVIEWED_BINARY_FILES = {
+    "website/assets/honey-reddy-daram.jpg": (
+        "cdf666f6d5153f37dc85a7704e602080be9d0f00f6643d159533cf77b35e9e02"
+    ),
     "docs/co-wingman-architecture-current.png": (
         "ac77b02e30a68a1e99fdbba2272de1f7f32f0b258948c03dcfbf9fe23265c637"
     ),

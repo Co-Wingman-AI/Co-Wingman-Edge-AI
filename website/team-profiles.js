@@ -21,7 +21,7 @@ const teamProfiles = {
     name: "Honey Reddy Daram",
     initials: "HD",
     role: "Project team",
-    photo: null,
+    photo: "./assets/honey-reddy-daram.jpg",
     links: [
       {
         label: "Portfolio",
