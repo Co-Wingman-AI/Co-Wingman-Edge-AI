@@ -468,18 +468,13 @@ committing each completed unit. Detailed product instructions remain in README,
   Diff whitespace and repository hygiene passed (80 source files).
 - **Remaining:** GitHub Pages deployment remains unverified from this workspace.
 
-## 2026-10-22 — Poster presentation preparation
+## 2026-10-22 — Revert presentation material publication
 
-- **Session/device:** managed Linux cloud workspace; documentation review.
-- **Source:** organization main `774bb74`; current runtime/docs and previously
-  supplied numeric timing report reviewed.
-- **Changes:** added short and extended pitches, a poster walkthrough, architecture
-  glossary, mode-specific privacy explanation, bounded timing interpretation,
-  demo/fallback procedure, 40 prepared questions, reading links and rehearsal plan.
-  Linked the pack from the README. No application or website behavior changed.
-- **Validation:** checked configuration/context/retrieval/trigger claims against
-  source and current documentation. All local pack links resolve. Repository
-  hygiene passed (81 source files); diff whitespace checked. Historical results
-  are attributed and explicitly separated from new evaluation evidence.
-- **Remaining:** rehearse the actual Jetson configuration; the guide does not
-  establish new live performance, classifier accuracy or user-outcome results.
+- **Session/device:** managed Linux cloud workspace.
+- **Source:** organization main `d673093`.
+- **Changes:** reverted the presentation preparation document and its README link
+  at the user's request. Earlier website changes remain intact.
+- **Validation:** confirmed the document is absent from the repository and README
+  matches the pre-publication version; no application or website changes.
+- **Remaining:** presentation material stays outside Git; do not publish further
+  presentation material without an explicit request.
