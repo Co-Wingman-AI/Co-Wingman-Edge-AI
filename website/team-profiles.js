@@ -14,7 +14,7 @@ const teamProfiles = {
     name: "Shrimayee Deshpande",
     initials: "SD",
     role: "Project team",
-    photo: null,
+    photo: "./assets/shrimayee-deshpande.jpg",
     links: [],
   },
   honey: {
@@ -37,7 +37,7 @@ const teamProfiles = {
     name: "Yasasvi Kaipa",
     initials: "YK",
     role: "Project team",
-    photo: null,
+    photo: "./assets/yasasvi-kaipa.jpg",
     links: [],
   },
   andrea: {

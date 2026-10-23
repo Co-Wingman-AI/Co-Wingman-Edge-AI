@@ -8,6 +8,14 @@
   height: 100%;
   object-fit: cover;
 }
+.team-portrait img[src$="shrimayee-deshpande.jpg"],
+#profile-photo[src$="shrimayee-deshpande.jpg"] {
+  object-position: center 20%;
+}
+.team-portrait img[src$="yasasvi-kaipa.jpg"],
+#profile-photo[src$="yasasvi-kaipa.jpg"] {
+  object-position: center 35%;
+}
 .team-grid article:has(.profile-trigger:enabled) .team-avatar,
 .team-advisor:has(.profile-trigger:enabled) .team-avatar {
   cursor: pointer;

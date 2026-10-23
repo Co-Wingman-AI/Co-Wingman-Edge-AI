@@ -478,3 +478,33 @@ committing each completed unit. Detailed product instructions remain in README,
   matches the pre-publication version; no application or website changes.
 - **Remaining:** presentation material stays outside Git; do not publish further
   presentation material without an explicit request.
+
+## 2026-10-22 — Prepare additional team portrait locally
+
+- **Session/device:** managed Linux cloud workspace; Chromium browser.
+- **Source:** organization main `1b3cb4c`.
+- **Changes:** added the newly supplied original portrait to its roster avatar and
+  profile card, with framing CSS, reviewed asset hash and refreshed asset versions.
+  Updated website maintenance notes; no contact links were inferred.
+- **Validation:** portrait loading, initials replacement, profile opening, accurate
+  contact placeholder and no horizontal overflow passed at 1440, 390 and 320 pixels.
+  Mobile screenshot reviewed. JavaScript syntax, whitespace and repository hygiene
+  passed (80 source files).
+- **Remaining:** changes are local and unpublished, respecting the no-push
+  instruction. Public contact links for this profile remain pending.
+
+## 2026-10-22 — Publish both supplied team portraits
+
+- **Session/device:** managed Linux cloud workspace; Chromium browser.
+- **Source:** organization main `1b3cb4c`, preserving the prepared local portrait
+  changes. The user explicitly authorized publication of the website updates.
+- **Changes:** added the second supplied portrait to the roster and profile card,
+  preserving both original image files. Added framing CSS and reviewed hashes;
+  refreshed profile asset versions and updated website notes.
+- **Validation:** both portraits load in roster and dialogs; initials replacement,
+  desktop clicks/mobile taps, contact placeholders and no horizontal overflow
+  passed at 1440, 390 and 320 pixels. No browser errors; mobile framing reviewed.
+  JavaScript syntax, whitespace and repository hygiene passed (80 source files).
+- **Remaining:** contact links for the new profiles remain pending. Live Pages
+  deployment verification is unavailable from this workspace. Presentation
+  preparation material remains excluded from the repository.

@@ -39,8 +39,10 @@ when changing them so returning visitors fetch matching files after deployment.
 Maintain names, roles, local portrait paths, and public contact links in
 `website/team-profiles.js`. Honey's portfolio URL was supplied by the project
 owner; her LinkedIn URL was confirmed in that portfolio's contact section.
-Her supplied portrait is included unchanged as a local website asset.
-The other contact links and portraits have not yet been supplied.
+Honey's, Shrimayee's and Yasasvi's supplied portraits are included unchanged as
+local website assets, shown in both the roster and profile cards. Shrimayee's and
+Yasasvi's public contact links and the remaining portraits/contact links have not
+yet been supplied.
 Profiles display initials and explicit pending notices until those assets exist;
 no identity or contact address is guessed.
 

@@ -26,6 +26,12 @@ FORBIDDEN_SUFFIXES = {
     ".pem",
 }
 REVIEWED_BINARY_FILES = {
+    "website/assets/yasasvi-kaipa.jpg": (
+        "3df3affa82b2514e173aae84ba0c6e641aa3c83b6af43f118805210a9c9f5d62"
+    ),
+    "website/assets/shrimayee-deshpande.jpg": (
+        "89155f59339f159eae81e5d3f8bd5936ab54ca0ca4d8ddc4edfb4b7e43d9b544"
+    ),
     "website/assets/honey-reddy-daram.jpg": (
         "cdf666f6d5153f37dc85a7704e602080be9d0f00f6643d159533cf77b35e9e02"
     ),
