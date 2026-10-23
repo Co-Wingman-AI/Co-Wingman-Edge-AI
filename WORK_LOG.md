@@ -508,3 +508,17 @@ committing each completed unit. Detailed product instructions remain in README,
 - **Remaining:** contact links for the new profiles remain pending. Live Pages
   deployment verification is unavailable from this workspace. Presentation
   preparation material remains excluded from the repository.
+
+## 2026-10-22 — Complete project-team portrait roster
+
+- **Session/device:** managed Linux cloud workspace; Chromium browser.
+- **Source:** organization main `bbd5131`.
+- **Changes:** added the newly supplied original portrait to the remaining
+  project-team avatar and profile card, registered its reviewed hash and refreshed
+  profile data. All four project-team members now have supplied portraits.
+- **Validation:** all four roster images present; new portrait loads in avatar
+  and dialog, replaces initials, and opens via desktop click/mobile tap at 1440,
+  390 and 320 pixels. No horizontal overflow; mobile screenshot reviewed.
+  JavaScript syntax, whitespace and repository hygiene passed (80 source files).
+- **Remaining:** additional contact links and the advisor portrait remain pending;
+  live Pages deployment cannot be verified from this workspace.

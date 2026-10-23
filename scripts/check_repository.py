@@ -26,6 +26,9 @@ FORBIDDEN_SUFFIXES = {
     ".pem",
 }
 REVIEWED_BINARY_FILES = {
+    "website/assets/mrunal-vibhute.jpg": (
+        "8f55e5ac0aa1d127e47ea2b8eab5909191a931d3a7bfc2e1cab71bdad47ee0e1"
+    ),
     "website/assets/yasasvi-kaipa.jpg": (
         "3df3affa82b2514e173aae84ba0c6e641aa3c83b6af43f118805210a9c9f5d62"
     ),

@@ -7,7 +7,7 @@ const teamProfiles = {
     name: "Mrunal Vibhute",
     initials: "MV",
     role: "Project team",
-    photo: null,
+    photo: "./assets/mrunal-vibhute.jpg",
     links: [],
   },
   shrimayee: {
