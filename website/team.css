@@ -175,6 +175,27 @@ body.profile-open {
   text-align: center;
   font-size: 12px;
 }
+.profile-qr {
+  margin: 24px 0 0;
+}
+.profile-qr[hidden] {
+  display: none;
+}
+.profile-qr img {
+  display: block;
+  width: 184px;
+  max-width: 100%;
+  height: auto;
+  background: white;
+  border: 1px solid #d2dddd;
+  border-radius: 10px;
+}
+.profile-qr figcaption {
+  margin-top: 10px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--muted);
+}
 .profile-noscript a {
   text-decoration: underline;
 }

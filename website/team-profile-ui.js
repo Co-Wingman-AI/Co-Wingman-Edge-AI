@@ -7,6 +7,14 @@
   const profilePhoto = document.getElementById("profile-photo");
   const profileInitials = document.getElementById("profile-initials");
   const profileNote = document.getElementById("profile-note");
+  const profileQr = document.getElementById("profile-qr");
+  const profileQrImage = document.getElementById("profile-qr-image");
+  function clearQr() {
+    profileQr.hidden = true;
+    profileQrImage.onload = null;
+    profileQrImage.onerror = null;
+    profileQrImage.removeAttribute("src");
+  }
   function openProfile(button) {
     const profile = teamProfiles[button.dataset.profile];
     if (!profile) return;
@@ -37,6 +45,18 @@
       links.append(link);
     });
     links.hidden = links.childElementCount === 0;
+    clearQr();
+    const linkedin = profile.links.find(
+      (contact) => contact.label === "LinkedIn",
+    );
+    if (linkedin?.qr?.startsWith("./assets/qr/")) {
+      profileQrImage.alt = `QR code for ${profile.name}'s LinkedIn profile`;
+      profileQrImage.onload = () => {
+        profileQr.hidden = false;
+      };
+      profileQrImage.onerror = clearQr;
+      profileQrImage.src = linkedin.qr;
+    }
     profileNote.textContent = links.hidden
       ? "Photo and public contact links coming soon."
       : "Portrait coming soon. Explore the work and connect below.";
@@ -97,6 +117,7 @@
       profileDialog.close();
   });
   profileDialog.addEventListener("close", () => {
+    clearQr();
     document.body.classList.remove("profile-open");
     profilePhoto.onload = null;
     profilePhoto.onerror = null;

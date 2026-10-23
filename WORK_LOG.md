@@ -534,3 +534,20 @@ committing each completed unit. Detailed product instructions remain in README,
   JavaScript syntax, whitespace and repository hygiene passed (80 source files).
 - **Remaining:** advisor portrait/contact links remain pending. External profile
   availability and the live Pages deployment were not independently verified.
+
+## 2026-10-22 — Add LinkedIn QR codes to profile cards
+
+- **Session/device:** managed Linux cloud workspace; Chromium browser.
+- **Source:** organization main `777de3a`.
+- **Changes:** added four locally generated SVG QR assets and displayed the
+  matching code below each profile's contact buttons. Added accessible image
+  descriptions, scan captions, load-error handling and versioned asset references.
+  Advisor profile remains without a code until a destination is supplied.
+- **Validation:** all four cards passed at 1440, 390 and 320 pixels; all 12
+  rendered code screenshots decoded to their matching contact-button URLs.
+  Keyboard containment, automated WCAG A/AA checks, missing-image behavior,
+  advisor hiding, no horizontal overflow and no browser errors passed. Mobile
+  layout reviewed. JavaScript syntax, whitespace and repository hygiene passed
+  (84 source files).
+- **Remaining:** live Pages deployment and external profile availability remain
+  unverified from this workspace. No presentation preparation files published.

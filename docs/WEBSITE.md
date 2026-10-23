@@ -43,6 +43,13 @@ All four project team members' supplied portraits are included unchanged as loca
 website assets, shown in both the roster and profile cards. Mrunal, Shrimayee and
 Yasasvi also have the LinkedIn URLs supplied by the project owner. The advisor's
 portrait/contact links have not yet been supplied.
+Each team member's profile card also displays a local SVG QR code for their
+LinkedIn URL, alongside the normal link button. Maintain the `qr` path on the
+LinkedIn entry in `team-profiles.js`; regenerate and decode-check the QR whenever
+its destination changes. Assets live in `website/assets/qr/`, with a white quiet
+zone preserved by the image and styles. No external QR service is requested.
+Profiles without a QR keep that area hidden; image-load failures leave normal
+contact buttons available.
 Profiles display initials and explicit pending notices until those assets exist;
 no identity or contact address is guessed.
 

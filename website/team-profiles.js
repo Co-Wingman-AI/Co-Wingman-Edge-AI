@@ -12,6 +12,7 @@ const teamProfiles = {
       {
         label: "LinkedIn",
         url: "https://www.linkedin.com/in/mrunal-vibhute-b6b392235/",
+        qr: "./assets/qr/mrunal-linkedin.svg",
       },
     ],
   },
@@ -24,6 +25,7 @@ const teamProfiles = {
       {
         label: "LinkedIn",
         url: "https://www.linkedin.com/in/shrimayee/",
+        qr: "./assets/qr/shrimayee-linkedin.svg",
       },
     ],
   },
@@ -40,6 +42,7 @@ const teamProfiles = {
       {
         label: "LinkedIn",
         url: "https://www.linkedin.com/in/honeyreddydaram/",
+        qr: "./assets/qr/honey-linkedin.svg",
       },
     ],
   },
@@ -52,6 +55,7 @@ const teamProfiles = {
       {
         label: "LinkedIn",
         url: "https://www.linkedin.com/in/yasasvikaipa/",
+        qr: "./assets/qr/yasasvi-linkedin.svg",
       },
     ],
   },
