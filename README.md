@@ -257,6 +257,10 @@ explicit setup script, never as a conversation-time fallback.
 
 ## Validation and handoff
 
+For poster preparation, use the [pitch, walkthrough, reading list and 40-question
+rehearsal pack](docs/POSTER_PREPARATION.md). It distinguishes demonstrated behavior
+from experimental capabilities and includes live/typed/offline demo scripts.
+
 ```sh
 python3 -m unittest discover -s tests -v
 python3 -m cowingman --offline --demo
