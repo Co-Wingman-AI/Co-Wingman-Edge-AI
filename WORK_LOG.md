@@ -522,3 +522,15 @@ committing each completed unit. Detailed product instructions remain in README,
   JavaScript syntax, whitespace and repository hygiene passed (80 source files).
 - **Remaining:** additional contact links and the advisor portrait remain pending;
   live Pages deployment cannot be verified from this workspace.
+
+## 2026-10-22 — Add supplied team social links
+
+- **Session/device:** managed Linux cloud workspace.
+- **Source:** organization main `a1870cc`.
+- **Changes:** added the three supplied public LinkedIn destinations to the
+  corresponding profile cards, normalized HTTPS/trailing punctuation, refreshed
+  the profile-data version and updated website maintenance notes.
+- **Validation:** all three destination/label mappings match the supplied URLs;
+  JavaScript syntax, whitespace and repository hygiene passed (80 source files).
+- **Remaining:** advisor portrait/contact links remain pending. External profile
+  availability and the live Pages deployment were not independently verified.

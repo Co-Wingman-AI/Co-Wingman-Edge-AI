@@ -8,14 +8,24 @@ const teamProfiles = {
     initials: "MV",
     role: "Project team",
     photo: "./assets/mrunal-vibhute.jpg",
-    links: [],
+    links: [
+      {
+        label: "LinkedIn",
+        url: "https://www.linkedin.com/in/mrunal-vibhute-b6b392235/",
+      },
+    ],
   },
   shrimayee: {
     name: "Shrimayee Deshpande",
     initials: "SD",
     role: "Project team",
     photo: "./assets/shrimayee-deshpande.jpg",
-    links: [],
+    links: [
+      {
+        label: "LinkedIn",
+        url: "https://www.linkedin.com/in/shrimayee/",
+      },
+    ],
   },
   honey: {
     name: "Honey Reddy Daram",
@@ -38,7 +48,12 @@ const teamProfiles = {
     initials: "YK",
     role: "Project team",
     photo: "./assets/yasasvi-kaipa.jpg",
-    links: [],
+    links: [
+      {
+        label: "LinkedIn",
+        url: "https://www.linkedin.com/in/yasasvikaipa/",
+      },
+    ],
   },
   andrea: {
     name: "Dr. Andrea Ramirez-Salgado",

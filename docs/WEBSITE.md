@@ -40,9 +40,9 @@ Maintain names, roles, local portrait paths, and public contact links in
 `website/team-profiles.js`. Honey's portfolio URL was supplied by the project
 owner; her LinkedIn URL was confirmed in that portfolio's contact section.
 All four project team members' supplied portraits are included unchanged as local
-website assets, shown in both the roster and profile cards. Public contact links
-for Mrunal, Shrimayee and Yasasvi, and the advisor's portrait/contact links have
-not yet been supplied.
+website assets, shown in both the roster and profile cards. Mrunal, Shrimayee and
+Yasasvi also have the LinkedIn URLs supplied by the project owner. The advisor's
+portrait/contact links have not yet been supplied.
 Profiles display initials and explicit pending notices until those assets exist;
 no identity or contact address is guessed.
 
