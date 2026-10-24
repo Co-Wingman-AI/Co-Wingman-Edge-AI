@@ -1,0 +1,27 @@
+% EDIT POSTER WORDING AND MEASUREMENTS HERE.
+% Escape LaTeX special characters: \&, \%, \_, \#.
+\newcommand{\PosterTitle}{Co-Wingman: A Hybrid Edge--Cloud AI Assistant\\
+for Real-Time Conversational Recovery Cues}
+\newcommand{\Authors}{Mrunal Vibhute, Shrimayee Deshpande, Honey Reddy Daram, Dr. Andrea Ramirez-Salgado}
+\newcommand{\Affiliation}{University of Florida | Master's in AI Systems | AI Days 2026}
+\newcommand{\Motivation}{Help speakers recover a thought with a short, context-aware cue during a conversational pause.}
+\newcommand{\PrivacyText}{%
+  Raw audio stays on the Jetson.\par\vspace{13pt}
+  Only bounded text reaches UF NaviGator.\par\vspace{13pt}
+  AWS storage is opt-in.\par\vspace{13pt}
+  Pause assistance detects silence, not anxiety or speaker identity.}
+\newcommand{\ResultsRows}{%
+  ASR inference & 110 ms & 127 ms\\
+  Cue handling & 1.04 s & 2.54 s\\
+  Summary update & 1.42 s & 1.99 s\\}
+\newcommand{\ResultsNote}{%
+  Timing sample: pause-assist-05; photo from a separate demo.
+  69 voiced windows, 7 summaries, zero recorded stage failures.
+  Cue timing excludes capture wait; a completed request may offer no cue.}
+\newcommand{\AWSStatus}{AWS integration implemented; live upload/reload validation pending.
+  AWS was not included in this timing test.}
+\newcommand{\NextSteps}{%
+  \textcolor{orange}{\bfseries 1.}\ Reduce four-second buffering delay\\[5pt]
+  \textcolor{orange}{\bfseries 2.}\ Evaluate cue usefulness with users\\[5pt]
+  \textcolor{orange}{\bfseries 3.}\ Validate AWS upload and recovery\\[5pt]
+  \textcolor{orange}{\bfseries 4.}\ Evaluate experimental disfluency scoring}

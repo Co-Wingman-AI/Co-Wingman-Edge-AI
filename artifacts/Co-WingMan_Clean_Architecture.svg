@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2400" height="1000" viewBox="0 0 2400 1000" role="img" aria-labelledby="title desc">
+  <title id="title">Co-WingMan system architecture</title>
+  <desc id="desc">A clean five-stage architecture flow from microphone input through local speech recognition and short-term context, to hosted cue generation, local validation, and cue output.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M0 0 L12 6 L0 12 Z" fill="#159A87"/>
+    </marker>
+    <style>
+      .title { font: 600 58px Arial, Helvetica, sans-serif; fill: #12304A; }
+      .subtitle { font: 400 25px Arial, Helvetica, sans-serif; fill: #607487; }
+      .zone { font: 600 18px Arial, Helvetica, sans-serif; fill: #607487; letter-spacing: 2px; }
+      .num { font: 600 21px Arial, Helvetica, sans-serif; fill: #FFFFFF; }
+      .node-title { font: 600 29px Arial, Helvetica, sans-serif; fill: #12304A; }
+      .node-body { font: 400 22px Arial, Helvetica, sans-serif; fill: #40586B; }
+      .node-small { font: 400 18px Arial, Helvetica, sans-serif; fill: #607487; }
+      .flow-label { font: 500 17px Arial, Helvetica, sans-serif; fill: #607487; }
+      .tag { font: 600 16px Arial, Helvetica, sans-serif; fill: #127A6C; letter-spacing: 1px; }
+      .note { font: 500 22px Arial, Helvetica, sans-serif; fill: #12304A; }
+    </style>
+  </defs>
+
+  <rect width="2400" height="1000" fill="#FFFFFF"/>
+
+  <text class="title" x="80" y="95">Co-WingMan Architecture</text>
+  <text class="subtitle" x="80" y="140">Privacy-first conversational cue generation on NVIDIA Jetson</text>
+
+  <text class="zone" x="210" y="242" text-anchor="middle">INPUT</text>
+  <text class="zone" x="810" y="242" text-anchor="middle">ON DEVICE · NVIDIA JETSON</text>
+  <text class="zone" x="1415" y="242" text-anchor="middle">MANAGED CLOUD</text>
+  <text class="zone" x="2010" y="242" text-anchor="middle">ON DEVICE · NVIDIA JETSON</text>
+
+  <!-- Stage 1 -->
+  <rect x="70" y="280" width="300" height="310" rx="18" fill="#FFFFFF" stroke="#9FB4C3" stroke-width="3"/>
+  <circle cx="112" cy="324" r="22" fill="#159A87"/>
+  <text class="num" x="106" y="332">1</text>
+  <text class="node-title" x="105" y="405">Microphone</text>
+  <text class="node-title" x="105" y="444">or typed input</text>
+  <line x1="105" y1="480" x2="335" y2="480" stroke="#D5E0E7" stroke-width="2"/>
+  <text class="node-body" x="105" y="525">Conversation input</text>
+  <text class="node-small" x="105" y="558">User-controlled capture</text>
+
+  <!-- Stage 2 -->
+  <rect x="450" y="280" width="340" height="310" rx="18" fill="#EDF4F8" stroke="#587E98" stroke-width="3"/>
+  <circle cx="492" cy="324" r="22" fill="#159A87"/>
+  <text class="num" x="486" y="332">2</text>
+  <text class="node-title" x="485" y="405">NVIDIA NeMo ASR</text>
+  <line x1="485" y1="440" x2="755" y2="440" stroke="#C7D8E2" stroke-width="2"/>
+  <text class="node-body" x="485" y="488">Speech → text</text>
+  <text class="node-small" x="485" y="530">Runs locally on Jetson</text>
+  <rect x="485" y="548" width="106" height="28" rx="14" fill="#D7EEE9"/>
+  <text class="tag" x="538" y="568" text-anchor="middle">LOCAL</text>
+
+  <!-- Stage 3 -->
+  <rect x="870" y="280" width="340" height="310" rx="18" fill="#EDF4F8" stroke="#587E98" stroke-width="3"/>
+  <circle cx="912" cy="324" r="22" fill="#159A87"/>
+  <text class="num" x="906" y="332">3</text>
+  <text class="node-title" x="905" y="405">Short-term context</text>
+  <line x1="905" y1="440" x2="1175" y2="440" stroke="#C7D8E2" stroke-width="2"/>
+  <text class="node-body" x="905" y="488">Recent text only</text>
+  <text class="node-small" x="905" y="530">Bounded and temporary</text>
+  <rect x="905" y="548" width="130" height="28" rx="14" fill="#D7EEE9"/>
+  <text class="tag" x="970" y="568" text-anchor="middle">RAM ONLY</text>
+
+  <!-- Stage 4 -->
+  <rect x="1290" y="280" width="350" height="310" rx="18" fill="#E8F5F2" stroke="#159A87" stroke-width="3"/>
+  <circle cx="1332" cy="324" r="22" fill="#159A87"/>
+  <text class="num" x="1326" y="332">4</text>
+  <text class="node-title" x="1325" y="398">UF NaviGator</text>
+  <text class="node-body" x="1325" y="438">NVIDIA Nemotron</text>
+  <line x1="1325" y1="470" x2="1605" y2="470" stroke="#BFDCD6" stroke-width="2"/>
+  <text class="node-body" x="1325" y="518">Creates one short cue</text>
+  <rect x="1325" y="548" width="122" height="28" rx="14" fill="#FFFFFF"/>
+  <text class="tag" x="1386" y="568" text-anchor="middle">HTTPS</text>
+
+  <!-- Stage 5 -->
+  <rect x="1720" y="280" width="610" height="310" rx="18" fill="#EDF4F8" stroke="#587E98" stroke-width="3"/>
+  <circle cx="1762" cy="324" r="22" fill="#159A87"/>
+  <text class="num" x="1756" y="332">5</text>
+  <text class="node-title" x="1755" y="405">Validate and present</text>
+  <line x1="1755" y1="440" x2="2295" y2="440" stroke="#C7D8E2" stroke-width="2"/>
+  <text class="node-body" x="1755" y="488">Safety + length checks</text>
+  <text class="node-body" x="1755" y="526">Short cue on screen</text>
+  <text class="node-small" x="1755" y="562">Optional local text-to-speech</text>
+
+  <!-- Flow -->
+  <path d="M370 435 H435" fill="none" stroke="#159A87" stroke-width="6" marker-end="url(#arrow)"/>
+  <path d="M790 435 H855" fill="none" stroke="#159A87" stroke-width="6" marker-end="url(#arrow)"/>
+  <path d="M1210 435 H1275" fill="none" stroke="#159A87" stroke-width="6" marker-end="url(#arrow)"/>
+  <path d="M1640 435 H1705" fill="none" stroke="#159A87" stroke-width="6" marker-end="url(#arrow)"/>
+
+  <text class="flow-label" x="410" y="640" text-anchor="middle">audio</text>
+  <text class="flow-label" x="830" y="640" text-anchor="middle">text</text>
+  <text class="flow-label" x="1250" y="640" text-anchor="middle">bounded text</text>
+  <text class="flow-label" x="1680" y="640" text-anchor="middle">cue response</text>
+  <text class="tag" x="1250" y="690" text-anchor="middle">PRESS ENTER OR TYPE :CUE</text>
+
+  <!-- Key boundary statement -->
+  <line x1="80" y1="765" x2="2320" y2="765" stroke="#D5E0E7" stroke-width="2"/>
+  <circle cx="605" cy="840" r="8" fill="#159A87"/>
+  <text class="note" x="630" y="848">Raw audio stays on the Jetson</text>
+  <circle cx="1380" cy="840" r="8" fill="#159A87"/>
+  <text class="note" x="1405" y="848">Only bounded text goes to UF NaviGator</text>
+</svg>

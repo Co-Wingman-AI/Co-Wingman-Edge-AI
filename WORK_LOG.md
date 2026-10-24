@@ -205,6 +205,7 @@ committing each completed unit. Detailed product instructions remain in README,
   the Jetson was not inspected. Physical ASR/CUDA and microphone checks remain
   separate from these offline tests.
 
+<<<<<<< Updated upstream
 ## 2026-10-21 — Interactive public project website
 
 - **Session/device:** managed Linux cloud workspace; desktop Chromium browser.
@@ -551,3 +552,48 @@ committing each completed unit. Detailed product instructions remain in README,
   (84 source files).
 - **Remaining:** live Pages deployment and external profile availability remain
   unverified from this workspace. No presentation preparation files published.
+=======
+## 2026-10-21 — Detailed poster architecture diagram
+
+- **Session/device:** Codex workspace; macOS arm64.
+- **Source:** organization main `172b7aa`; diagram-only work with no runtime source
+  changes.
+- **Changes:** created a detailed light-background architecture diagram modeled on
+  a grouped engineering schematic. It covers user control, the shared application
+  control plane, local NeMo speech/context processing, UF NaviGator/Nemotron hosted
+  inference, strict local validation, terminal/TTS output, optional portfolio and
+  S3 continuity, profiling, shadow scoring, resource guards, and privacy rules.
+- **Validation:** the SVG passed XML validation, was rasterized to a 5,200 × 3,300
+  PNG, and was visually inspected at full resolution for readable labels, complete
+  arrows, group boundaries, and unclipped content.
+- **Remaining:** optional poster-specific resizing or palette adjustment. No
+  application tests, device checks, commit, or push were needed.
+
+## 2026-10-21 — Research poster with optional AWS architecture
+
+- **Session/device:** Codex workspace; macOS arm64, bundled Python 3.12.
+- **Source:** local organization main `172b7aa`, existing AWS implementation docs,
+  and operator-provided numeric performance measurements.
+- **Changes:** produced a 48-by-36-inch research poster PDF with vector text and
+  architecture, supplied college branding, a supplied demonstration image,
+  measured results, privacy boundaries, and explicit optional AWS persistence.
+  A separate rendered PNG and rebuild source accompany the poster. Existing
+  architecture artifacts and prior work-log edits were preserved.
+- **Validation:** one-page PDF dimensions and required measurement text passed
+  programmatic checks; the 4,800-by-3,600 rendering was visually reviewed for
+  clipping, readability, and arrow directions. No runtime code changed.
+- **Remaining:** live AWS upload/reload validation remains pending; physical print
+  proof is recommended. Artifacts have not been committed or published.
+
+## 2026-10-21 — Editable LaTeX poster project
+
+- **Session/device:** Codex workspace; macOS arm64, TeX Live 2025 pdfLaTeX.
+- **Source:** existing poster artifacts and local main `172b7aa`.
+- **Changes:** created a standalone 48-by-36-inch LaTeX poster project with
+  separate wording, TikZ architecture, layout source, and bundled image assets.
+  Packaged source files into an importable ZIP for continued editing.
+- **Validation:** pdfLaTeX compilation completed; the rendered one-page preview
+  was inspected for text wrapping, panel alignment, and architecture boundaries.
+  Images remain raster assets; surrounding text and architecture are editable.
+- **Remaining:** no deployment or runtime changes. Poster assets remain local.
+>>>>>>> Stashed changes

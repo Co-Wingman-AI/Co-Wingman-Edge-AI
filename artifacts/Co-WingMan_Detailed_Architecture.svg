@@ -1,0 +1,212 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2600" height="1650" viewBox="0 0 2600 1650" role="img" aria-labelledby="title desc">
+  <title id="title">Co-WingMan detailed edge AI architecture</title>
+  <desc id="desc">Detailed grouped system architecture for Co-WingMan showing user control, the Jetson speech pipeline, bounded context, UF NaviGator hosted inference, local validation and output, optional portfolio and S3 continuity, and operational safeguards.</desc>
+  <defs>
+    <marker id="mainArrow" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#334155"/></marker>
+    <marker id="optArrow" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#16A34A"/></marker>
+    <marker id="modelArrow" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#6558F5"/></marker>
+    <marker id="lifeArrow" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#D97706"/></marker>
+    <style>
+      .page-title{font:700 34px Arial,Helvetica,sans-serif;fill:#182433}.page-sub{font:400 16px Arial,Helvetica,sans-serif;fill:#64748B}
+      .group-title{font:700 19px Arial,Helvetica,sans-serif;fill:#182433}.group-note{font:400 13px Arial,Helvetica,sans-serif;fill:#64748B}
+      .node-title{font:700 16px Arial,Helvetica,sans-serif;fill:#182433}.node-title-white{font:700 16px Arial,Helvetica,sans-serif;fill:#FFF}
+      .node-body{font:400 12px Arial,Helvetica,sans-serif;fill:#475569}.node-body-white{font:400 12px Arial,Helvetica,sans-serif;fill:#E8EEF5}
+      .edge-label{font:400 11px Arial,Helvetica,sans-serif;fill:#475569}.edge-label-green{font:400 11px Arial,Helvetica,sans-serif;fill:#15803D}.edge-label-orange{font:400 11px Arial,Helvetica,sans-serif;fill:#B45309}
+      .process{fill:#F5F7F9;stroke:#94A3B8;stroke-width:2}.model{fill:#F1F0FF;stroke:#6558F5;stroke-width:3}.dark{fill:#273547;stroke:#273547;stroke-width:2}
+      .human{fill:#FFF;stroke:#273547;stroke-width:2}.optional{fill:#F0FDF4;stroke:#22C55E;stroke-width:2}.storage{fill:#FFF;stroke:#94A3B8;stroke-width:2}
+      .group{fill:#FAFBFC;stroke:#94A3B8;stroke-width:2;stroke-dasharray:9 7}.group-purple{fill:#FCFBFF;stroke:#B8AEFF;stroke-width:2;stroke-dasharray:9 7}.group-green{fill:#F6FFF8;stroke:#86EFAC;stroke-width:2;stroke-dasharray:9 7}
+      .main-flow{fill:none;stroke:#334155;stroke-width:2.5;marker-end:url(#mainArrow)}.optional-flow{fill:none;stroke:#16A34A;stroke-width:2.3;stroke-dasharray:7 6;marker-end:url(#optArrow)}
+      .model-flow{fill:none;stroke:#6558F5;stroke-width:2.3;stroke-dasharray:6 5;marker-end:url(#modelArrow)}.life-flow{fill:none;stroke:#D97706;stroke-width:2.3;stroke-dasharray:7 5;marker-end:url(#lifeArrow)}
+    </style>
+  </defs>
+
+  <rect width="2600" height="1650" fill="#FFFFFF"/>
+  <text class="page-title" x="35" y="48">Co-WingMan EDGE AI · Detailed System Architecture</text>
+  <text class="page-sub" x="35" y="75">Local NVIDIA speech processing + bounded context + UF NaviGator Nemotron + validated short cues</text>
+
+  <!-- Legend -->
+  <rect x="35" y="105" width="430" height="250" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
+  <text class="group-title" x="55" y="135">LEGEND</text>
+  <rect class="human" x="55" y="155" width="30" height="28" rx="9"/><text class="node-body" x="100" y="175">Human / user control</text>
+  <rect class="process" x="55" y="195" width="30" height="28"/><text class="node-body" x="100" y="215">Data / process</text>
+  <rect class="model" x="55" y="235" width="30" height="28"/><text class="node-body" x="100" y="255">AI / ML model</text>
+  <rect class="dark" x="55" y="275" width="30" height="28"/><text class="node-body" x="100" y="295">Shared controller / boundary</text>
+  <path class="main-flow" d="M260 170 H320"/><text class="node-body" x="335" y="175">Main flow</text>
+  <path class="optional-flow" d="M260 215 H320"/><text class="node-body" x="335" y="220">Optional path</text>
+  <path class="model-flow" d="M260 255 H320"/><text class="node-body" x="335" y="260">Model data</text>
+  <path class="life-flow" d="M260 295 H320"/><text class="node-body" x="335" y="300">Lifecycle / cleanup</text>
+
+  <!-- Shared control plane -->
+  <rect class="group" x="500" y="105" width="1600" height="545" rx="20"/>
+  <text class="group-title" x="525" y="137">SHARED CONTROL PLANE · LOCAL APPLICATION</text>
+  <text class="group-note" x="525" y="160">Commands, triggers, bounded state, request lifecycle, and sanitized status remain under operator control.</text>
+
+  <rect class="human" x="535" y="205" width="210" height="88" rx="16"/>
+  <text class="node-title" x="640" y="238" text-anchor="middle">User / Operator</text><text class="node-body" x="640" y="264" text-anchor="middle">ACT-01 · explicit consent</text>
+
+  <rect class="process" x="800" y="205" width="260" height="88"/>
+  <text class="node-title" x="930" y="238" text-anchor="middle">Terminal / CLI</text><text class="node-body" x="930" y="264" text-anchor="middle">Enter · :cue · :listen · :clear</text>
+
+  <rect class="dark" x="1120" y="205" width="280" height="88"/>
+  <text class="node-title-white" x="1260" y="238" text-anchor="middle">Application Controller</text><text class="node-body-white" x="1260" y="264" text-anchor="middle">event loop · workers · lifecycle</text>
+
+  <rect class="process" x="1460" y="205" width="260" height="88"/>
+  <text class="node-title" x="1590" y="238" text-anchor="middle">Cue Trigger</text><text class="node-body" x="1590" y="264" text-anchor="middle">manual by default</text>
+
+  <rect class="dark" x="1780" y="205" width="280" height="88"/>
+  <text class="node-title-white" x="1920" y="238" text-anchor="middle">Request Boundary</text><text class="node-body-white" x="1920" y="264" text-anchor="middle">allowlist · deadline · schema</text>
+
+  <path class="main-flow" d="M745 249 H800"/><text class="edge-label" x="772" y="238" text-anchor="middle">input</text>
+  <path class="main-flow" d="M1060 249 H1120"/><text class="edge-label" x="1090" y="238" text-anchor="middle">events</text>
+  <path class="main-flow" d="M1400 249 H1460"/><text class="edge-label" x="1430" y="238" text-anchor="middle">explicit</text>
+  <path class="main-flow" d="M1720 249 H1780"/><text class="edge-label" x="1750" y="238" text-anchor="middle">snapshot</text>
+
+  <rect class="model" x="1120" y="360" width="280" height="82"/>
+  <text class="node-title" x="1260" y="392" text-anchor="middle">Optional Pause Detector</text><text class="node-body" x="1260" y="417" text-anchor="middle">speech energy → silence event</text>
+  <path class="model-flow" d="M1400 401 H1435 Q1460 401 1460 376 V293"/><text class="edge-label" x="1430" y="390" text-anchor="end">opt-in</text>
+
+  <rect class="process" x="1460" y="360" width="260" height="82"/>
+  <text class="node-title" x="1590" y="392" text-anchor="middle">Rolling Timer</text><text class="node-body" x="1590" y="417" text-anchor="middle">60 s context · minute summary</text>
+  <path class="optional-flow" d="M1590 360 V293"/>
+
+  <rect class="process" x="1780" y="360" width="280" height="82"/>
+  <text class="node-title" x="1920" y="392" text-anchor="middle">Status / Diagnostics</text><text class="node-body" x="1920" y="417" text-anchor="middle">sanitized categories only</text>
+  <path class="main-flow" d="M1400 275 H1760 Q1780 275 1780 295 V360"/>
+
+  <rect class="optional" x="800" y="500" width="260" height="88"/>
+  <text class="node-title" x="930" y="532" text-anchor="middle">Typed Fallback</text><text class="node-body" x="930" y="557" text-anchor="middle">works without mic or CUDA</text>
+  <path class="optional-flow" d="M930 500 V293"/>
+
+  <rect class="process" x="1120" y="500" width="280" height="88"/>
+  <text class="node-title" x="1260" y="532" text-anchor="middle">Context / Output State</text><text class="node-body" x="1260" y="557" text-anchor="middle">bounded references · clear/expiry</text>
+  <path class="main-flow" d="M1260 500 V293"/>
+
+  <!-- Operations -->
+  <rect class="group-green" x="2140" y="105" width="425" height="545" rx="20"/>
+  <text class="group-title" x="2165" y="137">OPERATIONS &amp; SAFETY</text>
+  <rect class="optional" x="2180" y="185" width="345" height="82"/>
+  <text class="node-title" x="2352" y="217" text-anchor="middle">Content-free Timings</text><text class="node-body" x="2352" y="242" text-anchor="middle">capture · ASR · HTTPS · validation</text>
+  <rect class="optional" x="2180" y="315" width="345" height="104"/>
+  <text class="node-title" x="2352" y="347" text-anchor="middle">Resource Guards</text><text class="node-body" x="2352" y="372" text-anchor="middle">≥2 GiB before model load</text><text class="node-body" x="2352" y="394" text-anchor="middle">stop speech below 1 GiB</text>
+  <rect class="optional" x="2180" y="470" width="345" height="130"/>
+  <text class="node-title" x="2352" y="502" text-anchor="middle">Privacy Rules</text><text class="node-body" x="2352" y="527" text-anchor="middle">no audio API input · no transcript log</text><text class="node-body" x="2352" y="549" text-anchor="middle">exact endpoint/model allowlist</text><text class="node-body" x="2352" y="571" text-anchor="middle">workers blocked from internet</text>
+  <path class="optional-flow" d="M2060 401 H2140"/><text class="edge-label-green" x="2100" y="390" text-anchor="middle">metrics</text>
+
+  <!-- Panel A -->
+  <rect x="35" y="700" width="790" height="900" rx="18" fill="#FFFFFF" stroke="#64748B" stroke-width="2"/>
+  <text class="group-title" x="55" y="735">A · LOCAL SPEECH &amp; CONTEXT · NVIDIA JETSON</text>
+  <text class="group-note" x="55" y="758">Raw audio and speech models remain on the device.</text>
+
+  <rect class="human" x="75" y="800" width="270" height="86" rx="15"/>
+  <text class="node-title" x="210" y="833" text-anchor="middle">Personal Microphone</text><text class="node-body" x="210" y="858" text-anchor="middle">16 kHz mono · consenting user</text>
+  <rect class="process" x="440" y="800" width="320" height="86"/>
+  <text class="node-title" x="600" y="833" text-anchor="middle">Timestamped Audio Capture</text><text class="node-body" x="600" y="858" text-anchor="middle">0.25 s blocks · 4 s RAM window</text>
+  <path class="main-flow" d="M345 843 H440"/><text class="edge-label" x="392" y="832" text-anchor="middle">PCM</text>
+
+  <rect class="model" x="440" y="940" width="320" height="100"/>
+  <text class="node-title" x="600" y="974" text-anchor="middle">NVIDIA Conformer CTC Small</text><text class="node-body" x="600" y="999" text-anchor="middle">NeMo + PyTorch CUDA · ≈13M params</text><text class="node-body" x="600" y="1021" text-anchor="middle">greedy decode → ≤240-char text</text>
+  <path class="main-flow" d="M600 886 V940"/>
+
+  <rect class="process" x="440" y="1095" width="320" height="90"/>
+  <text class="node-title" x="600" y="1128" text-anchor="middle">Freshness &amp; Privacy Gate</text><text class="node-body" x="600" y="1153" text-anchor="middle">timestamp check · normalize · label unknown</text>
+  <path class="main-flow" d="M600 1040 V1095"/>
+
+  <rect class="process" x="440" y="1240" width="320" height="110"/>
+  <text class="node-title" x="600" y="1273" text-anchor="middle">RollingContext · RAM Only</text><text class="node-body" x="600" y="1298" text-anchor="middle">default: ≤4 fragments / ≤800 chars</text><text class="node-body" x="600" y="1320" text-anchor="middle">rolling: ≤15 / ≤3,600 chars / 60 s</text>
+  <path class="main-flow" d="M600 1185 V1240"/>
+
+  <rect class="dark" x="440" y="1410" width="320" height="92"/>
+  <text class="node-title-white" x="600" y="1444" text-anchor="middle">Bounded Context Snapshot</text><text class="node-body-white" x="600" y="1469" text-anchor="middle">selected only when a cue is requested</text>
+  <path class="main-flow" d="M600 1350 V1410"/>
+
+  <rect class="process" x="75" y="940" width="270" height="90"/>
+  <text class="node-title" x="210" y="973" text-anchor="middle">RMS Pause Detector</text><text class="node-body" x="210" y="998" text-anchor="middle">optional · cooldown controlled</text>
+  <path class="model-flow" d="M345 985 H390 V843 H440"/>
+
+  <rect class="optional" x="75" y="1095" width="270" height="90"/>
+  <text class="node-title" x="210" y="1128" text-anchor="middle">Typed / Partner Input</text><text class="node-body" x="210" y="1153" text-anchor="middle">explicit labels · bypasses ASR</text>
+  <path class="optional-flow" d="M345 1140 H440"/>
+
+  <!-- Panel B -->
+  <rect x="855" y="700" width="820" height="900" rx="18" fill="#FFFFFF" stroke="#64748B" stroke-width="2"/>
+  <text class="group-title" x="875" y="735">B · REQUEST &amp; HOSTED INFERENCE</text>
+  <text class="group-note" x="875" y="758">Only bounded selected text crosses the Jetson–UF trust boundary.</text>
+
+  <rect class="dark" x="895" y="800" width="310" height="106"/>
+  <text class="node-title-white" x="1050" y="834" text-anchor="middle">NavigatorClient Request</text><text class="node-body-white" x="1050" y="859" text-anchor="middle">validated context + strict JSON schema</text><text class="node-body-white" x="1050" y="881" text-anchor="middle">15 s deadline · no redirect/proxy/retry</text>
+  <path class="main-flow" d="M760 1456 H815 V853 H895"/><text class="edge-label" x="838" y="840">bounded text</text>
+
+  <rect class="optional" x="895" y="970" width="310" height="92"/>
+  <text class="node-title" x="1050" y="1003" text-anchor="middle">Local Portfolio Retriever</text><text class="node-body" x="1050" y="1028" text-anchor="middle">≤2 passages · ≤1,200 fact chars</text>
+  <path class="optional-flow" d="M1050 970 V906"/>
+
+  <rect class="storage" x="895" y="1125" width="310" height="100" rx="50"/>
+  <text class="node-title" x="1050" y="1161" text-anchor="middle">Portfolio Snapshot</text><text class="node-body" x="1050" y="1186" text-anchor="middle">local JSON or optional S3 load</text>
+  <path class="optional-flow" d="M1050 1125 V1062"/>
+
+  <rect class="model" x="1290" y="800" width="330" height="100"/>
+  <text class="node-title" x="1455" y="834" text-anchor="middle">UF NaviGator API</text><text class="node-body" x="1455" y="859" text-anchor="middle">POST /v1/chat/completions · HTTPS</text><text class="node-body" x="1455" y="881" text-anchor="middle">exact approved host and path</text>
+  <path class="main-flow" d="M1205 853 H1290"/>
+
+  <rect class="model" x="1290" y="970" width="330" height="110"/>
+  <text class="node-title" x="1455" y="1004" text-anchor="middle">NVIDIA Nemotron-3 Nano</text><text class="node-body" x="1455" y="1029" text-anchor="middle">nemotron-3-nano-30b-a3b</text><text class="node-body" x="1455" y="1051" text-anchor="middle">thinking off · temperature 0 · ≤256 tokens</text>
+  <path class="main-flow" d="M1455 900 V970"/>
+
+  <rect class="process" x="1290" y="1145" width="330" height="82"/>
+  <text class="node-title" x="1455" y="1177" text-anchor="middle">Structured JSON Candidate</text><text class="node-body" x="1455" y="1202" text-anchor="middle">cue · intent · should_offer</text>
+  <path class="main-flow" d="M1455 1080 V1145"/>
+
+  <rect class="dark" x="1080" y="1325" width="380" height="120"/>
+  <text class="node-title-white" x="1270" y="1360" text-anchor="middle">Strict Local Response Validation</text><text class="node-body-white" x="1270" y="1385" text-anchor="middle">JSON shape · types · safety · no echo</text><text class="node-body-white" x="1270" y="1408" text-anchor="middle">≤12 words · ≤160 chars · allowed intent</text>
+  <path class="main-flow" d="M1455 1227 V1275 Q1455 1325 1405 1325"/>
+
+  <rect class="process" x="895" y="1325" width="140" height="120"/>
+  <text class="node-title" x="965" y="1360" text-anchor="middle">Withhold</text><text class="node-body" x="965" y="1385" text-anchor="middle">invalid</text><text class="node-body" x="965" y="1407" text-anchor="middle">declined</text>
+  <path class="life-flow" d="M1080 1385 H1035"/><text class="edge-label-orange" x="1058" y="1374" text-anchor="middle">fail</text>
+
+  <!-- Panel C -->
+  <rect x="1705" y="700" width="860" height="900" rx="18" fill="#FFFFFF" stroke="#64748B" stroke-width="2"/>
+  <text class="group-title" x="1725" y="735">C · OUTPUT, OPTIONAL CONTINUITY &amp; CLEANUP</text>
+  <text class="group-note" x="1725" y="758">Validated output returns locally; persistence remains separately opt-in.</text>
+
+  <rect class="dark" x="1745" y="800" width="330" height="92"/>
+  <text class="node-title-white" x="1910" y="834" text-anchor="middle">Validated Cue</text><text class="node-body-white" x="1910" y="859" text-anchor="middle">short phrase approved for display</text>
+  <path class="main-flow" d="M1460 1385 H1640 V846 H1745"/><text class="edge-label" x="1650" y="835">accepted</text>
+
+  <rect class="process" x="2170" y="800" width="345" height="92"/>
+  <text class="node-title" x="2342" y="834" text-anchor="middle">Private Terminal Cue</text><text class="node-body" x="2342" y="859" text-anchor="middle">visible ≈20 s · suppressed if redirected</text>
+  <path class="main-flow" d="M2075 846 H2170"/>
+
+  <rect class="model" x="2170" y="955" width="345" height="102"/>
+  <text class="node-title" x="2342" y="989" text-anchor="middle">Optional Local NVIDIA TTS</text><text class="node-body" x="2342" y="1014" text-anchor="middle">FastPitch → unload → HiFi-GAN</text><text class="node-body" x="2342" y="1036" text-anchor="middle">loads only after ASR exits</text>
+  <path class="model-flow" d="M2342 892 V955"/>
+
+  <rect class="process" x="1745" y="955" width="330" height="102"/>
+  <text class="node-title" x="1910" y="989" text-anchor="middle">Rolling Summary Generator</text><text class="node-body" x="1910" y="1014" text-anchor="middle">minute-based · ≤1,200 chars</text><text class="node-body" x="1910" y="1036" text-anchor="middle">lossy continuity, not transcript archive</text>
+  <path class="optional-flow" d="M1910 892 V955"/>
+
+  <rect class="storage" x="2170" y="1130" width="345" height="104" rx="52"/>
+  <text class="node-title" x="2342" y="1167" text-anchor="middle">Private S3 Prefix</text><text class="node-body" x="2342" y="1192" text-anchor="middle">timestamped summaries / portfolio</text><text class="node-body" x="2342" y="1214" text-anchor="middle">explicit configuration required</text>
+  <path class="optional-flow" d="M2075 1006 H2115 V1182 H2170"/><text class="edge-label-green" x="2125" y="1088">opt-in save</text>
+
+  <rect class="dark" x="1745" y="1130" width="330" height="104"/>
+  <text class="node-title-white" x="1910" y="1165" text-anchor="middle">Discard Request State</text><text class="node-body-white" x="1910" y="1190" text-anchor="middle">success · decline · error · shutdown</text><text class="node-body-white" x="1910" y="1212" text-anchor="middle">default context clears; mic pauses</text>
+  <path class="life-flow" d="M2075 846 H2105 V1100 H1910 V1130"/>
+
+  <rect class="optional" x="1745" y="1330" width="330" height="110"/>
+  <text class="node-title" x="1910" y="1364" text-anchor="middle">Content-free Profiling</text><text class="node-body" x="1910" y="1389" text-anchor="middle">numeric stage timings only</text><text class="node-body" x="1910" y="1411" text-anchor="middle">no prompts, cues, or transcripts</text>
+
+  <rect class="optional" x="2170" y="1330" width="345" height="110"/>
+  <text class="node-title" x="2342" y="1364" text-anchor="middle">Disfluency Shadow Scoring</text><text class="node-body" x="2342" y="1389" text-anchor="middle">local experimental model</text><text class="node-body" x="2342" y="1411" text-anchor="middle">never triggers cues or infers anxiety</text>
+  <path class="optional-flow" d="M2075 1385 H2170"/>
+
+  <!-- Cross-panel control arrows -->
+  <path class="main-flow" d="M1260 588 V675 H600 V800"/><text class="edge-label" x="900" y="665">start / stop speech worker</text>
+  <path class="main-flow" d="M1590 293 V650 H600 V1410"/>
+  <path class="main-flow" d="M1920 293 V675 H1050 V800"/><text class="edge-label" x="1500" y="665">approved request</text>
+  <path class="optional-flow" d="M1590 442 V670 H1910 V955"/><text class="edge-label-green" x="1790" y="660">summary timer</text>
+
+  <!-- Footer note -->
+  <text class="page-sub" x="35" y="1632">Primary privacy boundary: raw microphone audio stays on the Jetson; only bounded selected text is sent to UF NaviGator over HTTPS.</text>
+  <text class="page-sub" x="2565" y="1632" text-anchor="end">Co-WingMan architecture · October 2026</text>
+</svg>

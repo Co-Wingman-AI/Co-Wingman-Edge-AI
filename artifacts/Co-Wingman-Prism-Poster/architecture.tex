@@ -1,0 +1,55 @@
+% EDITABLE ARCHITECTURE. Included inside the main TikZ picture.
+% Blue = local Jetson; green = UF inference; orange = optional AWS storage.
+\filldraw[rounded corners=7pt,fill=localbg,draw=blue,line width=1pt]
+  (310,592) rectangle (733,903);
+\filldraw[rounded corners=7pt,fill=cloudbg,draw=green,line width=1pt]
+  (741,592) rectangle (1003,903);
+\Text{321}{604}{400}{21}{navy}{\centering\bfseries NVIDIA Jetson -- local}
+\Text{751}{604}{242}{21}{green}{\centering\bfseries UF hosted inference}
+
+\node[block,minimum width=120pt,minimum height=58pt] (mic) at (389,681)
+  {Microphone\\4 s audio buffer};
+\node[block,minimum width=120pt,minimum height=58pt] (asr) at (522,681)
+  {NVIDIA\\NeMo ASR};
+\node[block,minimum width=120pt,minimum height=58pt] (context) at (655,681)
+  {60 s rolling\\text context};
+\draw[flow] (mic.east) -- (asr.west);
+\draw[flow] (asr.east) -- (context.west);
+
+\node[block,minimum width=120pt,minimum height=58pt] (trigger) at (389,770)
+  {Manual / pause\\trigger};
+\node[block,minimum width=120pt,minimum height=58pt] (portfolio) at (522,770)
+  {Local portfolio\\selection};
+\node[block,minimum width=120pt,minimum height=58pt] (request) at (655,770)
+  {Bounded\\request};
+\draw[flow] (context.south) -- (request.north);
+\draw[flow] (portfolio.east) -- (request.west);
+\draw[flow] (trigger.north) -- (389,726) -- (630,726) -- (630,741);
+
+\node[block,draw=green,minimum width=214pt,minimum height=56pt] (api) at (872,751)
+  {\bfseries UF NaviGator API};
+\node[block,draw=green,minimum width=214pt,minimum height=56pt] (model) at (872,835)
+  {\bfseries NVIDIA Nemotron\\\normalfont\fontsize{13}{15}\selectfont Cue / minute summary};
+\draw[cloudflow] (request.east) -- (730,770) -- (730,751) -- (api.west);
+\Text{715}{728}{48}{10}{green}{\centering HTTPS}
+\draw[cloudflow] (api.south) -- (model.north);
+
+\node[block,minimum width=188pt,minimum height=47pt] (validate) at (621,849)
+  {Validate response};
+\node[block,minimum width=169pt,minimum height=47pt] (terminal) at (413,849)
+  {Terminal cue};
+\draw[cloudflow] (model.west) -- (validate.east);
+\draw[flow] (validate.west) -- (terminal.east);
+\Text{321}{884}{400}{11}{navy}{\centering\bfseries Raw audio stays local. Rolling listening continues during cue calls.}
+
+% S3 connects through the Jetson app, never directly to the hosted model.
+\filldraw[rounded corners=7pt,fill=awsbg,draw=orange,line width=1pt]
+  (310,927) rectangle (1003,1021);
+\Text{324}{936}{660}{20}{awstext}{\bfseries AWS S3 -- optional storage}
+\Text{341}{964}{295}{15}{ink}{\bfseries Summary history\quad\normalfont windows/ + latest.json}
+\Text{656}{964}{330}{15}{ink}{\bfseries Portfolio archive\quad\normalfont portfolio.json}
+\Text{324}{1001}{662}{11}{awstext}{\centering boto3\quad\textbullet\quad IAM prefix access\quad\textbullet\quad SSE-S3\quad\textbullet\quad No audio or full transcript archive}
+\draw[awsflow] (485,903) -- (485,927);
+\draw[awsflow] (704,927) -- (704,903);
+\Text{314}{909}{165}{10}{awstext}{Upload summary + metadata}
+\Text{514}{909}{186}{10}{awstext}{Load portfolio / reuse summary}
