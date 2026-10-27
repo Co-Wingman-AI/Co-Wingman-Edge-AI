@@ -1,0 +1,120 @@
+.feedback-section {
+  display: grid;
+  grid-template-columns: 0.9fr 1.1fr;
+  gap: 64px;
+  border-top: 1px solid var(--line);
+}
+.feedback-intro > p:not(.eyebrow) {
+  color: var(--muted);
+  max-width: 400px;
+}
+.feedback-recipient a {
+  overflow-wrap: anywhere;
+}
+.feedback-form {
+  padding: 32px;
+  border: 1px solid #bdccca;
+  border-radius: 24px;
+  background: #e8f0ed;
+}
+.feedback-form label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0 0 9px;
+}
+.feedback-form label span {
+  font-weight: 400;
+  color: var(--muted);
+}
+.feedback-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.feedback-fields > div {
+  min-width: 0;
+}
+.feedback-form input:not([type="hidden"]),
+.feedback-form textarea {
+  display: block;
+  width: 100%;
+  padding: 13px 14px;
+  border: 1px solid #9eb2b6;
+  border-radius: 12px;
+  background: #fff;
+  font-size: 16px;
+  line-height: 1.5;
+}
+.feedback-form textarea {
+  resize: vertical;
+  min-height: 160px;
+}
+.feedback-help {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.65;
+  margin: 12px 0 18px;
+}
+.feedback-section a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.feedback-voice {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 12px 16px;
+  border: 1px solid #91a7a5;
+  border-radius: 24px;
+  background: var(--paper);
+  font-size: 14px;
+}
+.feedback-voice[aria-pressed="true"] {
+  background: var(--ink);
+  color: white;
+}
+.feedback-form button:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+.feedback-status {
+  min-height: 24px;
+  font-size: 13px;
+  font-weight: 600;
+  margin: 12px 0;
+}
+.feedback-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 18px;
+  margin-top: 24px;
+}
+.feedback-actions a {
+  font-size: 13px;
+  padding-block: 12px;
+}
+@media (max-width: 900px) {
+  .feedback-section {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+  .feedback-intro > p:not(.eyebrow) {
+    max-width: 600px;
+  }
+}
+@media (max-width: 500px) {
+  .feedback-form {
+    padding: 22px 18px;
+  }
+  .feedback-fields {
+    grid-template-columns: 1fr;
+  }
+  .feedback-actions .button {
+    width: 100%;
+  }
+}

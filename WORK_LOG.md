@@ -612,3 +612,26 @@ committing each completed unit. Detailed product instructions remain in README,
 - **Remaining:** the workspace proxy blocks Pages and the GitHub deployment API,
   so live deployment status must be confirmed in the GitHub Actions run. No live
   success is claimed here. No application or presentation content changed.
+
+## 2026-10-27 — Feedback form with optional browser dictation
+
+- **Session/device:** managed Linux cloud workspace; Chromium browser.
+- **Source:** organization main `fac9743`.
+- **Changes:** added a simple feedback section with optional contact fields,
+  editable text, explicit start/stop browser dictation, native FormSubmit email
+  submission and an email-draft alternative. Added navigation, responsive styles,
+  privacy disclosures, activation instructions and a Pages syntax check. Only
+  the feedback form can navigate to the hosted form service; demos remain local.
+- **Validation:** browser tests passed at 1440, 390 and 320 pixels for recognition
+  API variants, append/dedup/edit behavior, permission and network errors, stale
+  events, length limits, timeout, tab/page exit, startup failure, review before
+  sending, unsupported browsers and no-JavaScript submission. Intercepted POST
+  checked fields and recipient without sending real email. Feedback WCAG A/AA
+  checks, syntax and diff whitespace passed; mobile screenshot reviewed.
+  Full repository hygiene still reports inherited artifact findings (95
+  unreviewed binaries, two whitespace findings and 11 missing-newline findings);
+  none concern the changed feedback files.
+- **Remaining:** recipient must complete FormSubmit's first-submission activation;
+  real email delivery and physical microphone recognition were not tested. The
+  previously reported Pages 404/settings issue remains unresolved from this
+  workspace; publishing this code is not proof of live availability.

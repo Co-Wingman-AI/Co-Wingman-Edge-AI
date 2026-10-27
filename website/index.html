@@ -19,16 +19,18 @@
     <meta property="og:type" content="website" />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'"
+      content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'self'; form-action https://formsubmit.co"
     />
     <title>Co-Wingman — Find your words. Keep your moment.</title>
     <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
     <link rel="stylesheet" href="./style.css" />
     <link rel="stylesheet" href="./showcase.css" />
     <link rel="stylesheet" href="./team.css?v=profiles-9" />
+    <link rel="stylesheet" href="./feedback.css?v=1" />
     <script src="./team-profiles.js?v=profiles-9" defer></script>
     <script src="./team-profile-ui.js?v=profiles-9" defer></script>
     <script src="./site.js?v=profiles-2" defer></script>
+    <script src="./feedback.js?v=1" defer></script>
   </head>
   <body>
     <a class="skip-link" href="#main">Skip to content</a>
@@ -86,6 +88,7 @@
       <nav aria-label="Main navigation">
         <a href="#demo">Experience</a><a href="#how">Engineering</a>
         <a href="#research">Research</a><a href="#start">Get started</a>
+        <a href="#feedback">Feedback</a>
       </nav>
       <a class="button button-small button-ink" href="#demo"
         >Try a moment <svg class="icon"><use href="#i-arrow" /></svg
@@ -94,7 +97,7 @@
     <nav class="mobile-sections wrap" aria-label="Explore the project">
       <a href="#demo">Experience</a><a href="#how">Engineering</a
       ><a href="#research">Research</a><a href="#start">Get started</a
-      ><a href="#team">Team</a>
+      ><a href="#team">Team</a><a href="#feedback">Feedback</a>
     </nav>
 
     <main id="main">
@@ -1322,6 +1325,138 @@ python3 -m cowingman --rolling --pause-assist --show-input</code></pre>
         </p>
       </section>
 
+      <section
+        class="section wrap feedback-section"
+        id="feedback"
+        aria-labelledby="feedback-title"
+      >
+        <div class="feedback-intro">
+          <p class="eyebrow">YOUR THOUGHTS MATTER</p>
+          <h2 id="feedback-title">
+            A little feedback.<br /><span class="serif">A better wingman.</span>
+          </h2>
+          <p>
+            Tried the demo or visited our poster? Tell us what worked and what
+            we could improve.
+          </p>
+          <p class="feedback-recipient">
+            Your feedback goes to Honey at
+            <a href="mailto:honeyreddydara@gmail.com"
+              >honeyreddydara@gmail.com</a
+            >.
+          </p>
+        </div>
+        <form
+          id="feedback-form"
+          class="feedback-form"
+          action="https://formsubmit.co/honeyreddydara@gmail.com"
+          method="POST"
+        >
+          <input
+            type="hidden"
+            name="_subject"
+            value="Co-Wingman website feedback"
+          />
+          <input type="hidden" name="_template" value="table" />
+          <input
+            type="text"
+            name="_honey"
+            tabindex="-1"
+            autocomplete="off"
+            aria-hidden="true"
+            hidden
+          />
+          <div class="feedback-fields">
+            <div>
+              <label for="feedback-name">Name <span>(optional)</span></label>
+              <input
+                id="feedback-name"
+                name="name"
+                autocomplete="name"
+                maxlength="100"
+              />
+            </div>
+            <div>
+              <label for="feedback-email">Email <span>(optional)</span></label>
+              <input
+                id="feedback-email"
+                name="email"
+                type="email"
+                autocomplete="email"
+                maxlength="254"
+              />
+            </div>
+          </div>
+          <label for="feedback-message">Your feedback</label>
+          <textarea
+            id="feedback-message"
+            name="message"
+            rows="6"
+            maxlength="2000"
+            required
+            aria-describedby="feedback-message-help"
+            placeholder="What worked well? What could be better?"
+          ></textarea>
+          <p id="feedback-message-help" class="feedback-help">
+            Type or dictate, then review and edit before sending. Up to 2,000
+            characters.
+          </p>
+          <button
+            type="button"
+            id="feedback-voice"
+            class="feedback-voice"
+            aria-controls="feedback-message"
+            aria-pressed="false"
+            aria-describedby="feedback-voice-help"
+            disabled
+          >
+            <svg class="icon" aria-hidden="true"><use href="#i-mic" /></svg>
+            <span id="feedback-voice-label">Speak your feedback</span>
+          </button>
+          <p id="feedback-voice-help" class="feedback-help">
+            Voice input needs a supported browser and microphone permission.
+            Your browser may send audio to its speech service for transcription.
+            Listening starts only when you press the microphone button.
+          </p>
+          <p
+            id="feedback-status"
+            class="feedback-status"
+            role="status"
+            aria-live="polite"
+          >
+            You can always type your feedback.
+          </p>
+          <p class="feedback-help">
+            When you send, your text and any details you enter go to Honey
+            through
+            <a
+              href="https://formsubmit.co/"
+              target="_blank"
+              rel="noopener noreferrer"
+              >FormSubmit</a
+            >. An anti-spam check may appear. This page does not save a copy of
+            your feedback or record audio files.
+          </p>
+          <div class="feedback-actions">
+            <button type="submit" id="feedback-send" class="button button-blue">
+              Send feedback
+              <svg class="icon" aria-hidden="true"><use href="#i-arrow" /></svg>
+            </button>
+            <a
+              id="feedback-email-instead"
+              href="mailto:honeyreddydara@gmail.com?subject=Co-Wingman%20website%20feedback"
+              >Use email instead</a
+            >
+          </div>
+          <noscript
+            ><p class="feedback-help">
+              You can type and send without JavaScript. For dictation, use your
+              device keyboard's microphone.
+            </p></noscript
+          >
+        </form>
+      </section>
+
       <section class="wrap closing">
         <span class="closing-star" aria-hidden="true">✳</span>
         <p class="eyebrow">THE GOAL IS SIMPLE</p>
@@ -1352,9 +1487,12 @@ python3 -m cowingman --rolling --pause-assist --show-input</code></pre>
           <details>
             <summary>Is this website listening to me?</summary>
             <p>
-              No. This page is a static project showcase. The interactive
-              example uses prewritten fictional dialogue and makes no microphone
-              or AI requests. The actual prototype runs separately on a Jetson.
+              The conversation demos do not access your microphone or call an AI
+              model. The feedback form offers optional browser dictation, which
+              starts only when you press its microphone button and may use your
+              browser's online speech service. You can stop it at any time or
+              simply type. The actual Co-Wingman prototype runs separately on a
+              Jetson.
             </p>
           </details>
           <details>
@@ -1380,7 +1518,10 @@ python3 -m cowingman --rolling --pause-assist --show-input</code></pre>
               Recent conversation text is bounded and held in memory. Optional
               S3 features persist portfolio snapshots and timestamped summaries.
               This website does not store your demo selections or request
-              account information.
+              account information. If you send feedback, the text and any
+              optional contact details are processed by FormSubmit and delivered
+              to Honey's email. That feedback is separate from the prototype's
+              conversation memory.
             </p>
           </details>
         </div>

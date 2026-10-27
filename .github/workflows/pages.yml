@@ -31,6 +31,7 @@ jobs:
           node --check website/team-profiles.js
           node --check website/team-profile-ui.js
           node --check website/site.js
+          node --check website/feedback.js
       - name: Configure Pages
         uses: actions/configure-pages@v5
       - name: Stamp deployment revision

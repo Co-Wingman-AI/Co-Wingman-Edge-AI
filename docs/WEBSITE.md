@@ -5,6 +5,36 @@ with no build step or production dependencies. The interactive examples are
 fictional, scripted demonstrations. They do not capture audio, call an AI service,
 connect to AWS, or save visitor data.
 
+The separate feedback form at `#feedback` accepts a required message and optional
+name/reply email. Its native HTTPS POST uses FormSubmit to send to the project
+owner's supplied address. GitHub Pages does not itself send email. **The recipient
+must activate the form through the email FormSubmit sends after the first
+submission.** Until that verification is complete, do not claim inbox delivery.
+The service handles its own anti-spam/confirmation screen; the site does not
+display a fabricated “sent” state. Normal typed submission works without
+JavaScript. “Use email instead” opens an email draft, including entered feedback
+when JavaScript is available, as a fallback independent of FormSubmit activation.
+No live test feedback or activation email was sent by the development checks.
+
+Optional dictation in `website/feedback.js` uses browser SpeechRecognition or
+webkitSpeechRecognition, in a secure context, only after a button press. Browser
+support varies; permission denial, missing microphones, network errors and
+unsupported browsers leave typed input available. Final recognition results append
+to the editable textarea without duplicating already accepted results. Stop,
+leaving the page and a one-minute limit end dictation. Sending is disabled while
+dictation is active so visitors can review the text first. The field is bounded
+at 2,000 characters. There is no local storage or audio-file recording, but the
+browser's transcription service may receive audio. This differs from the Jetson
+prototype's local ASR; the form help and FAQ disclose that distinction.
+
+Submitted feedback and optional contact details pass through FormSubmit and email;
+they are not subject to the prototype's 60-second conversation expiry. The CSP
+allows form navigation only to `https://formsubmit.co`; demo requests remain
+disabled. Contact links and feedback text are never added to analytics or logs.
+Maintain the recipient in both the HTML form/email links and the email-draft
+builder in `feedback.js`. Test recipient activation and delivery from the deployed
+site before collecting event feedback; mocked submissions do not establish either.
+
 The conversation card draws from 15 hardcoded question/fragment/cue triples in
 `website/site.js`, grouped into three topics. Each topic uses a shuffled bag to
 avoid repeats until its examples are exhausted; refills avoid immediate repeats.
