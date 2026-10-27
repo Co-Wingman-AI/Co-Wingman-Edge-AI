@@ -597,3 +597,18 @@ committing each completed unit. Detailed product instructions remain in README,
   Images remain raster assets; surrounding text and architecture are editable.
 - **Remaining:** no deployment or runtime changes. Poster assets remain local.
 >>>>>>> Stashed changes
+
+## 2026-10-27 — Trigger Pages deployment with publication verification
+
+- **Session/device:** managed Linux cloud workspace.
+- **Source:** organization main `d20b7a6`; existing poster artifacts preserved.
+- **Changes:** added a build-time revision marker and post-deployment verification
+  to the existing Pages workflow. Publishing this workflow change triggers a fresh
+  deployment of the current website. Only the public website directory is uploaded.
+- **Validation:** workflow YAML and embedded Python parse; mocked checks accept
+  the current revision/page and reject stale revisions or incorrect content after
+  bounded retries. Website JavaScript syntax and diff whitespace checks passed.
+  The same website source passed desktop/mobile browser checks earlier this session.
+- **Remaining:** the workspace proxy blocks Pages and the GitHub deployment API,
+  so live deployment status must be confirmed in the GitHub Actions run. No live
+  success is claimed here. No application or presentation content changed.

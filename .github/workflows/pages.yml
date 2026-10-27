@@ -33,6 +33,11 @@ jobs:
           node --check website/site.js
       - name: Configure Pages
         uses: actions/configure-pages@v5
+      - name: Stamp deployment revision
+        env:
+          DEPLOYMENT_REVISION: ${{ github.sha }}
+        run: |
+          node -e 'require("node:fs").writeFileSync("website/deployment.json", JSON.stringify({revision: process.env.DEPLOYMENT_REVISION}) + "\n")'
       - name: Upload public website only
         uses: actions/upload-pages-artifact@v3
         with:
@@ -40,3 +45,35 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+      - name: Verify published website
+        env:
+          PAGES_URL: ${{ steps.deployment.outputs.page_url }}
+          DEPLOYMENT_REVISION: ${{ github.sha }}
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+          import time
+          import urllib.error
+          import urllib.request
+
+          base = os.environ["PAGES_URL"].rstrip("/") + "/"
+          revision = os.environ["DEPLOYMENT_REVISION"]
+          for attempt in range(6):
+              try:
+                  with urllib.request.urlopen(base + "deployment.json?v=" + revision, timeout=15) as response:
+                      deployed = json.load(response)
+                  if deployed.get("revision") != revision:
+                      raise ValueError("Pages is still serving an older revision")
+                  with urllib.request.urlopen(base + "?v=" + revision, timeout=15) as response:
+                      html = response.read().decode("utf-8")
+                  if "Co-Wingman" not in html or 'id="team-profile"' not in html:
+                      raise ValueError("The published page is missing expected website content")
+                  print("Verified published website:", base)
+                  break
+              except (OSError, urllib.error.URLError, ValueError) as error:
+                  if attempt == 5:
+                      raise SystemExit("Published website verification failed: " + str(error))
+                  print("Waiting for the new Pages revision...")
+                  time.sleep(10)
+          PY
